@@ -5,6 +5,6 @@
 
 export const environment = {
   production: false,
-  apiHost:    'http://192.168.1.30:4200/',
+  apiHost:    'http://86.238.41.71:4200/',
   apiPrefix:  'api/',
 };
