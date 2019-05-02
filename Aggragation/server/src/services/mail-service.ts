@@ -1,6 +1,6 @@
 /**
  * Usage, improt the module anywhere you need to send email,
- * @example import MailService from '../../mail-service';
+ * @example import MailService from '../../mail-service'; 123
  */
 
 const nodemailer = require('nodemailer');
