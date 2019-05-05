@@ -1,3 +1,8 @@
+typeorm migration:run / typeorm migration:revert
+npm run typeorm migration:create -- -n migrationNameHere
+typeorm-model-generator -h localhost -d  cleverTest -u test -x 1234 -e postgres -o "./src/entity" -s public
+
+
 The following README provides detailed steps on how to run the code locally as well as how to deploy the application to Heroku.
 In the last section explanation on how to create new endpoints is provided.
 ## How to run locally

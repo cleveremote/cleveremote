@@ -33,22 +33,10 @@ export class account {
         
 
    
-    @OneToMany(type=>device, device=>device.account_,{ onDelete: 'CASCADE' , })
+    @OneToMany(type=>device, device=>device.account,{ onDelete: 'CASCADE' , })
     devices:device[];
-    
-
-   
-    @OneToMany(type=>device, device=>device.account_)
-    devices2:device[];
-    
-
    
     @OneToMany(type=>users, users=>users.account_,{ onDelete: 'CASCADE' , })
-    userss:users[];
-    
-
-   
-    @OneToMany(type=>users, users=>users.account_)
-    userss2:users[];
+    users:users[];
     
 }

@@ -18,11 +18,7 @@ export class provider {
    
     @ManyToOne(type=>users, users=>users.providers,{  nullable:false,onDelete: 'CASCADE', })
     @JoinColumn({ name:'user_id'})
-    user_:users | null;
-
-    @ManyToOne(type=>users, users=>users.providers2,{  nullable:false, })
-    @JoinColumn({ name:'user_id'})
-    user_:users | null;
+    user:users | null;
 
 
     @Column("character varying",{ 

@@ -34,10 +34,6 @@ export class device {
    
     @ManyToOne(type=>account, account=>account.devices,{  nullable:false,onDelete: 'CASCADE', })
     @JoinColumn({ name:'account_id'})
-    account_:account | null;
-
-    @ManyToOne(type=>account, account=>account.devices2,{  nullable:false, })
-    @JoinColumn({ name:'account_id'})
-    account_:account | null;
+    account:account | null;
 
 }
