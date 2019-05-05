@@ -9,7 +9,7 @@ export class createUser1556374316998 implements MigrationInterface {
             last_name VARCHAR (50) UNIQUE NOT NULL,
             email VARCHAR (255) UNIQUE NOT NULL,
             number_phone VARCHAR (50) UNIQUE NOT NULL,
-            password VARCHAR (50) UNIQUE NOT NULL,
+            password VARCHAR (512) UNIQUE NOT NULL,
             account_id VARCHAR (255) NOT NULL REFERENCES Account(account_id) ON DELETE CASCADE,
             FOREIGN KEY (account_id) REFERENCES Account (account_id)
            );`);  

@@ -73,7 +73,8 @@
     "rxjs-compat": "^6.4.0",
     "typeorm": "^0.2.16",
     "typescript": "^3.3.3",
-    "ws": "^6.2.1"
+    "ws": "^6.2.1",
+    "xbee-rx": "^4.0.1"
   },
   "engines": {
     "node": "9.5.0"

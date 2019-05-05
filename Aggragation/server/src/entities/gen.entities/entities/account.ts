@@ -33,11 +33,22 @@ export class account {
         
 
    
-    @ManyToOne(type=>device, device=>device.accounts,{  nullable:false,onDelete: 'CASCADE' })
-    @JoinColumn({ name:'device_id'})
-    device:device | null;
+    @OneToMany(type=>device, device=>device.account_,{ onDelete: 'CASCADE' , })
+    devices:device[];
+    
+
    
-    @OneToMany(type=>users, users=>users.account,{ onDelete: 'CASCADE' })
-    users:users[];
+    @OneToMany(type=>device, device=>device.account_)
+    devices2:device[];
+    
+
+   
+    @OneToMany(type=>users, users=>users.account_,{ onDelete: 'CASCADE' , })
+    userss:users[];
+    
+
+   
+    @OneToMany(type=>users, users=>users.account_)
+    userss2:users[];
     
 }

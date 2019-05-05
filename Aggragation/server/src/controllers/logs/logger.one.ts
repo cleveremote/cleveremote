@@ -11,6 +11,7 @@ import UserController from '../../api/controllers/userController';
 import { Model } from 'mongoose';
 import { IUserModel, UserModule } from '../../api/models/userModel';
 import { isAuthenticated } from '../../middleware/authentication';
+import XbeeService from '../../config/xbee';
 
 
 
@@ -21,9 +22,14 @@ class Logger extends Controller {
     
     @isAuthenticated()
     public get(req: Request, res: Response): void {
+        XbeeService.GetNodeDiscovery().subscribe(function (frame) {
+                console.log("Success!",frame);
+            }, function (e) {
+                console.log("Command failed:\n", e);
+            });
         const userCtrl = new UserController<Model<IUserModel>>(UserModule);
         userCtrl.getAll(req, res);
-        //this.sendSuccess(res, "data")
+        
 
     }
 }

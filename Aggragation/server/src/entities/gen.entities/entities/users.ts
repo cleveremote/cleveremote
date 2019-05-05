@@ -59,20 +59,29 @@ export class users {
     @Column("character varying",{ 
         nullable:false,
         unique: true,
-        length:50,
+        length:512,
         name:"password"
         })
     password:string;
         
 
    
-    @ManyToOne(type=>account, account=>account.users,{  nullable:false,onDelete: 'CASCADE' })
+    @ManyToOne(type=>account, account=>account.userss,{  nullable:false,onDelete: 'CASCADE', })
     @JoinColumn({ name:'account_id'})
-    account:account | null;
+    account_:account | null;
+
+    @ManyToOne(type=>account, account=>account.userss2,{  nullable:false, })
+    @JoinColumn({ name:'account_id'})
+    account_:account | null;
 
 
    
-    @OneToMany(type=>provider, provider=>provider.user,{ onDelete: 'CASCADE' , })
+    @OneToMany(type=>provider, provider=>provider.user_,{ onDelete: 'CASCADE' , })
     providers:provider[];
+    
+
+   
+    @OneToMany(type=>provider, provider=>provider.user_)
+    providers2:provider[];
     
 }
