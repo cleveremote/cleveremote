@@ -36,7 +36,7 @@ export class account {
     @OneToMany(type=>device, device=>device.account,{ onDelete: 'CASCADE' , })
     devices:device[];
    
-    @OneToMany(type=>users, users=>users.account_,{ onDelete: 'CASCADE' , })
+    @OneToMany(type=>users, users=>users.account,{ onDelete: 'CASCADE' , })
     users:users[];
     
 }

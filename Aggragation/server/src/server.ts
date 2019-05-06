@@ -20,8 +20,6 @@ import Passport from './config/passport';
 import * as mongoose from 'mongoose';
 import cookieParser = require('cookie-parser');
 
-// require('./config/passport')(passport); 1456789
-
 
 class Server {
 

@@ -68,7 +68,7 @@ export class users {
    
     @ManyToOne(type=>account, account=>account.users,{  nullable:false,onDelete: 'CASCADE', })
     @JoinColumn({ name:'account_id'})
-    account_:account | null;
+    account:account | null;
    
     @OneToMany(type=>provider, provider=>provider.user,{ onDelete: 'CASCADE' , })
     providers:provider[];

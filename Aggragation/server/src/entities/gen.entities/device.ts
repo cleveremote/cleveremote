@@ -1,5 +1,6 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
 import {account} from "./account";
+import {transceiver} from "./transceiver";
 
 
 @Entity("device",{schema:"public" } )
@@ -36,4 +37,9 @@ export class device {
     @JoinColumn({ name:'account_id'})
     account:account | null;
 
+
+   
+    @OneToMany(type=>transceiver, transceiver=>transceiver.device,{ onDelete: 'CASCADE' , })
+    transceivers:transceiver[];
+    
 }

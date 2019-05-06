@@ -11,7 +11,7 @@ export class createTransceiver1557085348819 implements MigrationInterface {
             type VARCHAR (255) NOT NULL,
             config_id VARCHAR (255) NOT NULL, 
             FOREIGN KEY (config_id) REFERENCES Transceiver_config(config_id) ON DELETE CASCADE,
-            coordinator_id VARCHAR (255) NOT NULL, 
+            coordinator_id VARCHAR (255), 
             FOREIGN KEY (coordinator_id) REFERENCES Transceiver(transceiver_id) ON DELETE CASCADE,
             device_id VARCHAR (255) NOT NULL,
             FOREIGN KEY (device_id) REFERENCES Device(device_id) ON DELETE CASCADE
