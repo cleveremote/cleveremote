@@ -1,27 +1,24 @@
 
-import { of as observableOf, from as observableFrom } from 'rxjs';
+import { Observable, of as observableOf, from as observableFrom } from 'rxjs';
 import { tap, flatMap, map } from 'rxjs/operators';
+
+import { ormConnection } from './entities';
+import { Router } from './router';
+import { RedisClient, createClient } from 'redis';
+import * as connectRedis from 'connect-redis';
+
+import { Passport } from './config/passport';
 import * as bodyParser from 'body-parser';
 import * as compression from 'compression';
 import * as express from 'express';
 import * as session from 'express-session';
 import * as logger from 'morgan';
 import * as passport from "passport";
-
-import ormConnection from './entities';
-import { Router } from './router';
-import { Observable } from 'rxjs-compat';
-import * as cors from "cors";
-import { RedisClient, createClient } from 'redis';
-import * as connectRedis from 'connect-redis';
-
-import Passport from './config/passport';
-
 import * as mongoose from 'mongoose';
-import cookieParser = require('cookie-parser');
+import * as cookieParser from 'cookie-parser';
 
 
-class Server {
+export class Server {
 
     // set app to be of type express.Application
     public app: express.Application;
@@ -45,12 +42,14 @@ class Server {
 
     public initDb(): Observable<void> {
         console.log('* start init db...');
+
         return observableFrom(
             // connection.sync({ force: true }))
             ormConnection).pipe(
                 map(() => console.log('* init db OK.')),
-                tap(null, (err) => {
+                tap(undefined, err => {
                     console.error(`! init db KO ${err}`);
+
                     return err;
                 }));
     }
@@ -58,6 +57,7 @@ class Server {
     public initDbMongoose(): Observable<void> {
         console.log('* start init db...');
         const db: string = String((process.env.NODE_ENV === 'production') ? process.env.PROD_DB : process.env.DEV_DB);
+
         return observableOf(
             mongoose.connect(db, {
                 useMongoClient: true,
@@ -65,15 +65,18 @@ class Server {
             })
 
         ).pipe(map(() => console.log('* init db OK.')),
-            tap((x: void) => { }, (err: any) => {
+            tap((x: void) => {
+                (mongoose as any).Promise = Promise;
+            }, (err: any) => {
                 console.error(`! init db KO ${err}`);
+
                 return err;
             }));
     }
 
     public initDependencies(): Observable<void> {
         console.log('* start init dependencies...');
-        const RedisStore = connectRedis(session);
+        const redisStore = connectRedis(session);
         const redisClient: RedisClient = createClient();
 
         return observableOf(true).pipe(
@@ -87,10 +90,10 @@ class Server {
                     secret: String(process.env.JWT_SECRET),
                     resave: true,
                     saveUninitialized: true,
-                    store: new RedisStore({ host: '192.168.1.30', port: 6379, client: redisClient, ttl: 86400 }),
+                    store: new redisStore({ host: '192.168.1.30', port: 6379, client: redisClient, ttl: 86400 }),
                     cookie: {
-                        secure: false,
-                    },
+                        secure: false
+                    }
                 }));
 
                 redisClient.on('error', (err: any) => {
@@ -103,21 +106,23 @@ class Server {
 
     public initRoutes(): Observable<void> {
         console.log('* start init routes...');
+
         return observableFrom(Router.getRouter()).pipe(
             map((router: express.Router) => {
                 console.log('* init routes OK.');
                 this.app.use('', router);
                 this.app.use('/api/', router);
-            }
-            ),
+            }),
             tap((x: void) => { }, (err: any) => {
                 console.error(`! init routes KO ${err}`);
+
                 return err;
             }));
     }
 
     public initPassport(): Observable<void> {
         console.log('* start init passport...');
+
         return observableFrom(Passport.init().pipe(
             map((passport: passport.PassportStatic) => {
                 console.log('* init passport OK.');
@@ -131,5 +136,3 @@ class Server {
     }
 
 }
-
-export default Server;

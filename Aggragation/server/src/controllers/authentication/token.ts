@@ -1,4 +1,4 @@
-import Controller from '../_controller';
+import {Controller} from '../_controller';
 import { Request, RequestHandler, Response, response } from 'express';
 import { AppError } from '../../errors/appError.class';
 import { isAuthenticated } from '../../middleware/authentication';
@@ -6,7 +6,7 @@ import { IUser } from '../../entities/interfaces/entities.interface';
 import * as jwt from 'jsonwebtoken';
 
 
-class Token extends Controller {
+export class Token extends Controller {
 
     @isAuthenticated()
     public get(req: Request, res: Response): void {
@@ -19,4 +19,3 @@ class Token extends Controller {
     }
 
 }
-export default Token;

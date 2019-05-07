@@ -14,5 +14,4 @@ export const LogSchema = new mongoose.Schema({
     date: { type: Date, required: true }
 });
 
-const Log = mongoose.model<ILog>("Log", LogSchema);
-export default Log;
+export const log = mongoose.model<ILog>("Log", LogSchema);

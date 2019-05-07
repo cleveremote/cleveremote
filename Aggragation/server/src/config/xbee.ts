@@ -1,14 +1,12 @@
 import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
-import { Observable, of, observable } from 'rxjs';
-import { of as observableOf, from as observableFrom } from 'rxjs';
+import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 import { token } from 'morgan';
+import * as xbeeRx from 'xbee-rx';
 
-var xbeeRx = require('xbee-rx');
-
-class XbeeService {
+export class XbeeService {
 
     public static xbee: any;
     constructor(serverInstance: http.Server) {
@@ -49,7 +47,7 @@ class XbeeService {
                 //     });
             }));
     }
-    
+
     public static GetNodeDiscovery(): Observable<any> {
         return XbeeService.xbee.localCommand({
             command: "ND"
@@ -58,7 +56,7 @@ class XbeeService {
         }))
     }
 
-    public static switchDigital(port: string, value: boolean,address:string): Observable<any> {
+    public static switchDigital(port: string, value: boolean, address: string): Observable<any> {
         return XbeeService.xbee.remoteCommand({
             command: port,
             commandParameter: [value ? 5 : 4],
@@ -71,4 +69,3 @@ class XbeeService {
 
 
 }
-export default XbeeService;

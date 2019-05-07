@@ -1,7 +1,5 @@
-import Controller from './_controller';
+import { Controller } from './_controller';
 
-class Authentication extends Controller {
+export class Authentication extends Controller {
 
 }
-
-export default Authentication;

@@ -1,8 +1,7 @@
 import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
-import { Observable, of, observable } from 'rxjs';
-import { of as observableOf, from as observableFrom } from 'rxjs';
+import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 import { token } from 'morgan';
 
@@ -31,38 +30,40 @@ interface IWebSocketError {
     target: WebSocket;
 }
 
-class WebSocketConfig {
+export class WebSocketConfig {
 
     public static wss: WebSocket.Server;
     constructor(serverInstance: http.Server) {
-        WebSocketConfig.wss = new WebSocket.Server({ server: serverInstance, verifyClient : function (info, cb) {
-            const token = <string>info.req.headers['sec-websocket-protocol'];
-            if (!token)
-                cb(false, 401, 'Unauthorized')
-            else {
-                jwt.verify(token, '123456789', function (err, decoded) {
-                    if (err) {
-                        cb(false, 401, 'Unauthorized')
-                    } else {
-                        (<any>info.req).user = decoded
-                        cb(true)
-                    }
-                })
-    
-            }
-        }  });
+        WebSocketConfig.wss = new WebSocket.Server({
+            server: serverInstance, verifyClient: function (info, cb) {
+                const token = <string>info.req.headers['sec-websocket-protocol'];
+                if (!token)
+                    cb(false, 401, 'Unauthorized')
+                else {
+                    jwt.verify(token, '123456789', function (err, decoded) {
+                        if (err) {
+                            cb(false, 401, 'Unauthorized')
+                        } else {
+                            (<any>info.req).user = decoded
+                            cb(true)
+                        }
+                    })
 
-       
+                }
+            }
+        });
+
+
     }
 
     public init(): Observable<WebSocket.Server> {
         return this.initDependencies().pipe(
             map(() => WebSocketConfig.wss));
     }
-    public  createMessage(content: string, isBroadcast = false, sender: any = undefined): string {
+    public createMessage(content: string, isBroadcast = false, sender: any = undefined): string {
         return JSON.stringify(new Message(content, isBroadcast, sender));
     }
-    public  initDependencies(): Observable<void> {
+    public initDependencies(): Observable<void> {
         console.log('* start init websocket...');
         return observableOf(true).pipe(
             map(() => {
@@ -71,10 +72,10 @@ class WebSocketConfig {
                     const extWs = ws as ExtWebSocket;
                     extWs.isAlive = true;
                     ws.on('pong', () => { extWs.isAlive = true; });
-                    ws.onmessage = (event: IWebSocketEvent) => { 
+                    ws.onmessage = (event: IWebSocketEvent) => {
                         this.onMessage(event);
-                     };
-                    ws.onclose = (event:any)=>{
+                    };
+                    ws.onclose = (event: any) => {
 
                         const t = 2;
                     };
@@ -85,7 +86,7 @@ class WebSocketConfig {
                 this.stayConnected();
             }));
     }
-    public  stayConnected() {
+    public stayConnected() {
         setInterval(() => {
             WebSocketConfig.wss.clients.forEach((ws: WebSocket) => {
                 const extWs = ws as ExtWebSocket;
@@ -93,17 +94,17 @@ class WebSocketConfig {
 
                 jwt.verify(ws.protocol, '123456789', function (err, decoded) {
                     if (err || !extWs.isAlive) {
-                        return ws.close(1000,'token expires');
+                        return ws.close(1000, 'token expires');
                     }
                     extWs.isAlive = false;
                     ws.ping(null, undefined);
                 });
-                
+
             });
         }, 10000);
     }
 
-    public  onMessage(event: IWebSocketEvent): any {
+    public onMessage(event: IWebSocketEvent): any {
         const message = JSON.parse(<string>event.data) as Message;
         setTimeout(() => {
             if (message.isBroadcast) {
@@ -120,4 +121,3 @@ class WebSocketConfig {
     }
 
 }
-export default WebSocketConfig;

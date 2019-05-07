@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import Passport from "../config/passport";
+import { Passport } from "../config/passport";
 import { IUser } from "../entities/interfaces/entities.interface";
 import * as jwt from 'jsonwebtoken';
 
@@ -44,7 +44,3 @@ export function isAuthenticated() {
         );
     };
 }
-
-class Autentication { }
-
-export default Autentication;

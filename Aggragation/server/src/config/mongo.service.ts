@@ -1,29 +1,19 @@
-import Log, { ILog } from "../entities/mongo.entities/logs";
+import { ILog, log } from "../entities/mongo.entities/logs";
 import { observable, from, of, Observable } from "rxjs";
-import { tap } from "rxjs/operators";
-import { mergeMap } from "rxjs-compat/operator/mergeMap";
+import { tap, mergeMap } from "rxjs/operators";
 
-class MongoService {
+export class MongoService {
 
-    public static getLogs():Observable<ILog[]> {
-        const promise = Log.find().exec(); 
+    public static getLogs(): Observable<Array<ILog>> {
+        const promise = log.find().exec();
+
         return from(promise);
     }
 
-    public static createLogs():Observable<ILog>{
-      
-        const logData :ILog = <ILog>{source: "string",
-            module: "string",
-            value: "string",
-            date: new Date()
-        };
-        
-        var log = new Log(logData);
+    public static createLogs(data: ILog): Observable<ILog> {
 
-        const promise  = log.save();
+        const promise = log.create(data);
+
         return from(promise);
     }
-
-
 }
-export default MongoService;

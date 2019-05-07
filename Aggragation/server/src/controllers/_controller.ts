@@ -1,49 +1,46 @@
 import * as express from 'express';
 import { AppError } from '../errors/appError.class';
 
-class Controller {
+export class Controller {
 
-    public  _params = '';
+    public _params = '';
 
-    public constructor () {
-    }
-
-    public dispatch(req: express.Request, res: express.Response,next:any): void {
+    public dispatch(req: express.Request, res: express.Response, next: any): void {
         switch (req.method) {
-            case 'GET' :
+            case 'GET':
                 this.get(req, res);
                 break;
-            case 'POST' :
-                this.post(req, res,next);
+            case 'POST':
+                this.post(req, res, next);
                 break;
-            case 'PUT' :
+            case 'PUT':
                 this.put(req, res);
                 break;
-            case 'DELETE' :
+            case 'DELETE':
                 this.delete(req, res);
                 break;
-            default :
+            default:
                 res.sendStatus(AppError.HTTP_INTERNAL_ERROR);
         }
     }
 
-    public get(req : express.Request, res : express.Response) : void {
+    public get(req: express.Request, res: express.Response): void {
         res.sendStatus(AppError.HTTP_NOT_FOUND);
     }
 
-    public post(req : express.Request, res : express.Response,next:any) : void {
+    public post(req: express.Request, res: express.Response, next: any): void {
         res.sendStatus(AppError.HTTP_NOT_FOUND);
     }
 
-    public put(req : express.Request, res : express.Response) : void {
+    public put(req: express.Request, res: express.Response): void {
         res.sendStatus(AppError.HTTP_NOT_FOUND);
     }
 
-    public delete(req : express.Request, res : express.Response) : void {
+    public delete(req: express.Request, res: express.Response): void {
         res.sendStatus(AppError.HTTP_NOT_FOUND);
     }
 
-    public sendSuccess(res : express.Response, data:any = null, code: number = AppError.HTTP_OK): void {
+    public sendSuccess(res: express.Response, data: any = null, code: number = AppError.HTTP_OK): void {
         res.status(code);
         res.send(data);
     }
@@ -59,5 +56,3 @@ class Controller {
     }
 
 }
-
-export default Controller;
