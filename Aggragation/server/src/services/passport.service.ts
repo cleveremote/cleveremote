@@ -12,31 +12,31 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JWTStrategy, ExtractJwt as ExtractJWT } from 'passport-jwt';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 
-export class Passport {
+export class PassportService {
 
     public static passport: passport.PassportStatic;
 
     public static init(): Observable<passport.PassportStatic> {
-        Passport.passport = passport;
+        PassportService.passport = passport;
 
-        return Passport.initDependencies().pipe(
-            map(() => Passport.passport));
+        return PassportService.initDependencies().pipe(
+            map(() => PassportService.passport));
     }
 
     public static initDependencies(): Observable<boolean> {
         return observableOf(true).pipe(
             tap(() => {
-                Passport.passport.serializeUser((user: any, done: any) => {
+                PassportService.passport.serializeUser((user: any, done: any) => {
                     done(undefined, user.id);
                 });
 
-                Passport.passport.deserializeUser((id: any, done: any) => {
+                PassportService.passport.deserializeUser((id: any, done: any) => {
                     UserModule.findById(id, (err: any, user: any) => {
                         done(err, user);
                     });
                 });
 
-                Passport.passport.use('local-signup', new LocalStrategy({
+                PassportService.passport.use('local-signup', new LocalStrategy({
                     usernameField: 'email',
                     passwordField: 'password',
                     passReqToCallback: true
@@ -64,7 +64,7 @@ export class Passport {
                         });
                     }));
 
-                Passport.passport.use('local-login', new LocalStrategy({
+                PassportService.passport.use('local-login', new LocalStrategy({
                     usernameField: 'email',
                     passwordField: 'password',
                     passReqToCallback: true
@@ -74,7 +74,7 @@ export class Passport {
                         userRepository.authenticate(req, email, password, done);
                     }));
 
-                Passport.passport.use('jwt', new JWTStrategy({
+                PassportService.passport.use('jwt', new JWTStrategy({
                     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
                     secretOrKey: String(process.env.JWT_SECRET)
                 },
@@ -84,7 +84,7 @@ export class Passport {
                     }
                 ));
 
-                Passport.passport.use(new GoogleStrategy({
+                PassportService.passport.use(new GoogleStrategy({
                     clientID: "940995958052-0kb6df6obe0shlcasd5ibl0f6qcdqjpo.apps.googleusercontent.com",
                     clientSecret: "ZBhopSvoHFrHTVoyC4DJm5j-",
                     callbackURL: "http://192.168.1.30:4200/api/auth/google/callback"

@@ -29,11 +29,11 @@ interface IWebSocketError {
     target: WebSocket;
 }
 
-export class WebSocketConfig {
+export class WebSocketService {
 
     public static wss: WebSocket.Server;
     constructor(serverInstance: http.Server) {
-        WebSocketConfig.wss = new WebSocket.Server({
+        WebSocketService.wss = new WebSocket.Server({
             server: serverInstance, verifyClient(info, cb): void {
                 const token = info.req.headers['sec-websocket-protocol'] as string;
                 if (!token) {
@@ -56,7 +56,7 @@ export class WebSocketConfig {
 
     public init(): Observable<WebSocket.Server> {
         return this.initDependencies().pipe(
-            map(() => WebSocketConfig.wss));
+            map(() => WebSocketService.wss));
     }
     public createMessage(content: string, isBroadcast = false, sender?: any): string {
         return JSON.stringify(new Message(content, isBroadcast, sender));
@@ -66,8 +66,9 @@ export class WebSocketConfig {
 
         return observableOf(true).pipe(
             map(() => {
-                const wss = WebSocketConfig.wss;
-                WebSocketConfig.wss.on('connection', (ws: WebSocket) => {
+                console.log('* init websocket OK.');
+                const wss = WebSocketService.wss;
+                WebSocketService.wss.on('connection', (ws: WebSocket) => {
                     const extWs = ws as ExtWebSocket;
                     extWs.isAlive = true;
                     ws.on('pong', () => { extWs.isAlive = true; });
@@ -80,14 +81,13 @@ export class WebSocketConfig {
                     };
                     ws.onerror = (e: IWebSocketError) => { console.warn(`Client disconnected - reason: ${e.error}`); };
                     ws.send(this.createMessage('Hi there, I am a WebSocket server'));
-                    console.log('* init websocket OK.');
                 });
                 this.stayConnected();
             }));
     }
     public stayConnected(): void {
         setInterval(() => {
-            WebSocketConfig.wss.clients.forEach((ws: WebSocket) => {
+            WebSocketService.wss.clients.forEach((ws: WebSocket) => {
                 const extWs = ws as ExtWebSocket;
 
                 jwt.verify(ws.protocol, '123456789', (err, decoded) => {
@@ -108,7 +108,7 @@ export class WebSocketConfig {
         const message = JSON.parse(event.data as string) as Message;
         setTimeout(() => {
             if (message.isBroadcast) {
-                WebSocketConfig.wss.clients
+                WebSocketService.wss.clients
                     .forEach(client => {
                         if (client !== event.target) {
                             client.send(this.createMessage(message.content, true, message.sender));

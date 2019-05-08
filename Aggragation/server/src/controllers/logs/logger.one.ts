@@ -3,7 +3,7 @@ import Controller from '../_controller';
 import { Request, Response } from 'express';
 import { isAuthenticated } from '../../middleware/authentication';
 // import { XbeeService } from '../../config/xbee';
-import { MongoService } from '../../config/mongo.service';
+import { MongoService } from '../../services/mongo.service';
 import { map, mergeMap } from 'rxjs/operators';
 import { ILog } from '../../entities/mongo.entities/logs';
 

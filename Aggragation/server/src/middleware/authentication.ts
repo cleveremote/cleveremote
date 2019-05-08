@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Passport } from "../config/passport";
+import { PassportService } from "../services/passport.service";
 import { IUser } from "../entities/interfaces/entities.interface";
 import * as jwt from 'jsonwebtoken';
 
@@ -9,7 +9,7 @@ export const authenticate = () => (target: any, propertyKey: string, descriptor:
     }
     target[`__${propertyKey}Middleware`].push(
         (request: Request, response: Response, next: NextFunction) => {
-            Passport.passport.authenticate('local-login', { session: false }, (err: any, user: any, info: any) => {
+            PassportService.passport.authenticate('local-login', { session: false }, (err: any, user: any, info: any) => {
                 if (err) {
                     next(err);
 
@@ -38,7 +38,7 @@ export const isAuthenticated = () => (target: any, propertyKey: string, descript
     }
     target[`__${propertyKey}Middleware`].push(
         (request: Request, response: Response, next: NextFunction) => {
-            Passport.passport.authenticate('jwt', { session: false })(request, response, next);
+            PassportService.passport.authenticate('jwt', { session: false })(request, response, next);
         }
     );
 };

@@ -7,7 +7,7 @@ import { Router } from './router';
 import { RedisClient, createClient } from 'redis';
 import * as connectRedis from 'connect-redis';
 
-import { Passport } from './config/passport';
+import { PassportService } from './services/passport.service';
 import * as bodyParser from 'body-parser';
 import * as compression from 'compression';
 import * as express from 'express';
@@ -78,7 +78,8 @@ export class Server {
                 this.app.use(express.static('files'));
                 this.app.use(logger('dev'));
                 this.app.use(cookieParser());
-                this.app.use(bodyParser());
+                this.app.use(bodyParser.urlencoded({ extended: true }));
+                this.app.use(bodyParser.json());
                 this.app.use(session({
                     secret: String(process.env.JWT_SECRET),
                     resave: true,
@@ -94,6 +95,7 @@ export class Server {
                 });
 
                 this.app.set('port', process.env.PORT);
+                console.log('* init dependencies OK');
             }));
     }
 
@@ -115,7 +117,7 @@ export class Server {
     public initPassport(): Observable<void> {
         console.log('* start init passport...');
 
-        return observableFrom(Passport.init()).pipe(
+        return observableFrom(PassportService.init()).pipe(
             map((passport: passportType.PassportStatic) => {
                 console.log('* init passport OK.');
                 this.app.use(passport.initialize());

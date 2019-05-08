@@ -11,7 +11,6 @@ export class MongoService {
     }
 
     public static createLogs(data: ILog): Observable<ILog> {
-
         const promise = log.create(data);
 
         return from(promise);

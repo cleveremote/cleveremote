@@ -4,14 +4,17 @@
   "description": "Minimal boilerplate for mean architecture using ts",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && set DEBUG=express:* && node dist/app.js",
+    "start-express": "tsc && set DEBUG=express:* && node dist/app.js",
     "start:cloud": "tsc && NODE_ENV=production node dist/app.js",
     "start:heroku": "npm run start:cloud",
     "dev": "nodemon --exec npm start",
     "lint": "tslint --project tsconfig.json --config -c tslint.json 'src/**/*.ts'",
     "test": "./node_modules/.bin/mocha --reporter spec",
     "start-debug": "tsc && nodemon --inspect=0.0.0.0:5100 dist/app.js",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config .env"
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config .env",
+    "watch-ts": "tsc -w",
+    "debug": "nodemon --inspect=0.0.0.0:5100 dist/app.js",
+    "start": "tsc && node dist/app.js"
   },
   "author": "",
   "license": "ISC",

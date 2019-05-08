@@ -40,10 +40,11 @@ export class XbeeService {
     }
 
     public initListners(): Observable<void> {
-        console.log('* start init websocket...');
+        console.log('* start init xbee...');
 
         return observableOf(true).pipe(
             map(() => {
+                console.log('* init xbee OK');
                 // var allPacketSub = XbeeService.xbee.allPackets
                 //     .subscribe(function (packet) {
                 //         console.log("Packet recieved:", packet);
