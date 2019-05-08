@@ -45,7 +45,7 @@ export class DataService implements OnDestroy {
   }
 
   public stopWebSocket() {
-   this.socket.unsubscribe();
+    this.socket.unsubscribe();
   }
 
   public initWebSocket() {
@@ -53,13 +53,12 @@ export class DataService implements OnDestroy {
     this.socket = webSocket({
       url: "ws://86.238.41.71:3000",
       closeObserver: {
-        next : (closeEvent) => {
+        next: (closeEvent) => {
           const customError = { code: closeEvent.code, reason: closeEvent.reason }
           console.log(`code: ${customError.code}, reason: ${customError.reason}`);
-          if(customError.code===1000){
+          if (customError.code === 1000) {
             this.restartWebSocket();
           }
-          
         }
       },
       protocol: [token]
@@ -72,18 +71,19 @@ export class DataService implements OnDestroy {
       retryWhen(errors =>
         errors.pipe(
           tap(err => {
-            console.error('error!',err) 
+            console.error('error!', err)
           }),
           delay(5000)
         )
       )
     ).subscribe({
-      next : (message: Message) => {
-        if (this.observer && message)
+      next: (message: Message) => {
+        if (this.observer && message) {
           this.observer.next(message);
+        }
         this.serverMessages.push(message);
       },
-      error:(err: any) => console.error('test',err),
+      error: (err: any) => console.error('test', err),
       complete: () => console.warn('Completed!')
     });
   }
@@ -106,7 +106,7 @@ export class DataService implements OnDestroy {
   private handleError(error) {
     console.error('server error:', error);
     if (error.error instanceof Error) {
-      let errMessage = error.error.message;
+      const errMessage = error.error.message;
       return Observable.throw(errMessage);
     }
     return Observable.throw(error || 'Socket.io server error');
