@@ -1,22 +1,25 @@
 import * as express from 'express';
-import { Controller } from './controllers/_controller';
-
+// tslint:disable-next-line: no-default-import
+import Controller from './controllers/_controller';
+import * as fileSystem from 'fs';
 const app = express();
 
 export class Router {
 
-    private static fs = require('fs');
+    private static readonly fs = fileSystem;
 
-    private static METHODS: string[] = ['get', 'post', 'put', 'delete'];
+    private static readonly METHODS: Array<string> = ['get', 'post', 'put', 'delete'];
 
-    private static MIDDLEWARES_FILE_NAME: string = '_middlewares.js';
+    private static readonly MIDDLEWARES_FILE_NAME = '_middlewares.js';
 
+    // tslint:disable-next-line: promise-function-async
     public static getRouter(): Promise<express.Router> {
-        return Router.generateRoute(__dirname + '/controllers/');
+        return Router.generateRoute(`${__dirname}/controllers/`);
     }
 
-    private static async generateRoute(dir: string, path: string = '/', router: express.Router = express.Router()): Promise<express.Router> {
-        const files: string[] = Router.fs.readdirSync(dir);
+    // tslint:disable-next-line: max-line-length
+    private static async generateRoute(dir: string, path = '/', router: express.Router = express.Router()): Promise<express.Router> {
+        const files: Array<string> = Router.fs.readdirSync(dir);
         if (files.indexOf(Router.MIDDLEWARES_FILE_NAME) !== -1) {
             Router.setMasterMiddlewares(path, (await import(dir + Router.MIDDLEWARES_FILE_NAME)).default, router);
         }
@@ -26,14 +29,15 @@ export class Router {
             const ctrl: Controller = new impotedCtrl.default();
             const routeName: string = Router.routeOfFile(path, file);
             if (Router.fs.statSync(dir + file).isDirectory()) {
-                const params: string = (ctrl._params !== '') ? ctrl._params + '/' : '';
-                await Router.generateRoute(dir + file + '/', path + file + '/' + params, router);
+                const params: string = (ctrl._params !== '') ? `${ctrl._params}/` : '';
+                await Router.generateRoute(`${dir}${file}/`, `${path}${file}/${params}`, router);
             } else {
-                const params: string = (file.indexOf('.one') !== -1) ? '/' + ctrl._params : '';
-                this.setMiddleware(routeName + params, ctrl, router);
-                this.setController(routeName + params, ctrl, router);
+                const params: string = (file.indexOf('.one') !== -1) ? `/${ctrl._params}` : '';
+                Router.setMiddleware(routeName + params, ctrl, router);
+                Router.setController(routeName + params, ctrl, router);
             }
         }
+
         return router;
     }
 
@@ -41,33 +45,33 @@ export class Router {
         return file[0] === '_' || file.indexOf('js.map') !== -1;
     }
 
-    private static routeOfFile(path: string, file: string) {
+    private static routeOfFile(path: string, file: string): string {
         return path + file
             .replace('.js', '')
             .replace('.one', '');
     }
 
-    private static setMasterMiddlewares(route: string, middleWare: Array<express.RequestHandler>, router: express.Router) {
-        if (middleWare.length === 0) return;
-        console.log('set Master Middlewares : ' + route);
+    private static setMasterMiddlewares(route: string, middleWare: Array<express.RequestHandler>, router: express.Router): void {
+        if (middleWare.length === 0) {
+            return;
+        }
+        console.log(`set Master Middlewares : ${route}`);
         router.use(route, middleWare);
     }
-    private static setMiddleware(route: string, ctrl: Controller, router: express.Router) {
+    private static setMiddleware(route: string, ctrl: Controller, router: express.Router): void {
 
-        for (const method of this.METHODS) {
-            if ((<any>ctrl)['__' + method + 'Middleware'] && (<any>ctrl)['__' + method + 'Middleware'].length) {
-                (<any>router)[method](route, ...(<any>ctrl)['__' + method + 'Middleware']);
+        for (const method of Router.METHODS) {
+            if ((ctrl as any)[`__${method}Middleware`] && (ctrl as any)[`__${method}Middleware`].length) {
+                (router as any)[method](route, ...(ctrl as any)[`__${method}Middleware`]);
             }
         }
     }
 
-    private static setController(route: string, ctrl: Controller, router: express.Router) {
-        for (const method of this.METHODS) {
-            (<any>router)[method](route, (req: express.Request, res: express.Response) => {
-                (<any>ctrl)[method](req, res);
+    private static setController(route: string, ctrl: Controller, router: express.Router): void {
+        for (const method of Router.METHODS) {
+            (router as any)[method](route, (req: express.Request, res: express.Response) => {
+                (ctrl as any)[method](req, res);
             });
         }
     }
-
-
 }

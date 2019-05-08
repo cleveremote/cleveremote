@@ -6,30 +6,27 @@ export interface IUser {
     number_phone: string;
     password: string;
     account?: IAccount;
-    providers?: IProvider[];
+    providers?: Array<IProvider>;
 }
 
 export interface IAccount {
-    account_id:string;
-    name:string;
-    description?:string;
-    device?:IDevice;
-    users:IUser[];
+    account_id: string;
+    name: string;
+    description?: string;
+    device?: IDevice;
+    users: Array<IUser>;
 }
 
 export interface IDevice {
-    device_id:string;
-    name:string;
-    description?:string;
-    accounts:IAccount[];
+    device_id: string;
+    name: string;
+    description?: string;
+    accounts: Array<IAccount>;
 }
 
 export interface IProvider {
-    provider_id:string;
-    user?:IUser;
-    provider:string;
-    provider_uid:string;
+    provider_id: string;
+    user?: IUser;
+    provider: string;
+    provider_uid: string;
 }
-
-
-

@@ -1,18 +1,13 @@
-/**
- * Usage, improt the module anywhere you need to send email,
- * @example import MailService from '../../mail-service'; 123
- */
+import * as nodemailer from 'nodemailer';
 
-const nodemailer = require('nodemailer');
-
-export default class MailService {
+export class MailService {
 
     public static transporter: any = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: '******', // TODO add the email as parameter variable
-            pass: '******', // TODO add password to email as parameter variable
-        },
+            user: '******',
+            pass: '******'
+        }
     });
 
     /**
@@ -27,12 +22,12 @@ export default class MailService {
      *           };
      *
      */
-    public static sendMail(mailOptions: object) {
-        this.transporter.sendMail(mailOptions, (error: any, info: any) => {
+    public static sendMail(mailOptions: object): void {
+        MailService.transporter.sendMail(mailOptions, (error: any, info: any) => {
             if (error) {
                 console.log(error);
             } else {
-                console.log('Email sent: ' + info.response);
+                console.log(`Email sent: ${info.response}`);
             }
         });
     }

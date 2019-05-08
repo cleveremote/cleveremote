@@ -1,11 +1,11 @@
-import { Controller } from '../_controller';
+// tslint:disable-next-line: no-default-import
+import Controller from '../_controller';
 import { Request, RequestHandler, Response, response } from 'express';
-import { AppError } from '../../errors/appError.class';
+import { AppError } from '../../errors/apperror.class';
 import { authenticate } from '../../middleware/authentication';
 
-
-
-export class Login extends Controller {
+// tslint:disable-next-line: no-default-export
+export default class Login extends Controller {
 
     @authenticate()
     public post(req: Request, res: Response, next: any): void {

@@ -2,13 +2,26 @@ import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
-import * as jwt from 'jsonwebtoken';
-import { token } from 'morgan';
 import * as xbeeRx from 'xbee-rx';
 
 export class XbeeService {
 
     public static xbee: any;
+
+    public static GetNodeDiscovery(): Observable<any> {
+        return XbeeService.xbee.localCommand({
+            command: "ND"
+        }).pipe(map((response: any) => response));
+    }
+
+    public static switchDigital(port: string, value: boolean, address: string): Observable<any> {
+        return XbeeService.xbee.remoteCommand({
+            command: port,
+            commandParameter: [value ? 5 : 4],
+            destination64: address// '0013a20040b971f3'
+        }).pipe(map((response: any) => response));
+    }
+
     constructor(serverInstance: http.Server) {
         XbeeService.xbee = xbeeRx({
             serialport: '/dev/ttyUSB0',
@@ -28,6 +41,7 @@ export class XbeeService {
 
     public initListners(): Observable<void> {
         console.log('* start init websocket...');
+
         return observableOf(true).pipe(
             map(() => {
                 // var allPacketSub = XbeeService.xbee.allPackets
@@ -47,25 +61,4 @@ export class XbeeService {
                 //     });
             }));
     }
-
-    public static GetNodeDiscovery(): Observable<any> {
-        return XbeeService.xbee.localCommand({
-            command: "ND"
-        }).pipe(map((response: any) => {
-            return response;
-        }))
-    }
-
-    public static switchDigital(port: string, value: boolean, address: string): Observable<any> {
-        return XbeeService.xbee.remoteCommand({
-            command: port,
-            commandParameter: [value ? 5 : 4],
-            destination64: address// '0013a20040b971f3'
-        }).pipe(map((response: any) => {
-            return response;
-        }))
-    }
-
-
-
 }

@@ -1,5 +1,3 @@
-import RequestScope from "../middleware/requestScope";
-
+// tslint:disable-next-line: no-default-export
 export default [
-    RequestScope.middleware
 ];

@@ -3,7 +3,7 @@ import * as moment from 'moment';
 import { tap, flatMap, map } from 'rxjs/operators';
 import { Observable, of as observableOf, from as observableFrom } from 'rxjs';
 
-import { userExt } from '../entities/custom.repositories/userExt';
+import { UserExt } from '../entities/custom.repositories/user.ext';
 import { getRepository, getCustomRepository } from 'typeorm';
 
 import * as passport from "passport";
@@ -67,23 +67,19 @@ export class Passport {
                 Passport.passport.use('local-login', new LocalStrategy({
                     usernameField: 'email',
                     passwordField: 'password',
-                    passReqToCallback: true,
+                    passReqToCallback: true
                 },
                     (req: any, email: any, password: any, done: any) => {
-                        const userRepository = getCustomRepository(userExt);
+                        const userRepository = getCustomRepository(UserExt);
                         userRepository.authenticate(req, email, password, done);
                     }));
 
-                /**
-                 * JWT STRATEGY
-                 * to verify the validity of json web token
-                 * */
                 Passport.passport.use('jwt', new JWTStrategy({
                     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
                     secretOrKey: String(process.env.JWT_SECRET)
                 },
                     (jwtPayload: any, done: any, req: any) => {
-                        const userRepository = getCustomRepository(userExt);
+                        const userRepository = getCustomRepository(UserExt);
                         userRepository.getUser(jwtPayload.user_id, done);
                     }
                 ));
@@ -120,9 +116,7 @@ export class Passport {
                                 });
                             });
                         });
-                    }
-                ));
-
+                    }));
             }));
     }
 

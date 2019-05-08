@@ -10,6 +10,12 @@
       "emitDecoratorMetadata": true,
       "declaration": false,
       "baseUrl": ".",
+      "plugins": [
+        {
+          "name": "typescript-tslint-plugin",
+          "configFile": "tslint.json"
+        }
+      ],
       "lib": [
           "es2017",
           "dom"

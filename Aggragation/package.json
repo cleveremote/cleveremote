@@ -27,5 +27,8 @@
   "dependencies": {
     "@types/morgan": "^1.7.35",
     "connect-redis": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/passport-google-oauth2": "^0.1.2"
   }
 }

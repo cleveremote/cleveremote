@@ -7,11 +7,11 @@ export interface ILog extends mongoose.Document {
     date: Date;
 }
 
-export const LogSchema = new mongoose.Schema({
+export const logSchema = new mongoose.Schema({
     source: { type: String, required: true },
     module: { type: String, required: true },
     value: { type: String, required: true },
     date: { type: Date, required: true }
 });
 
-export const log = mongoose.model<ILog>("Log", LogSchema);
+export const log = mongoose.model<ILog>("Log", logSchema);

@@ -1,7 +1,9 @@
+// tslint:disable-next-line: file-name-casing
 import * as express from 'express';
-import { AppError } from '../errors/appError.class';
+import { AppError } from '../errors/apperror.class';
 
-export class Controller {
+// tslint:disable-next-line: no-default-export dynamic import
+export default class Controller {
 
     public _params = '';
 
@@ -40,7 +42,7 @@ export class Controller {
         res.sendStatus(AppError.HTTP_NOT_FOUND);
     }
 
-    public sendSuccess(res: express.Response, data: any = null, code: number = AppError.HTTP_OK): void {
+    public sendSuccess(res: express.Response, data?: any, code: number = AppError.HTTP_OK): void {
         res.status(code);
         res.send(data);
     }
@@ -48,7 +50,7 @@ export class Controller {
     public sendError(res: express.Response, e: AppError): void {
         res.status(e.status || AppError.HTTP_INTERNAL_ERROR);
         res.send({
-            message: e.message || null,
+            message: e.message,
             trace: e.stack,
             code: e.code,
             data: e.data

@@ -13,24 +13,16 @@ import * as compression from 'compression';
 import * as express from 'express';
 import * as session from 'express-session';
 import * as logger from 'morgan';
-import * as passport from "passport";
+import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
 
-
 export class Server {
-
-    // set app to be of type express.Application
     public app: express.Application;
 
     constructor() {
         this.app = express();
     }
-
-    public close(): void {
-        // return this.app.close();
-    }
-
 
     public init(): Observable<express.Application> {
         return this.initDependencies().pipe(
@@ -43,15 +35,14 @@ export class Server {
     public initDb(): Observable<void> {
         console.log('* start init db...');
 
-        return observableFrom(
-            // connection.sync({ force: true }))
-            ormConnection).pipe(
-                map(() => console.log('* init db OK.')),
-                tap(undefined, err => {
-                    console.error(`! init db KO ${err}`);
+        return observableFrom(ormConnection).pipe(
+            map(() => {
+                console.log('* init db OK.');
+            }, (err: any) => {
+                console.error(`! init db KO ${err}`);
 
-                    return err;
-                }));
+                return err;
+            }));
     }
 
     public initDbMongoose(): Observable<void> {
@@ -61,17 +52,19 @@ export class Server {
         return observableOf(
             mongoose.connect(db, {
                 useMongoClient: true,
-                promiseLibrary: global.Promise,
+                promiseLibrary: global.Promise
             })
 
-        ).pipe(map(() => console.log('* init db OK.')),
-            tap((x: void) => {
+        ).pipe(map(
+            (x: any) => {
+                console.log('* init db OK.');
                 (mongoose as any).Promise = Promise;
             }, (err: any) => {
                 console.error(`! init db KO ${err}`);
 
                 return err;
-            }));
+            }
+        ));
     }
 
     public initDependencies(): Observable<void> {
@@ -112,8 +105,7 @@ export class Server {
                 console.log('* init routes OK.');
                 this.app.use('', router);
                 this.app.use('/api/', router);
-            }),
-            tap((x: void) => { }, (err: any) => {
+            }, (err: any) => {
                 console.error(`! init routes KO ${err}`);
 
                 return err;
@@ -123,16 +115,16 @@ export class Server {
     public initPassport(): Observable<void> {
         console.log('* start init passport...');
 
-        return observableFrom(Passport.init().pipe(
-            map((passport: passport.PassportStatic) => {
+        return observableFrom(Passport.init()).pipe(
+            map((passport: passportType.PassportStatic) => {
                 console.log('* init passport OK.');
                 this.app.use(passport.initialize());
                 this.app.use(passport.session());
-            }),
-            tap((x: void) => { }, (err: any) => {
+            }, (err: any) => {
                 console.error(`! init passport KO ${err}`);
+
                 return err;
-            })));
+            }));
     }
 
 }
