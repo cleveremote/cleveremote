@@ -1,7 +1,7 @@
 {
   "name": "mean-ts",
   "version": "1.0.0",
-  "description": "- MongoDB - Angular 4 - Express - Node",
+  "description": "Aggregation cleveremote server Application",
   "main": "index.js",
   "scripts": {
     "test": "cd server && npm run test && cd ../client && npm run lint && cd ../",
@@ -23,12 +23,5 @@
   "engines": {
     "node": "9.5.0"
   },
-  "homepage": "https://github.com/martinavagyan/mean-ts#readme",
-  "dependencies": {
-    "@types/morgan": "^1.7.35",
-    "connect-redis": "^3.4.1"
-  },
-  "devDependencies": {
-    "@types/passport-google-oauth2": "^0.1.2"
-  }
+  "homepage": "https://github.com/martinavagyan/mean-ts#readme"
 }
