@@ -13,15 +13,15 @@ export interface IAccount {
     account_id: string;
     name: string;
     description?: string;
-    device?: IDevice;
     users: Array<IUser>;
+    divices: Array<IDevice>;
 }
 
 export interface IDevice {
     device_id: string;
     name: string;
     description?: string;
-    accounts: Array<IAccount>;
+    account: IAccount;
 }
 
 export interface IProvider {
@@ -29,4 +29,21 @@ export interface IProvider {
     user?: IUser;
     provider: string;
     provider_uid: string;
+}
+
+export interface ITransceiverConfig {
+    config_id: string;
+    configuration: Object; // CREATE An object for configuration
+    status: string;
+}
+
+export interface ITransceiver {
+    transceiver_id: string;
+    name: string;
+    description: string | null;
+    address: string;
+    type: string;
+    config?: ITransceiverConfig | null;
+    coordinator?: ITransceiver | null;
+    device: IDevice | null;
 }

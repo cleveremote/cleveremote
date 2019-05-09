@@ -1,9 +1,0 @@
-const path = require('path');
-
-module.exports = {
-  'config': path.resolve('dist', 'entities/migration.config.js'),
-  'models-path': path.resolve('src', 'entities'),
-  'seeders-path': path.resolve('src', 'entities/seeders'),
-  'migrations-source-path': path.resolve('src', 'entities/migrations'),
-  'migrations-compiled-path': path.resolve('dist', 'entities/migrations')
-}
