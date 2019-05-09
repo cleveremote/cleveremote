@@ -16,8 +16,8 @@ server.init()
             console.log(`* server OK on port ${app.get("port")}`);
         });
         serverInstance.timeout = Number(process.env.TIMEOUT_GLOBAL);
-        const xbee = new XbeeService(serverInstance);
-        xbee.init().subscribe();
+        // const xbee = new XbeeService(serverInstance);
+        // xbee.init().subscribe();
         const wss = new WebSocketService(serverInstance);
 
         return wss.init();

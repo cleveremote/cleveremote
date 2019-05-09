@@ -4,8 +4,8 @@ import { tap, flatMap, map } from 'rxjs/operators';
 
 import { ormConnection } from './entities';
 import { Router } from './router';
-import { RedisClient, createClient } from 'redis';
-import * as connectRedis from 'connect-redis';
+// import { RedisClient, createClient } from 'redis';
+// import * as connectRedis from 'connect-redis';
 
 import { PassportService } from './services/passport.service';
 import * as bodyParser from 'body-parser';
@@ -69,8 +69,8 @@ export class Server {
 
     public initDependencies(): Observable<void> {
         console.log('* start init dependencies...');
-        const redisStore = connectRedis(session);
-        const redisClient: RedisClient = createClient();
+        // const redisStore = connectRedis(session);
+        // const redisClient: RedisClient = createClient();
 
         return observableOf(true).pipe(
             map(() => {
@@ -84,15 +84,15 @@ export class Server {
                     secret: String(process.env.JWT_SECRET),
                     resave: true,
                     saveUninitialized: true,
-                    store: new redisStore({ host: '192.168.1.30', port: 6379, client: redisClient, ttl: 86400 }),
+                    // store: new redisStore({ host: '192.168.1.30', port: 6379, client: redisClient, ttl: 86400 }),
                     cookie: {
                         secure: false
                     }
                 }));
 
-                redisClient.on('error', (err: any) => {
-                    console.log('Redis error: ', err);
-                });
+                // redisClient.on('error', (err: any) => {
+                //     console.log('Redis error: ', err);
+                // });
 
                 this.app.set('port', process.env.PORT);
                 console.log('* init dependencies OK');

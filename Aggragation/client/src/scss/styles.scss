@@ -1,9 +1,7 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto');
-
 body {
-	font-family: 'Roboto', sans-serif;
-	background: url(assets/img/mountain.png) no-repeat center center fixed;
-	background-size: cover;
+	//font-family: 'Roboto', sans-serif;
+	//background: url(assets/img/mountain.png) no-repeat center center fixed;
+	//background-size: cover;
 }
 .main-section {
 	margin: 0 auto;
@@ -36,8 +34,8 @@ body {
 	padding-left: 54px;
 }
 .form-group::before {
-	font-family: 'Font Awesome\ 5 Free';
-	content: "\f1fa";
+	font-family: FontAwesome;
+    content: "\f095";
 	position: absolute;
 	font-size: 22px;
 	left: 28px;

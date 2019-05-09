@@ -28,6 +28,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   public userData: any = {};
   public downloadTimer: any;
   public webSocketsub: Subscription;
+  public isCollapsed = true;
   constructor(
     private userIdle: UserIdleService,
     private apiRequestsService: ApiRequestsService,
