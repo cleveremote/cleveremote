@@ -1,4 +1,4 @@
-free port on failure
+Type ORM
 ---------------
 typeorm migration:run / typeorm migration:revert
 npm run typeorm migration:create -- -n migrationNameHere
