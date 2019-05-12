@@ -23,6 +23,7 @@ import { TestcmpComponent } from './testcmp/testcmp.component';
 import { UserIdleModule } from 'angular-user-idle';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import { AngularFontAwesomeModule } from 'angular-font-awesome';
+import { TimerService } from '../services/timer.service';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,7 @@ import { AngularFontAwesomeModule } from 'angular-font-awesome';
   imports: [
     NgbModule.forRoot(),
     AngularFontAwesomeModule,
-    UserIdleModule.forRoot({ idle: 20, timeout: 10, ping: 2 }),
+    UserIdleModule.forRoot({ idle: 3600, timeout: 10, ping: 2 }),
     BrowserModule,
     FormsModule,
     CommonModule,
@@ -51,7 +52,8 @@ import { AngularFontAwesomeModule } from 'angular-font-awesome';
     ApiRequestsService,
     ConfigurationService,
     AuthGuard,
-    DataService
+    DataService,
+    TimerService
   ],
   bootstrap: [AppComponent]
 })

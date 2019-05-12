@@ -1,9 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ApiRequestsService } from "../../services/api-requests.service";
 import { AuthService } from "../../auth/auth.service";
 import { UserIdleService } from 'angular-user-idle';
 import { timer, Subscription } from 'rxjs';
 import { DataService } from '../../services/websocket/websocket.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TimerService } from '../../services/timer.service';
 
 export class Message {
   constructor(
@@ -23,20 +25,27 @@ export class Message {
 
 
 export class ProfileComponent implements OnInit, OnDestroy {
-
+  @ViewChild('modal') modal: ElementRef;
   public testEntries: any = [];
   public userData: any = {};
   public downloadTimer: any;
   public webSocketsub: Subscription;
   public isCollapsed = true;
+  private modalReference = null;
+  public counterLogout = 0;
+  private isModalOpened = false;
   constructor(
     private userIdle: UserIdleService,
     private apiRequestsService: ApiRequestsService,
     private authService: AuthService,
-    private dataService: DataService) { }
+    private dataService: DataService,
+    private modalService: NgbModal,
+    private timerService: TimerService) { }
 
   ngOnInit() {
-    this.initInactivity();
+    this.timerService.userIdle = this.userIdle;
+    this.timerService.modalReference = this.modal;
+    this.timerService.initInactivity();
 
     this.webSocketsub = this.dataService.observable.subscribe((x) => {
       const t = x;
@@ -54,44 +63,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.dataService.socket.next(message);
   }
 
-
-  public initInactivity(){
-   this.restartWatching();
-    const coundownCmp  = document.getElementById("countdown");
-    this.userIdle.onTimerStart().subscribe(count => {
-      if (count !== null) {
-        coundownCmp.innerHTML = (11 - count) + " seconds remaining";
-        if (count >= 10) {
-          coundownCmp.innerHTML = "Finished"
-          this.logout();
-        }
-      } else if(coundownCmp) {
-        coundownCmp.innerHTML = null;
-      }
-    });
-  }
-
   logout() {
     this.authService.logout();
-  }
-
-  public restartWatching(refreshToken:boolean=false) {
-    if(refreshToken){
-      this.authService.refreshToken().subscribe((response)=>{
-        this.dataService.restartWebSocket();
-      });
-    }
-    document.getElementById("countdown")?document.getElementById("countdown").innerHTML = null:document.getElementById("countdown").innerHTML;
-    this.userIdle.stopWatching();
-    this.userIdle.startWatching();
   }
 
   public getTests(): void {
     this.apiRequestsService.getTests().subscribe(response => this.testEntries = response);
   }
 
+  openVerticallyCentered(content) {
+    this.modalReference = this.modalService.open(content, { centered: true });
+  }
+
   ngOnDestroy() {
-    this.userIdle.stopWatching();
+    this.timerService.stopWatchingActivity();
     this.webSocketsub.unsubscribe();
   }
 

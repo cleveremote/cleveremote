@@ -9,6 +9,7 @@ import { share, flatMap, mergeMap, map, retryWhen, tap, delay, startWith, switch
 import { webSocket } from "rxjs/webSocket";
 import { AuthService } from '../../auth/auth.service';
 import { Subject, of, throwError } from 'rxjs';
+import { TimerService } from '../timer.service';
 
 export class Message {
   constructor(
@@ -26,17 +27,24 @@ export class DataService implements OnDestroy {
 
   public socket: any;
   observer: Observer<Message>;
-  public observable: Observable<Message>
+  public observable: Observable<Message>;
 
   public loginData: any = {};
   public serverMessages = new Array<Message>();
   public clientMessage = '';
   public isBroadcast = false;
   public sender = '';
+  public obsMessage = null;
 
-  constructor(private authService: AuthService) {
+  constructor(private timerService: TimerService,
+    private authService: AuthService) {
     this.initWebSocket();
     this.observable = this.createObservable().pipe(share());
+    this.obsMessage = this.timerService.chatMessageAdded.subscribe((data) => {
+      if (data === 'refreshToken') {
+        this.refreshTokenAndWebSocket();
+      }
+    });
   }
 
   public restartWebSocket() {
@@ -45,7 +53,10 @@ export class DataService implements OnDestroy {
   }
 
   public stopWebSocket() {
-    this.socket.unsubscribe();
+    if (this.socket) {
+      this.socket.unsubscribe();
+      this.socket = undefined;
+    }
   }
 
   public initWebSocket() {
@@ -54,7 +65,7 @@ export class DataService implements OnDestroy {
       url: "ws://86.238.41.71:3000",
       closeObserver: {
         next: (closeEvent) => {
-          const customError = { code: closeEvent.code, reason: closeEvent.reason }
+          const customError = { code: closeEvent.code, reason: closeEvent.reason };
           console.log(`code: ${customError.code}, reason: ${customError.reason}`);
           if (customError.code === 1000) {
             this.restartWebSocket();
@@ -90,7 +101,8 @@ export class DataService implements OnDestroy {
 
   ngOnDestroy() {
     this.stopWebSocket();
-    console.log('Service destroy')
+    this.obsMessage.unsubscribe();
+    console.log('Service destroy');
   }
 
   getQuotes(): Observable<Message> {
@@ -112,4 +124,9 @@ export class DataService implements OnDestroy {
     return Observable.throw(error || 'Socket.io server error');
   }
 
+  public refreshTokenAndWebSocket() {
+    this.authService.refreshToken().subscribe((response) => {
+      this.restartWebSocket();
+    });
+  }
 }

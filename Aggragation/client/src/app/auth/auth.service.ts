@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, OnDestroy } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { Subject } from "rxjs";
@@ -7,23 +7,32 @@ import { AuthData } from "./auth-data.model";
 import { ApiRequestsService } from "../services/api-requests.service";
 import { UserIdleService } from 'angular-user-idle';
 import { tap } from 'rxjs/operators';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TimerService } from '../services/timer.service';
 
 @Injectable({ providedIn: "root" })
-export class AuthService {
+export class AuthService implements OnDestroy {
   private isAuthenticated = false;
   private token: string;
   private tokenTimer: any;
   private authStatusListener = new Subject<boolean>();
   private userId: string;
   public event: any;
-  constructor(private http: HttpClient, private router: Router, private apiRequestsService: ApiRequestsService) {
+  public modalReference = null;
+  public counterLogout = 0;
+  public isModalOpened = false;
+  public obsMessage = null;
 
-    window.addEventListener("message", (event) => {
-      if (event.origin !== "http://localhost:4000")
-        return;
-      this.event = event;
-    }, false);
-
+  constructor(private http: HttpClient,
+    private router: Router,
+    private apiRequestsService: ApiRequestsService,
+    private timerService: TimerService
+  ) {
+    this.obsMessage = this.timerService.chatMessageAdded.subscribe((data) => {
+      if (data === 'logout') {
+        this.logout();
+      }
+    });
   }
 
   getToken() {
@@ -52,17 +61,17 @@ export class AuthService {
     });
   }
 
-  
+
 
   login(email: string, password: string) {
-    
+
     const authData: AuthData = { email: email, password: password };
     this.apiRequestsService.postLogin(authData).subscribe(response => {
       const token = response.token;
       this.token = token;
       if (token) {
         const expiresInDuration = response.expiresIn;
-        this.setAuthTimer(expiresInDuration);
+        this.timerService.setAuthTimer(expiresInDuration);
         this.isAuthenticated = true;
         this.userId = response.user._id;
         this.authStatusListener.next(true);
@@ -70,11 +79,7 @@ export class AuthService {
         const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
         console.log(expirationDate);
         this.saveAuthData(token, expirationDate, this.userId);
-        // const userId = this.userId;
-        // window.parent.postMessage({ token, expirationDate, userId }, "*");
-        // (<any>window).data = { token, expirationDate, userId };
         this.router.navigate(["/profile"]);
-        //window.close();
       }
     });
   }
@@ -85,7 +90,7 @@ export class AuthService {
       this.token = token;
       if (token) {
         const expiresInDuration = response.expiresIn;
-        this.setAuthTimer(expiresInDuration);
+        this.timerService.setAuthTimer(expiresInDuration);
         this.isAuthenticated = true;
         this.userId = response.user._id;
         this.authStatusListener.next(true);
@@ -117,7 +122,7 @@ export class AuthService {
     this.token = token;
     if (token) {
       const expiresInDuration = googleInfo.expiresIn;
-      this.setAuthTimer(Number(expiresInDuration));
+      //this.timerService.setAuthTimer(Number(expiresInDuration));
       this.isAuthenticated = true;
       this.userId = userId;
       this.authStatusListener.next(true);
@@ -125,10 +130,14 @@ export class AuthService {
       const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
       console.log(expirationDate);
       this.saveAuthData(token, expirationDate, this.userId);
-      //this.router.navigate(["/profile"]);
     }
   }
 
+  ngOnDestroy() {
+
+    this.obsMessage.unsubscribe();
+    console.log('Service destroy auth');
+  }
 
   autoAuthUser() {
     const authInformation = this.getAuthData();
@@ -141,7 +150,7 @@ export class AuthService {
       this.token = authInformation.token;
       this.isAuthenticated = true;
       this.userId = authInformation.userId;
-      this.setAuthTimer(expiresIn / 1000);
+      this.timerService.setAuthTimer(expiresIn / 1000);
       this.authStatusListener.next(true);
     }
   }
@@ -150,31 +159,9 @@ export class AuthService {
     this.token = null;
     this.isAuthenticated = false;
     this.authStatusListener.next(false);
-    clearTimeout(this.tokenTimer);
     this.clearAuthData();
     this.router.navigate(["/"]);
     this.userId = null;
-  }
-
-  private setAuthTimer(duration: number) {
-
-    
-   
-
-    this.tokenTimer = setTimeout(() => {
-      // this.logout();
-      const coundownCmp = document.getElementById("countdown");
-      const count = 9;
-      if (count !== null) {
-        coundownCmp.innerHTML = (11 - count) + " seconds remaining";
-        if (count >= 10) {
-          coundownCmp.innerHTML = "Finished"
-          this.logout();
-        }
-      } else if (coundownCmp) {
-        coundownCmp.innerHTML = null;
-      }
-    }, duration * 1000);
   }
 
   private saveAuthData(token: string, expirationDate: Date, userId: string) {
