@@ -16,6 +16,7 @@ import * as logger from 'morgan';
 import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
+import { KafkaService } from './services/kafka.service';
 
 export class Server {
     public app: express.Application;
@@ -27,9 +28,10 @@ export class Server {
     public init(): Observable<express.Application> {
         return this.initDependencies().pipe(
             flatMap(() => this.initDb().pipe(
-                flatMap(() => this.initPassport().pipe(
-                    flatMap(() => this.initDbMongoose().pipe(
-                        flatMap(() => this.initRoutes()), map(() => this.app))))))));
+                flatMap(() => this.initKafka().pipe(
+                    flatMap(() => this.initPassport().pipe(
+                        flatMap(() => this.initDbMongoose().pipe(
+                            flatMap(() => this.initRoutes()), map(() => this.app))))))))));
     }
 
     public initDb(): Observable<void> {
@@ -43,6 +45,13 @@ export class Server {
 
                 return err;
             }));
+    }
+
+    public initKafka(): Observable<void> {
+        console.log('* start init db...');
+        const kafkaInstance = new KafkaService();
+
+        return kafkaInstance.init();
     }
 
     public initDbMongoose(): Observable<void> {
