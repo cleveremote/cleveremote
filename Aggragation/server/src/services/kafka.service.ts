@@ -2,15 +2,14 @@ import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
-import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup } from 'kafka-node';
-import { ConsumerGroupOptions } from 'kafka-node';
+import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup, ConsumerGroupOptions } from 'kafka-node';
 
 export class KafkaService {
     public consumer: ConsumerGroup;
     public producer: Producer;
     public offset: Offset;
     private readonly topicTest = 'topic-mitosis';
-    private client: KafkaClient = undefined;
+    private readonly client: KafkaClient = undefined;
     constructor() {
         this.client = new KafkaClient({ kafkaHost: '192.168.1.30:32771,192.168.1.30:32770' });
 
@@ -28,7 +27,6 @@ export class KafkaService {
         };
 
         this.consumer = new ConsumerGroup(cgOptions, [this.topicTest]);
-
 
         const topics = [this.topicTest];
         const options = { autoCommit: false }; // , fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024

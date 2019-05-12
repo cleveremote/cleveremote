@@ -1,6 +1,26 @@
+free port on failure
+---------------
 typeorm migration:run / typeorm migration:revert
 npm run typeorm migration:create -- -n migrationNameHere
 typeorm-model-generator -h localhost -d  cleverTest -u test -x 1234 -e postgres -o "./src/entity" -s public
+
+free port on failure
+---------------
+netstat -tunap | grep 3000
+kill -9 process_id
+
+Firewall
+---------------
+sudo ufw allow 32771/tcp
+sudo ufw allow 32770/tcp
+
+sudo apt-get remove docker-compose
+VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)
+DESTINATION=/usr/local/bin/docker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
+sudo chmod 755 $DESTINATION
+ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+
 
 Kafka topics
 ---------------
