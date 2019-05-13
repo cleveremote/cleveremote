@@ -36,9 +36,27 @@ dbsync_idbox subscribe
 dbsync_aggregator publish
 logsync_aggregator publish
 
-The following README provides detailed steps on how to run the code locally as well as how to deploy the application to Heroku.
-In the last section explanation on how to create new endpoints is provided.
-## How to run locally
+
+
+Kafka topics env conf
+---------------
+Declare 
+refacto put one host for all 
+TYPE_CONFIG = BOX/AGGREGATOR
+
+KAFKA_TOPICS = "dbsync_aggregator.subscribe logsync_aggregator.subscribe action_idbox.publish dbsync_idbox.publish"
+
+then in the kafka.service 
+create list of topic to subscribe.
+create list of topic to publish to.
+idbox as template.
+
+create dispatch.service.ts
+
+check if is it first connection.
+check if box is connected.  
+
+@types/uuid - npm
 
 Prerequisites
 ---------------

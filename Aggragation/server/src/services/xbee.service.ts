@@ -2,7 +2,7 @@ import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
-import * as xbeeRx from 'xbee-rx';
+import * as xbeeRx from 'xbee-rx'; // no types ... :(
 
 export class XbeeService {
 

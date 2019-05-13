@@ -2,15 +2,32 @@ import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
-import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup, ConsumerGroupOptions } from 'kafka-node';
+import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup, ConsumerGroupOptions, Message } from 'kafka-node';
+import { DispatchService } from './dispatch.service';
 
 export class KafkaService {
     public consumer: ConsumerGroup;
     public producer: Producer;
     public offset: Offset;
+    public subscribeTopics: Array<string>;
+    public publishTopics: Array<string>;
     private readonly topicTest = 'topic-mitosis';
     private readonly client: KafkaClient = undefined;
+    private dispatchService: DispatchService;
+
     constructor() {
+
+        process.env.KAFKA_TOPICS.split(' ').forEach((topic: string) => {
+            const topicObj = topic.split('.');
+            if (topic[1] === 'subscribe') {
+                this.subscribeTopics.push(topic[0]);
+            } else {
+                this.publishTopics.push(topic[0]);
+            }
+        });
+
+        this.dispatchService = new DispatchService(this.subscribeTopics);
+
         this.client = new KafkaClient({ kafkaHost: '192.168.1.30:32771,192.168.1.30:32770' });
 
         const ackBatchOptions = { noAckBatchSize: 1024, noAckBatchAge: 10 };
@@ -26,7 +43,7 @@ export class KafkaService {
             migrateRolling: true
         };
 
-        this.consumer = new ConsumerGroup(cgOptions, [this.topicTest]);
+        this.consumer = new ConsumerGroup(cgOptions, this.subscribeTopics);
 
         const topics = [this.topicTest];
         const options = { autoCommit: false }; // , fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024
@@ -67,13 +84,8 @@ export class KafkaService {
                 this.consumer.setOffset(topic.topic, topic.partition, min);
             });
         });
-        this.consumer.on('message', (result: any) => {
-            // const receivedMessage = JSON.parse(result.value);
-            console.log(`message received kafka: ${result.value}`);
-            // let cell = await Cell.save(newCell as ICell);
-            // save in db mongo ...
-            // pubsub.publish('newCell', { newCell: cell });
-            // notify with websocket if need
+        this.consumer.on('message', (message: Message) => {
+            this.dispatchService.routeMessage(message);
         });
         this.consumer.on('error', (err: any) => {
             console.log('error', err);
