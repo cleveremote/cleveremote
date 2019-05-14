@@ -1,3 +1,9 @@
+git problems
+
+cd /home/server/devclv/cleveremote/ <path-to-repo>
+cd .git/objects
+sudo chown -R server:server * server => username
+
 Type ORM
 ---------------
 typeorm migration:run / typeorm migration:revert
