@@ -37,6 +37,27 @@ dbsync_aggregator publish
 logsync_aggregator publish
 
 
+kafka tools
+---------------
+cd C:\Users\dell\Downloads\kafka_2.11-0.10.2.0\kafka_2.11-0.10.2.0\bin\windows
+.\kafka-topics.bat --zookeeper 192.168.1.30:2181 --delete --topic topic1_test
+.\kafka-console-consumer.bat --bootstrap-server 192.168.1.30:32771,192.168.1.30:32770 --topic topic-mitosis
+.\kafka-console-producer.bat  --broker-list 192.168.1.30:32771,192.168.1.30:32770 --topic topic1_test
+.\kafka-topics.bat --list --zookeeper 192.168.1.30:2181
+
+
+For dockerized kafka/zookeeper
+
+docker ps
+find you zookeeper container id
+
+docker exec -it <id> bash
+
+cd bin
+
+./zkCli.sh
+
+ls /brokers/topics
 
 Kafka topics env conf
 ---------------

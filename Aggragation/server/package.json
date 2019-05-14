@@ -15,7 +15,7 @@
     "watch-ts": "tsc -w",
     "debug": "nodemon --inspect=0.0.0.0:5100 dist/app.js",
     "start": "node dist/app.js",
-    "start-box":"NODE_ENV=box node dist/app.js"
+    "start-box": "NODE_ENV=box node dist/app.js"
   },
   "author": "",
   "license": "ISC",
@@ -42,6 +42,7 @@
     "@types/passport-local": "^1.0.33",
     "@types/redis": "^2.8.12",
     "@types/rx": "^4.1.1",
+    "@types/uuid": "^3.4.4",
     "@types/ws": "^6.0.1",
     "backend-tslint-rules": "^1.14.0",
     "chai": "^4.1.2",
@@ -81,6 +82,7 @@
     "request": "^2.85.0",
     "rxjs": "^6.4.0",
     "typeorm": "^0.2.16",
+    "uuid": "^3.3.2",
     "ws": "^6.2.1",
     "xbee-rx": "^4.0.1"
   },

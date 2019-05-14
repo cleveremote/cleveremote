@@ -48,14 +48,14 @@ export class Server {
     }
 
     public initKafka(): Observable<void> {
-        console.log('* start init db...');
+        console.log('* start init kafka...');
         const kafkaInstance = new KafkaService();
 
         return kafkaInstance.init();
     }
 
     public initDbMongoose(): Observable<void> {
-        console.log('* start init db...');
+        console.log('* start init kafka...');
         const db: string = String((process.env.NODE_ENV === 'production') ? process.env.PROD_DB : process.env.DEV_DB);
 
         return observableOf(
