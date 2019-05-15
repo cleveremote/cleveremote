@@ -27,11 +27,10 @@ export class KafkaService {
             }
         });
 
-        this.client = new KafkaClient({ kafkaHost: '192.168.1.30:32771,192.168.1.30:32770' });
-
+        this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
         const ackBatchOptions = { noAckBatchSize: 1024, noAckBatchAge: 10 };
         const cgOptions: ConsumerGroupOptions = {
-            kafkaHost: '192.168.1.30:32771,192.168.1.30:32770',
+            kafkaHost: process.env.KAFKA_HOSTS,
             batch: ackBatchOptions,
             groupId: 'groupID',
             id: 'consumerID',
@@ -59,8 +58,8 @@ export class KafkaService {
                 ];
                 const idBox = v1();
                 this.client.createTopics(topicsToCreate, (error, res) => {
-                    const t = 2;
-                    this.consumer.addTopics(['topic1_test', 'topic2_test'], function (err, added) {
+                    this.consumer.addTopics(['topic1_test', 'topic2_test'], (err, added) => {
+                        const toto = 2;
                     });
                 });
             });
