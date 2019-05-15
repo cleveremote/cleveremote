@@ -2,9 +2,20 @@ import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
-import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup, ConsumerGroupOptions, Message } from 'kafka-node';
+import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol } from 'kafka-node';
 import { DispatchService } from './dispatch.service';
 import { v1 } from 'uuid';
+import { assign } from 'nodemailer/lib/shared';
+
+export interface IPartitionTopic {
+    partitions: number;
+    lastPartition: number;
+}
+
+export interface ITopic {
+    topic: string;
+    partitionTopic: IPartitionTopic;
+}
 
 export class KafkaService {
     public consumer: ConsumerGroup;
@@ -15,7 +26,7 @@ export class KafkaService {
     private readonly topicTest = 'topic-mitosis';
     private readonly client: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
-
+    private readonly dynamicTopics: Array<ITopic>;
     constructor() {
 
         process.env.KAFKA_TOPICS.split(' ').forEach((topic: string) => {
@@ -45,6 +56,7 @@ export class KafkaService {
 
         const topics = [this.topicTest];
         const options = { autoCommit: false }; // , fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024
+
         this.producer = new Producer(this.client, { requireAcks: 1 });
         this.offset = new Offset(this.client);
 
@@ -53,17 +65,52 @@ export class KafkaService {
         if (process.env.NODE_ENV === 'development') {
             this.dispatchService.checkFirstConnection().subscribe((result: boolean) => {
                 const topicsToCreate = [
-                    { topic: 'topic1_test', partitions: 1, replicationFactor: 1 },
-                    { topic: 'topic2_test', partitions: 1, replicationFactor: 1 }
+                    { topic: 'topic1', partitions: 5, replicationFactor: 2 },
+                    { topic: 'topic2', partitions: 5, replicationFactor: 2 }
                 ];
                 const idBox = v1();
                 this.client.createTopics(topicsToCreate, (error, res) => {
-                    this.consumer.addTopics(['topic1_test', 'topic2_test'], (err, added) => {
-                        const toto = 2;
+                    const t = 2;
+                    this.consumer.addTopics(['topic1', 'topic2'], (err, added) => {
+                        const t = 2;
                     });
                 });
             });
         }
+
+        const t: CustomPartitionAssignmentProtocol;
+        t.name = "toto";
+        t.userData = {};
+        t.version = 0;
+        t.assign({}, {}, (error: any, result: any) => {
+            const t = 2;
+        });
+
+
+
+
+        const producerBIs = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
+            // key = key || '0';
+            // var index = parseInt(key) % partitions.length;
+            // return partitions[index];
+            const t = 2;
+
+            return t;
+        });
+
+        producerBIs.on('ready', () => {
+            setInterval(() => {
+                const km = new KeyedMessage('key', 'message');
+                const payloads = [
+                    { topic: 'topic1', messages: 'test', key: 'test_theKey' },
+                    { topic: 'topic2', messages: ['test1', 'test2', km], key: 'test2_theKey' }
+                ];
+
+                producerBIs.send(payloads, (err, data) => {
+                    console.log(data);
+                });
+            }, 5000);
+        });
 
 
         // this.offset.fetch([
@@ -72,6 +119,10 @@ export class KafkaService {
         //     data
         //     { 't': { '0': [999] } }
         // });
+    }
+
+    public getPartition(partitions, key: string): void {
+        const index = key.split('_');
     }
 
     public initializeProducer(): void {

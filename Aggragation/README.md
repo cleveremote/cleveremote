@@ -50,6 +50,8 @@ cd C:\Users\dell\Downloads\kafka_2.11-0.10.2.0\kafka_2.11-0.10.2.0\bin\windows
 .\kafka-console-consumer.bat --bootstrap-server 192.168.1.30:32771,192.168.1.30:32770 --topic topic-mitosis
 .\kafka-console-producer.bat  --broker-list 192.168.1.30:32771,192.168.1.30:32770 --topic topic1_test
 .\kafka-topics.bat --list --zookeeper 192.168.1.30:2181
+.\kafka-consumer-groups.bat --zookeeper 192.168.1.30:2181 --group count_errors --describe
+.\kafka-topics.bat --alter --zookeeper 192.168.1.30:2181 --topic topic1_test --partitions 10
 
 
 For dockerized kafka/zookeeper
