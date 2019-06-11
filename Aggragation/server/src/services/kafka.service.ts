@@ -5,7 +5,7 @@ import { of as observableOf, from as observableFrom, Observable, of, observable 
 import { Consumer, Offset, KafkaClient, Producer, KeyedMessage, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol } from 'kafka-node';
 import { DispatchService } from './dispatch.service';
 import { v1 } from 'uuid';
-import { assign } from 'nodemailer/lib/shared';
+
 
 export interface IPartitionTopic {
     partitions: number;
@@ -18,7 +18,7 @@ export interface ITopic {
 }
 
 export class KafkaService {
-    public consumer: ConsumerGroup;
+    public consumer: Array<ConsumerGroup> = [];
     public producer: Producer;
     public offset: Offset;
     public subscribeTopics: Array<string> = [];
@@ -27,33 +27,51 @@ export class KafkaService {
     private readonly client: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
     private readonly dynamicTopics: Array<ITopic>;
+
     constructor() {
 
-        process.env.KAFKA_TOPICS.split(' ').forEach((topic: string) => {
-            const topicObj = topic.split('.');
-            if (topicObj[1] === 'subscribe') {
-                this.subscribeTopics.push(topicObj[0]);
-            } else {
-                this.publishTopics.push(topicObj[0]);
-            }
+        process.env.KAFKA_TOPICS_PUBLICATION.split(';').forEach((topic: string) => {
+            this.publishTopics.push(topic);
         });
 
-        this.client = new KafkaClient({ kafkaHost: '192.168.1.30:32771,192.168.1.30:32770' });
+        process.env.KAFKA_TOPICS_SUBSCRIPTION.split(';').forEach((topic: string) => {
+            this.subscribeTopics.push(topic);
+        });
+
+        // process.env.KAFKA_TOPICS.split(' ').forEach((topic: string) => {
+        //     const topicObj = topic.split('.');
+        //     if (topicObj[1] === 'subscribe') {
+        //         this.subscribeTopics.push(topicObj[0]);
+        //     } else {
+        //         this.publishTopics.push(topicObj[0]);
+        //     }
+        // });
+
+        this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
+
+
 
         const ackBatchOptions = { noAckBatchSize: 1024, noAckBatchAge: 10 };
         const cgOptions: ConsumerGroupOptions = {
-            kafkaHost: '192.168.1.30:32771,192.168.1.30:32770',
+            kafkaHost: process.env.KAFKA_HOSTS,
             batch: ackBatchOptions,
             groupId: 'groupID',
-            id: 'consumerID',
             sessionTimeout: 15000,
-            protocol: ["roundrobin"],
+            protocol: this.setCustomPartitionAssignmentProtocol(),
             fromOffset: "latest",
             migrateHLC: false,
             migrateRolling: true
         };
 
-        this.consumer = new ConsumerGroup(cgOptions, [this.topicTest]);
+        this.client.loadMetadataForTopics([], function (error, results) {
+            console.log('%j', results);
+        });
+
+        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer1' }, cgOptions), ['topic1']));
+        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer2' }, cgOptions), ['topic1']));
+        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer3' }, cgOptions), ['topic1']));
+        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer4' }, cgOptions), ['topic1']));
+        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer5' }, cgOptions), ['topic1']));
 
         const topics = [this.topicTest];
         const options = { autoCommit: false }; // , fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024
@@ -63,29 +81,23 @@ export class KafkaService {
 
         this.dispatchService = new DispatchService(this.subscribeTopics);
 
-        if (process.env.NODE_ENV === 'development') {
-            this.dispatchService.checkFirstConnection().subscribe((result: boolean) => {
-                const topicsToCreate = [
-                    { topic: 'topic1', partitions: 5, replicationFactor: 2 },
-                    { topic: 'topic2', partitions: 5, replicationFactor: 2 }
-                ];
-                const idBox = v1();
-                this.client.createTopics(topicsToCreate, (error, res) => {
-                    const t = 2;
-                    this.consumer.addTopics(['topic1', 'topic2'], (err, added) => {
-                        const t = 2;
-                    });
-                });
-            });
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //     this.dispatchService.checkFirstConnection().subscribe((result: boolean) => {
+        //         const topicsToCreate = [
+        //             { topic: 'topic1', partitions: 5, replicationFactor: 2 },
+        //             { topic: 'topic2', partitions: 5, replicationFactor: 2 }
+        //         ];
+        //         const idBox = v1();
+        //         this.client.createTopics(topicsToCreate, (error, res) => {
+        //             const t = 2;
+        //             this.consumer.addTopics(['topic1', 'topic2'], (err, added) => {
+        //                 const t = 2;
+        //             });
+        //         });
+        //     });
+        // }
 
-        const t: CustomPartitionAssignmentProtocol;
-        t.name = "toto";
-        t.userData = {};
-        t.version = 0;
-        t.assign({}, {}, (error: any, result: any) => {
-            const t = 2;
-        });
+
 
 
 
@@ -94,23 +106,26 @@ export class KafkaService {
             // key = key || '0';
             // var index = parseInt(key) % partitions.length;
             // return partitions[index];
+            const test = this;
             const t = 2;
 
             return t;
         });
 
+        // const producerBIs = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 2 });
+
         producerBIs.on('ready', () => {
             setInterval(() => {
                 const km = new KeyedMessage('key', 'message');
                 const payloads = [
-                    { topic: 'topic1', messages: 'test', key: 'test_theKey' },
-                    { topic: 'topic2', messages: ['test1', 'test2', km], key: 'test2_theKey' }
+                    { topic: 'topic1', messages: 'test1', key: 'test_theKey1' } //,
+                    // { topic: 'topic2', messages: ['test1', 'test2', km], key: 'test2_theKey' }
                 ];
 
                 producerBIs.send(payloads, (err, data) => {
                     console.log(data);
                 });
-            }, 5000);
+            }, 1000);
         });
 
 
@@ -120,6 +135,33 @@ export class KafkaService {
         //     data
         //     { 't': { '0': [999] } }
         // });
+    }
+
+    public setCustomPartitionAssignmentProtocol(): Array<CustomPartitionAssignmentProtocol> {
+        const customPartitionAssignmentProtocol: CustomPartitionAssignmentProtocol = {
+            name: "customProtocol",
+            version: 0,
+            userData: {},
+            assign: (topicPartition: any, groupMembers: any, cb: (error: any, result: any) => void) => {
+                const ret: Array<any> = [];
+                groupMembers.forEach((groupMember, index) => {
+                    ret.push(
+                        {
+                            memberId: groupMember.id,
+                            topicPartitions: {
+                                "topic1": [
+                                    index
+                                ]
+                            },
+                            version: 0
+                        }
+                    );
+                });
+                cb(undefined, ret);
+            }
+        };
+
+        return [customPartitionAssignmentProtocol];
     }
 
     public getPartition(partitions, key: string) {
@@ -143,22 +185,32 @@ export class KafkaService {
     }
 
     public initializeConsumer(): void {
-        this.consumer.on('offsetOutOfRange', (topic: any) => {
-            topic.maxNum = 1;
-            this.offset.fetch([topic], (err, offsets) => {
-                if (err) {
-                    console.log('error', err);
-                }
-                const min = Math.min(offsets[topic.topic][topic.partition]);
-                this.consumer.setOffset(topic.topic, topic.partition, min);
+        this.consumer.forEach(consumer => {
+            consumer.on('offsetOutOfRange', (topic: any) => {
+                topic.maxNum = 1;
+                this.offset.fetch([topic], (err, offsets) => {
+                    if (err) {
+                        console.log('error', err);
+                    }
+                    const min = Math.min(offsets[topic.topic][topic.partition]);
+                    consumer.setOffset(topic.topic, topic.partition, min);
+                });
+            });
+            consumer.on('message', (message: Message) => {
+                console.log(
+                    '%s read msg Topic="%s" Partition=%s Offset=%d',
+                    consumer.memberId,
+                    message.topic,
+                    message.partition,
+                    message.offset
+                );
+                this.dispatchService.routeMessage(message);
+            });
+            consumer.on('error', (err: any) => {
+                console.log('error', err);
             });
         });
-        this.consumer.on('message', (message: Message) => {
-            this.dispatchService.routeMessage(message);
-        });
-        this.consumer.on('error', (err: any) => {
-            console.log('error', err);
-        });
+
     }
 
     public init(): Observable<void> {
