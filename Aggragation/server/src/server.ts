@@ -55,8 +55,8 @@ export class Server {
     }
 
     public initDbMongoose(): Observable<void> {
-        console.log('* start init kafka...');
-        const db: string = String((process.env.NODE_ENV === 'production') ? process.env.PROD_DB : process.env.DEV_DB);
+        console.log('* start init mongoDB...');
+        const db: string = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
 
         return observableOf(
             mongoose.connect(db, {
@@ -66,10 +66,10 @@ export class Server {
 
         ).pipe(map(
             (x: any) => {
-                console.log('* init db OK.');
+                console.log('* init mongoDB OK.');
                 (mongoose as any).Promise = Promise;
             }, (err: any) => {
-                console.error(`! init db KO ${err}`);
+                console.error(`! init mongoDB KO ${err}`);
 
                 return err;
             }
