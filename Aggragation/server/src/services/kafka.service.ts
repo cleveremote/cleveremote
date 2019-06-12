@@ -23,7 +23,6 @@ export class KafkaService {
     public offset: Offset;
     public subscribeTopics: Array<string> = [];
     public publishTopics: Array<string> = [];
-    private readonly topicTest = 'topic-mitosis';
     private readonly client: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
     private readonly dynamicTopics: Array<ITopic>;
@@ -48,85 +47,64 @@ export class KafkaService {
         // });
 
         this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
-
-
-
-        const ackBatchOptions = { noAckBatchSize: 1024, noAckBatchAge: 10 };
-        const cgOptions: ConsumerGroupOptions = {
-            kafkaHost: process.env.KAFKA_HOSTS,
-            batch: ackBatchOptions,
-            groupId: 'groupID',
-            sessionTimeout: 15000,
-            protocol: this.setCustomPartitionAssignmentProtocol(),
-            fromOffset: "latest",
-            migrateHLC: false,
-            migrateRolling: true
-        };
-
-        this.client.loadMetadataForTopics([], function (error, results) {
-            console.log('%j', results);
-        });
-
-        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer1' }, cgOptions), ['topic1']));
-        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer2' }, cgOptions), ['topic1']));
-        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer3' }, cgOptions), ['topic1']));
-        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer4' }, cgOptions), ['topic1']));
-        this.consumer.push(new ConsumerGroup(Object.assign({ id: 'consumer5' }, cgOptions), ['topic1']));
-
-        const topics = [this.topicTest];
-        const options = { autoCommit: false }; // , fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024
-
-        this.producer = new Producer(this.client, { requireAcks: 1 });
-        this.offset = new Offset(this.client);
-
         this.dispatchService = new DispatchService(this.subscribeTopics);
+        this.client.loadMetadataForTopics(['topic1'], (error, results) => {
+            console.log('%j', results);
+            this.createConsumers(results);
 
-        // if (process.env.NODE_ENV === 'development') {
-        //     this.dispatchService.checkFirstConnection().subscribe((result: boolean) => {
-        //         const topicsToCreate = [
-        //             { topic: 'topic1', partitions: 5, replicationFactor: 2 },
-        //             { topic: 'topic2', partitions: 5, replicationFactor: 2 }
-        //         ];
-        //         const idBox = v1();
-        //         this.client.createTopics(topicsToCreate, (error, res) => {
-        //             const t = 2;
-        //             this.consumer.addTopics(['topic1', 'topic2'], (err, added) => {
-        //                 const t = 2;
-        //             });
-        //         });
-        //     });
-        // }
+            this.producer = new Producer(this.client, { requireAcks: 1 });
+            this.offset = new Offset(this.client);
 
 
 
+            // if (process.env.NODE_ENV === 'development') {
+            //     this.dispatchService.checkFirstConnection().subscribe((result: boolean) => {
+            //         const topicsToCreate = [
+            //             { topic: 'topic1', partitions: 5, replicationFactor: 2 },
+            //             { topic: 'topic2', partitions: 5, replicationFactor: 2 }
+            //         ];
+            //         const idBox = v1();
+            //         this.client.createTopics(topicsToCreate, (error, res) => {
+            //             const t = 2;
+            //             this.consumer.addTopics(['topic1', 'topic2'], (err, added) => {
+            //                 const t = 2;
+            //             });
+            //         });
+            //     });
+            // }
 
 
 
-        const producerBIs = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
-            // key = key || '0';
-            // var index = parseInt(key) % partitions.length;
-            // return partitions[index];
-            const test = this;
-            const t = 2;
 
-            return t;
+
+
+            const producerBIs = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
+                // key = key || '0';
+                // var index = parseInt(key) % partitions.length;
+                // return partitions[index];
+                const test = this;
+                const t = 2;
+
+                return t;
+            });
+
+            // const producerBIs = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 2 });
+
+            producerBIs.on('ready', () => {
+                setInterval(() => {
+                    const payloads = [
+                        { topic: 'topic1', messages: 'test1', key: 'test_theKey1' }
+                    ];
+
+                    producerBIs.send(payloads, (err, data) => {
+                        console.log(data);
+                    });
+                }, 1000);
+            });
+
         });
 
-        // const producerBIs = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 2 });
 
-        producerBIs.on('ready', () => {
-            setInterval(() => {
-                const km = new KeyedMessage('key', 'message');
-                const payloads = [
-                    { topic: 'topic1', messages: 'test1', key: 'test_theKey1' } //,
-                    // { topic: 'topic2', messages: ['test1', 'test2', km], key: 'test2_theKey' }
-                ];
-
-                producerBIs.send(payloads, (err, data) => {
-                    console.log(data);
-                });
-            }, 1000);
-        });
 
 
         // this.offset.fetch([
@@ -162,6 +140,29 @@ export class KafkaService {
         };
 
         return [customPartitionAssignmentProtocol];
+    }
+
+    public createConsumers(globalMetaData: any): void {
+        const cgOptions: ConsumerGroupOptions = {
+            kafkaHost: process.env.KAFKA_HOSTS,
+            batch: { noAckBatchSize: 1024, noAckBatchAge: 10 },
+            groupId: 'groupID',
+            sessionTimeout: 15000,
+            protocol: this.setCustomPartitionAssignmentProtocol(),
+            fromOffset: "latest",
+            migrateHLC: false,
+            migrateRolling: true
+        };
+        const topicObject = globalMetaData[1].metadata["topic1"];
+        if (topicObject) {
+            Object.keys(topicObject).forEach((key, index) => {
+                const data = topicObject[key];
+                const consumerOptions = { ...cgOptions, id: `consumer${data.partition}` };
+                this.consumer.push(new ConsumerGroup(Object.assign({ id: `consumer${data.partition}` }, cgOptions), [data.topic]));
+            }
+            );
+        }
+
     }
 
     public getPartition(partitions, key: string) {
