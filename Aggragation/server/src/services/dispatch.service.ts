@@ -4,7 +4,7 @@ import { getCustomRepository } from "typeorm";
 import { AccountExt } from "../entities/custom.repositories/account.ext";
 
 export class DispatchService {
-    constructor(private readonly topics: Array<string>) {
+    constructor(private readonly topics: Array<any>) {
     }
 
     public routeMessage(message: Message): void {
@@ -19,7 +19,6 @@ export class DispatchService {
 
     public checkFirstConnection(): Observable<boolean> {
         const accountRepository = getCustomRepository(AccountExt);
-
         return accountRepository.getAccount();
     }
 
