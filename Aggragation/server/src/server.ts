@@ -56,14 +56,14 @@ export class Server {
 
     public initDbMongoose(): Observable<void> {
         console.log('* start init mongoDB...');
-        const db: string = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
+        // tslint:disable-next-line:max-line-length
+        const db = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
 
         return observableOf(
             mongoose.connect(db, {
                 useMongoClient: true,
                 promiseLibrary: global.Promise
             })
-
         ).pipe(map(
             (x: any) => {
                 console.log('* init mongoDB OK.');

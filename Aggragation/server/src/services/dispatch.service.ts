@@ -1,4 +1,4 @@
-import { Message } from "kafka-node";
+import { Message, ConsumerGroup } from "kafka-node";
 import { Observable } from "rxjs";
 import { getCustomRepository } from "typeorm";
 import { AccountExt } from "../entities/custom.repositories/account.ext";
@@ -7,18 +7,19 @@ export class DispatchService {
     constructor(private readonly topics: Array<any>) {
     }
 
-    public routeMessage(message: Message): void {
-        const top = this.topics;
-        // const receivedMessage = JSON.parse(result.value);
-        console.log(`message received kafka: ${message.value}`);
-        // let cell = await Cell.save(newCell as ICell);
-        // save in db mongo ...
-        // pubsub.publish('newCell', { newCell: cell });
-        // notify with websocket if need
+    public routeMessage(consumer: ConsumerGroup, message: Message): void {
+        console.log(
+            '%s read msg Topic="%s" Partition=%s Offset=%d',
+            consumer.memberId,
+            message.topic,
+            message.partition,
+            message.offset
+        );
     }
 
     public checkFirstConnection(): Observable<boolean> {
         const accountRepository = getCustomRepository(AccountExt);
+
         return accountRepository.getAccount();
     }
 

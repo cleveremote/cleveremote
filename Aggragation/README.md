@@ -1,3 +1,8 @@
+kafka conception
+---------------
+server has custom publisher and roudrobin consumer.
+box has cyclic publish and custom consumer
+
 git problems
 
 cd /home/server/devclv/cleveremote/ <path-to-repo>
