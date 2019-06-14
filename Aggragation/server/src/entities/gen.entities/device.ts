@@ -1,5 +1,6 @@
-import {Column,Entity,Index,JoinColumn,ManyToOne,OneToMany} from "typeorm";
+import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
 import {account} from "./account";
+import {partition_config} from "./partition_config";
 import {transceiver} from "./transceiver";
 
 
@@ -39,7 +40,10 @@ export class device {
 
 
    
-    @OneToMany(type=>transceiver, transceiver=>transceiver.device,{ onDelete: 'CASCADE' , })
+    @OneToMany(type=>transceiver, transceiver=>transceiver.device,{ onDelete: 'CASCADE' })
     transceivers:transceiver[];
     
+    @ManyToOne(type=>partition_config, partition_config=>partition_config.devices,{ nullable:false,onDelete: 'CASCADE'})
+    @JoinColumn({ name:'config_id'})
+    config:partition_config | null;
 }

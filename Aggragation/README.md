@@ -11,7 +11,7 @@ sudo chown -R server:server * server => username
 
 Type ORM
 ---------------
-typeorm migration:run / typeorm migration:revert
+npm run typeorm migration:run / typeorm migration:revert
 npm run typeorm migration:create -- -n migrationNameHere
 typeorm-model-generator -h localhost -d  cleverTest -u test -x 1234 -e postgres -o "./src/entity" -s public
 
