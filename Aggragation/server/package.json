@@ -10,7 +10,7 @@
     "dev": "nodemon --exec npm start",
     "lint": "tslint --project tsconfig.json --config -c tslint.json 'src/**/*.ts'",
     "test": "./node_modules/.bin/mocha --reporter spec",
-    "start-debug": "tsc && nodemon --inspect=0.0.0.0:5200 dist/app.js",
+    "start-debug": "tsc && nodemon --inspect=0.0.0.0:5100 dist/app.js",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config .env",
     "watch-ts": "tsc -w",
     "debug": "nodemon --inspect=0.0.0.0:5100 dist/app.js",
