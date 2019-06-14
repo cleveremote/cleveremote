@@ -7,6 +7,7 @@ import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";
 import { device } from '../entities/gen.entities/device';
+import { Tools } from './tools-service';
 
 export interface IPartitionTopic {
     rangePartitions: Array<number>;
@@ -25,11 +26,13 @@ export class KafkaService {
     public subscribeTopics: Array<ITopic> = [];
     public publishTopics: Array<ITopic> = [];
     private readonly client: KafkaClient = undefined;
+    private readonly clientProducer: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
     private readonly topics: Array<ITopic>;
 
     constructor() {
         this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
+        this.clientProducer = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
         this.dispatchService = new DispatchService(this.subscribeTopics);
     }
 
@@ -43,6 +46,8 @@ export class KafkaService {
                     });
                 }
             });
+            Tools.loginfo('   - init Subscription topics');
+            Tools.logSuccess('     => OK');
 
             return of(true);
         }
@@ -64,10 +69,14 @@ export class KafkaService {
                         });
                     }
                 });
+                Tools.loginfo('   - init Subscription topics');
+                Tools.logSuccess('     => OK');
 
                 return true;
             }));
         }
+        Tools.loginfo('   - init Subscription topics');
+        Tools.logError('      => KO');
 
         return of(false);
     }
@@ -96,12 +105,15 @@ export class KafkaService {
                                 this.publishTopics.push({
                                     box: cfg.boxId,
                                     name: topicString[0],
-                                    partitionTopic: { current: cfg.startRange, rangePartitions: [cfg.startRange, cfg.endRange] }
+                                    // partitionTopic: { current: cfg.startRange, rangePartitions: [cfg.startRange, cfg.endRange] }
+                                    partitionTopic: { current: 2, rangePartitions: [2, 3] }
                                 });
                             });
                         }
                     }
                 });
+                Tools.loginfo('   - init Publication topics');
+                Tools.logSuccess('     => OK');
 
                 return true;
 
@@ -179,9 +191,10 @@ export class KafkaService {
         });
     }
 
-    public initializeProducer(): void {
+    public initializeProducer(): Observable<boolean> {
         if (process.env.NODE_ENV === 'development') {
-            this.producer = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
+            // tslint:disable-next-line:max-line-length
+            this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
                 const topicData = this.publishTopics.find((topic: ITopic) => topic.box === key);
                 let partition = 0;
 
@@ -195,11 +208,8 @@ export class KafkaService {
                 return partition;
             });
         } else if (process.env.NODE_ENV === 'BOX') {
-            this.producer = new HighLevelProducer(this.client, { requireAcks: 1, partitionerType: 2 });
+            this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 2 });
         }
-
-
-
 
         // if (process.env.NODE_ENV === 'development') {
         //     this.dispatchService.checkFirstConnection().subscribe((result: boolean) => {
@@ -220,21 +230,27 @@ export class KafkaService {
         this.producer.on('ready', () => {
             setInterval(() => {
                 const payloads = [
-                    { topic: 'aggregator_dbsync', messages: 'test1', key: 'server_1' }
+                    { topic: 'aggregator_dbsync', messages: 'test123', key: 'server_1' }
                 ];
 
                 this.producer.send(payloads, (err, data) => {
-                    console.log(data);
+                    // console.log(data);
                 });
-            }, 1000);
+            }, 100);
         });
+
+        Tools.loginfo('   - init Producer');
+        Tools.logSuccess('     => OK');
+
+        return of(true);
+
     }
     public setConsumerListener(consumer: ConsumerGroup): void {
         consumer.on('offsetOutOfRange', (topic: any) => {
             topic.maxNum = 1;
             this.offset.fetch([topic], (err, offsets) => {
                 if (err) {
-                    console.log('error', err);
+                    Tools.logError('error', err);
                 }
                 const min = Math.min(offsets[topic.topic][topic.partition]);
                 consumer.setOffset(topic.topic, topic.partition, min);
@@ -244,32 +260,22 @@ export class KafkaService {
             this.dispatchService.routeMessage(consumer, message);
         });
         consumer.on('error', (err: any) => {
-            console.log('error', err);
+            Tools.logError('error', err);
         });
     }
 
     public initializeConsumer(): Observable<boolean> {
-
-
         const topics = this.subscribeTopics.map((topic: ITopic) => topic.name);
         const loadMetadataForTopicsObs = bindCallback(this.client.loadMetadataForTopics.bind(this.client, topics));
         const result = loadMetadataForTopicsObs();
 
         return result.pipe(map((results: any) => {
-            console.log('%j', results);
             this.createConsumers(results[1][1]);
+            Tools.loginfo('   - init Consumer');
+            Tools.logSuccess('     => OK');
 
             return true;
         }));
-
-
-
-        // this.client.loadMetadataForTopics(topics, (error, results) => {
-        //     console.log('%j', results);
-        //     this.createConsumers(results[1]);
-        // });
-
-        // return of(true);
     }
 
     public init(): Observable<void> {
@@ -277,19 +283,13 @@ export class KafkaService {
     }
 
     public initListners(): Observable<void> {
-        console.log('* start init kafka...');
-
         return observableOf(true).pipe(
             flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION).pipe(
-                flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION))
-            ).pipe(
-                flatMap(() => this.initializeConsumer().pipe(
-                    tap((result: any) => {
-                        const t = 2;
-                        this.initializeProducer();
-                        console.log('* init kafka OK');
-                    }))
-                ))
+                flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION))).pipe(
+                    flatMap(() => this.initializeProducer())).pipe(
+                        flatMap(() => this.initializeConsumer())).pipe(map(() => {
+                            Tools.logSuccess('  => OK.');
+                        }))
             ));
     }
 

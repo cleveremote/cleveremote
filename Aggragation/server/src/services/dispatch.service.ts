@@ -8,13 +8,14 @@ export class DispatchService {
     }
 
     public routeMessage(consumer: ConsumerGroup, message: Message): void {
-        console.log(
-            '%s read msg Topic="%s" Partition=%s Offset=%d',
-            consumer.memberId,
-            message.topic,
-            message.partition,
-            message.offset
-        );
+        // console.log(
+        //     '%s read msg %s Topic="%s" Partition=%s Offset=%d',
+        //     consumer.memberId,
+        //     message.value,
+        //     message.topic,
+        //     message.partition,
+        //     message.offset
+        // );
     }
 
     public checkFirstConnection(): Observable<boolean> {

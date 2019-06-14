@@ -3,6 +3,7 @@ import * as http from "http";
 import { map, tap } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
+import { Tools } from './tools-service';
 
 interface ExtWebSocket extends WebSocket {
     isAlive: boolean;
@@ -62,11 +63,11 @@ export class WebSocketService {
         return JSON.stringify(new Message(content, isBroadcast, sender));
     }
     public initDependencies(): Observable<void> {
-        console.log('* start init websocket...');
+        Tools.loginfo('* start init websocket...');
 
         return observableOf(true).pipe(
             map(() => {
-                console.log('* init websocket OK.');
+                Tools.logSuccess('  => OK.');
                 const wss = WebSocketService.wss;
                 WebSocketService.wss.on('connection', (ws: WebSocket) => {
                     const extWs = ws as ExtWebSocket;
@@ -79,7 +80,7 @@ export class WebSocketService {
 
                         const t = 2;
                     };
-                    ws.onerror = (e: IWebSocketError) => { console.warn(`Client disconnected - reason: ${e.error}`); };
+                    ws.onerror = (e: IWebSocketError) => { Tools.logWarn(`Client disconnected - reason: ${e.error}`); };
                     ws.send(this.createMessage('Hi there, I am a WebSocket server'));
                 });
                 this.stayConnected();
