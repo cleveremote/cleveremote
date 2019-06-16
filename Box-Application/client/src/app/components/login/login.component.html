@@ -1,0 +1,58 @@
+<!-- <div class="container">
+  <app-testcmp></app-testcmp>
+  <div class="col-sm-6 col-sm-offset-3">
+
+    <h1><span class="fa fa-sign-in"></span> Login</h1>
+
+   
+    <form (ngSubmit)="onLoginSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="text" class="form-control" name="email" [(ngModel)]="loginData['email']"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" class="form-control" name="password" [(ngModel)]="loginData['password']">
+      </div>
+
+      <button type="submit" class="btn btn-warning btn-lg">Login</button>
+    </form>
+    <hr>
+    <p>Need an account? <a routerLink="/signup">Signup</a></p>
+    <p>logout? <a href="https://mail.google.com/mail/u/0/?logout&hl=en">Signup</a></p>
+    <p>Or go <a routerLink="/">home</a>.</p>
+    <p>google? <li><a href="api/auth/google">Login</a></li></p>
+    <button class="btn btn-warning btn-lg" (click)="loginGoogle()">Login</button>
+
+  </div>
+</div> -->
+
+
+<div class="modal-dialog text-center">
+  <div class="col-sm-9 main-section">
+    <div class="modal-content">
+
+      <div class="col-12 user-img">
+        <img src="assets/img/face.png">
+      </div>
+
+      <div class="col-12 form-input">
+        <form (ngSubmit)="onLoginSubmit()">
+          <div class="form-group">
+            <input type="email" class="form-control" placeholder="Enter Email" name="email" [(ngModel)]="loginData['email']">
+          </div>
+          <div class="form-group">
+            <input type="password" class="form-control" placeholder="Enter Password" name="password" [(ngModel)]="loginData['password']">
+          </div>
+          <button type="submit" class="btn btn-success">Login</button>
+        </form>
+      </div>
+
+      <div class="col-12 forgot">
+        <a href="#">Forgot Password?</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+

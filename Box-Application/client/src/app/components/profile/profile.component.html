@@ -1,0 +1,82 @@
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mx-auto">
+  <a class="navbar-brand" href="#"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04"
+    aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation"
+    (click)="isCollapsed= !isCollapsed">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse collapse mx-auto" [ngbCollapse]="isCollapsed" id="navbarsExample04"
+    style="width: 200px;">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item dropdown" ngbDropdown>
+        <a class="nav-link dropdown-toggle" id="dropdown04" ngbDropdownToggle>Module</a>
+        <div class="dropdown-menu" aria-labelledby="dropdown04" ngbDropdownMenu>
+          <a class="dropdown-item" href="#">Box 1</a>
+          <a class="dropdown-item" href="#">Box 2</a>
+          <a class="dropdown-item" href="#">Box 3</a>
+        </div>
+      </li>
+    </ul>
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Shema</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Dashboard</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Configuration</a>
+      </li>
+    </ul>
+    <ul class="navbar-nav">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Right 1</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+
+
+<div class="container">
+  
+  <a (click)="restartWatching(true)" class="btn btn-default btn-sm">Stay connected</a>
+  <div class="page-header text-center">
+    <h1><span class="fa fa-anchor"></span> Profile Page</h1>
+    <a routerLink="/" (click)="logout()" class="btn btn-default btn-sm">Logout</a>
+    <a (click)="send()" class="btn btn-default btn-sm">socket test</a>
+
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="well">
+        <h3><span class="fa fa-user"></span> Local</h3>
+        <p>
+          <strong>id</strong> {{userData.id}}<br>
+          <strong>email</strong> {{userData.email}}<br>
+        </p>
+      </div>
+    </div>
+  </div>
+  <app-test-component></app-test-component>
+</div>
+
+
+<ng-template #modal let-modal>
+  <div class="modal-header">
+      <h4 class="col-12 modal-title text-center">Déconnexion dans  {{timerService.counterLogout}} seconds<div id="countdown"></div></h4>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-success mr-auto" (click)="timerService.restartWatching(true)">Rester connecté</button>
+    <button type="button" class="btn btn-danger" (click)="timerService.logout()">Déconnexion</button>
+
+  </div>
+</ng-template>
+
+
+<button class="btn btn-outline-primary mb-2 mr-2" (click)="openVerticallyCentered(modal)">Modal vertically
+  centered</button>

@@ -1,0 +1,39 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+    "backend-tslint-rules"
+  ],
+  "linterOptions": {
+    "exclude": [
+      "src/entities/gen.entities/**",
+      "src/database/migrations/**",
+      "src/api/**"
+    ]
+  },
+  "rules": {
+    "no-floating-promises": false,
+    "newline-per-chained-call": false,
+    "file-name-casing": [false, "kebab-case"],
+    "member-access": [
+      true
+    ],
+    "quotemark": [
+      false,
+      "single",
+      "double",
+      "avoid-escape",
+      "avoid-template"
+    ],
+    "ordered-imports": false,
+    "no-console": [
+      false,
+      "log",
+      "error"
+    ],
+    "jsdoc-format": false,
+    "object-literal-sort-keys": false,
+    "interface-name": false,
+    "no-var-requires": false
+  },
+  "rulesDirectory": []
+}
