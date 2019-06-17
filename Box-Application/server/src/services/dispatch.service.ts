@@ -26,13 +26,9 @@ export class DispatchService {
     }
 
     public checkFirstConnection(): Observable<boolean> {
-        // const accountRepository = getCustomRepository(AccountExt);
+        const accountRepository = getCustomRepository(AccountExt);
 
-        // return accountRepository.getAccount();
-
-        const accountRepository = getCustomRepository(UserExt);
-
-        return accountRepository.getUserByEmail("toto");
+        return accountRepository.isBoxInitialized();
 
     }
 
