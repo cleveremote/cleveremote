@@ -1,20 +1,23 @@
 import { EntityRepository, Repository, getCustomRepository } from "typeorm";
-import { users } from "../gen.entities/users";
-import * as bcrypt from 'bcrypt-nodejs';
+import { User } from "../gen.entities/users";
 import { Observable, from, of } from "rxjs";
-import { account } from "../gen.entities/account";
+import { Account } from "../gen.entities/account";
 import { map, mergeMap } from "rxjs/operators";
-import { IAccount, IDevice, IPartitionConfig, IUser } from "../interfaces/entities.interface";
-import { device } from "../gen.entities/device";
+import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { Device } from "../gen.entities/device";
 import { UserExt } from "./user.ext";
-import { partition_config } from "../gen.entities/partition_config";
+import { PartitionConfig } from "../gen.entities/partition_config";
 
-@EntityRepository(account)
-export class AccountExt extends Repository<account> {
+@EntityRepository(Account)
+export class AccountExt extends Repository<Account> implements ISynchronize {
+
+    public synchronize(data: ISynchronizeParams): any {
+        throw new Error("Method not implemented.");
+    }
 
     public isBoxInitialized(): Observable<boolean> {
         return from(this.find({ relations: ['devices', 'users', 'devices.partition_configs'] })).pipe(
-            map((acc: Array<account>) => {
+            map((acc: Array<Account>) => {
 
                 if (!acc) {
                     console.log('no account found');
@@ -34,7 +37,7 @@ export class AccountExt extends Repository<account> {
 
     public createAccount(message?: any): Observable<boolean> {
         const accountData: IAccount = { account_id: 'server_3', name: 'name12', description: 'description' } as any;
-        const accountToSave = new account();
+        const accountToSave = new Account();
         accountToSave.account_id = accountData.account_id;
         accountToSave.name = accountData.name;
         accountToSave.description = accountData.description;
@@ -47,7 +50,7 @@ export class AccountExt extends Repository<account> {
             last_name: 'last_name',
             first_name: 'first_name'
         } as any;
-        const userToSave = new users();
+        const userToSave = new User();
         userToSave.user_id = userData.user_id;
         userToSave.email = userData.email;
         userToSave.number_phone = userData.number_phone;
@@ -58,23 +61,23 @@ export class AccountExt extends Repository<account> {
         accountToSave.users = [userToSave];
 
         return from(this.save(accountToSave)).pipe(
-            mergeMap((accountSaved: account) => of(true)));
+            mergeMap((accountSaved: Account) => of(true)));
     }
 
     public createAndLinkDevice(message?: any): Observable<boolean> {
         const userRepository = getCustomRepository(UserExt);
 
         return userRepository.getAccountByEmail("email1").pipe(
-            mergeMap((currentAccount: account) => {
+            mergeMap((currentAccount: Account) => {
                 const deviceData: IDevice = { device_id: 'server_3', name: 'name121', description: 'description' } as any;
-                const deviceToSave = new device();
+                const deviceToSave = new Device();
                 deviceToSave.account = currentAccount;
                 deviceToSave.description = deviceData.description;
                 deviceToSave.device_id = deviceData.device_id;
                 deviceToSave.name = deviceData.name;
 
                 const partitionData: IPartitionConfig = { config_id: 'server_3', start_range: 2, end_range: 3 } as any;
-                const partitionToSave = new partition_config();
+                const partitionToSave = new PartitionConfig();
                 partitionToSave.config_id = partitionData.config_id;
                 partitionToSave.start_range = partitionData.start_range;
                 partitionToSave.end_range = partitionData.end_range;
@@ -89,7 +92,7 @@ export class AccountExt extends Repository<account> {
                     last_name: 'last_name',
                     first_name: 'first_name'
                 } as any;
-                const userToSave = new users();
+                const userToSave = new User();
                 userToSave.user_id = userData.user_id;
                 userToSave.email = userData.email;
                 userToSave.number_phone = userData.number_phone;
@@ -101,7 +104,7 @@ export class AccountExt extends Repository<account> {
                 currentAccount.devices = [deviceToSave];
 
                 return from(this.save(currentAccount)).pipe(
-                    mergeMap((accountSaved: account) => of(true)));
+                    mergeMap((accountSaved: Account) => of(true)));
             })
         );
     }

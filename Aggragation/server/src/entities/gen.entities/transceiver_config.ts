@@ -1,9 +1,9 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {transceiver} from "./transceiver";
+import {Transceiver} from "./transceiver";
 
 
 @Entity("transceiver_config",{schema:"public" } )
-export class transceiver_config {
+export class TransceiverConfig {
 
     @Column("character varying",{ 
         nullable:false,
@@ -28,8 +28,8 @@ export class transceiver_config {
         })
     status:string;
         
-    @ManyToOne(type=>transceiver, transceiver=>transceiver.transceiver_configs,{  nullable:false,onDelete: 'CASCADE', })
+    @ManyToOne(type=>Transceiver, transceiver=>transceiver.transceiver_configs,{  nullable:false,onDelete: 'CASCADE', })
     @JoinColumn({ name:'transceiver_id'})
-    transceiver:transceiver | null;
+    transceiver:Transceiver | null;
 
 }

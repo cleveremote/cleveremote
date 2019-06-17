@@ -6,7 +6,8 @@ export class createAccount1556370861576 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE Account(
             account_id VARCHAR (255) PRIMARY KEY,
             name VARCHAR (50) UNIQUE NOT NULL,
-            description TEXT
+            description TEXT,
+            activated BOOLEAN
            );`);
     }
 

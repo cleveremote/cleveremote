@@ -1,21 +1,27 @@
 import { EntityRepository, Repository } from "typeorm";
-import { users } from "../gen.entities/users";
-import * as bcrypt from 'bcrypt-nodejs';
 import { Observable, from } from "rxjs";
-import { device } from "../gen.entities/device";
+import { Device } from "../gen.entities/device";
 import { map } from "rxjs/operators";
-import { IDevice } from "../interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 
-@EntityRepository(device)
-export class DeviceExt extends Repository<device> {
+@EntityRepository(Device)
+export class DeviceExt extends Repository<Device> implements ISynchronize {
 
-    public getDevices(): Observable<Array<device>> {
-        return from(this.find({ relations: ['partition_configs'] })).pipe(map((devices: Array<device>) => devices
+    public synchronize(data: ISynchronizeParams): any {
+        throw new Error("Method not implemented.");
+    }
+
+    public getDevices(): Observable<Array<Device>> {
+        return from(this.find({ relations: ['partition_configs'] })).pipe(map((devices: Array<Device>) => devices
         ));
     }
 
-    public getDevice(): Observable<device> {
-        return from(this.findOne({ relations: ['partition_configs'] })).pipe(map((firstDevice: device) => firstDevice
-        ));
+    public getDeviceInfosBySerial(serialNumber: string): Observable<Device> {
+        return from(this.findOne({
+            where: { device_id: serialNumber },
+            relations: ['partition_configs', 'account', 'account.users']
+        })).pipe(
+            map((firstDevice: Device) => firstDevice)
+        );
     }
 }

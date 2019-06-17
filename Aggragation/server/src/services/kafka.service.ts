@@ -6,7 +6,7 @@ import { DispatchService } from './dispatch.service';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";
-import { device } from '../entities/gen.entities/device';
+import { Device } from '../entities/gen.entities/device';
 import { Tools } from './tools-service';
 import { ITopic } from '../entities/interfaces/entities.interface';
 
@@ -23,7 +23,7 @@ export class KafkaService {
     constructor() {
         this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
         this.clientProducer = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
-        this.dispatchService = new DispatchService(this.subscribeTopics);
+        this.dispatchService = new DispatchService(this);
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
@@ -47,7 +47,7 @@ export class KafkaService {
         const cfgTopicBoxArray: Array<any> = [];
         const deviceRepository = getCustomRepository(DeviceExt);
 
-        return deviceRepository.getDevices().pipe(map((devices: Array<device>) => {
+        return deviceRepository.getDevices().pipe(map((devices: Array<Device>) => {
             const t = devices;
             devices.forEach(element => {
                 cfgTopicBoxArray.push({
@@ -106,9 +106,15 @@ export class KafkaService {
     public initializeProducer(): Observable<boolean> {
         // tslint:disable-next-line:max-line-length
         this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
-            const topicData = this.publishTopics.find((topic: ITopic) => topic.box === key);
-            let partition = 0;
+            const keyData = key.split('.');
 
+            if (keyData === 'init-connexion') {
+                return 0;
+            }
+
+            const topicData = this.publishTopics.find((topic: ITopic) => topic.name === keyData[0] && topic.box === keyData[1]);
+            let partition = 0;
+            // traitement speciale pour le init-connexion;
             if (topicData.partitionTopic.current > topicData.partitionTopic.rangePartitions[1]) {
                 topicData.partitionTopic.current = topicData.partitionTopic.rangePartitions[0];
             }
@@ -120,6 +126,15 @@ export class KafkaService {
         });
 
         this.producer.on('ready', () => {
+            // setInterval(() => {
+            //     const payloads = [
+            //         { topic: 'box_action', messages: 'test-AGGREGATION', key: 'box_action.server_1' }
+            //     ];
+
+            //     this.producer.send(payloads, (err, data) => {
+            //         console.log(data);
+            //     });
+            // }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
         });

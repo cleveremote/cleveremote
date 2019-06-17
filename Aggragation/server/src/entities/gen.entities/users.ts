@@ -1,6 +1,6 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {account} from "./account";
-import {provider} from "./provider";
+import {Account} from "./account";
+import {Provider} from "./provider";
 
 
 @Entity("users",{schema:"public" } )
@@ -9,7 +9,7 @@ import {provider} from "./provider";
 @Index("users_last_name_key",["last_name",],{unique:true})
 @Index("users_number_phone_key",["number_phone",],{unique:true})
 @Index("users_password_key",["password",],{unique:true})
-export class users {
+export class User {
 
     @Column("character varying",{ 
         nullable:false,
@@ -66,11 +66,11 @@ export class users {
         
 
    
-    @ManyToOne(type=>account, account=>account.users,{  nullable:false,onDelete: 'CASCADE' })
+    @ManyToOne(type=>Account, account=>account.users,{  nullable:false,onDelete: 'CASCADE' })
     @JoinColumn({ name:'account_id'})
-    account:account | null;
+    account:Account | null;
    
-    @OneToMany(type=>provider, provider=>provider.user,{ onDelete: 'CASCADE' })
-    providers:provider[];
+    @OneToMany(type=>Provider, provider=>provider.user,{ onDelete: 'CASCADE' })
+    providers:Provider[];
     
 }
