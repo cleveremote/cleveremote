@@ -1,5 +1,8 @@
-export class Tools {
+import { Observable, from } from "rxjs";
+import { map } from "rxjs/operators";
 
+export class Tools {
+    public static serialNumber: string;
     public static titleApplication(): void {
         // tslint:disable
         console.log('\x1b[34m', "                                                                                                                                               ", '\x1b[0m');
@@ -70,6 +73,21 @@ export class Tools {
 
     public static logSuccess(message: string): void {
         console.log('\x1b[32m', message, '\x1b[0m');
+    }
+
+    public static getSerialNumber(): Observable<void> {
+        // tslint:disable-next-line: no-require-imports
+        const util = require('util');
+
+        // tslint:disable-next-line: no-require-imports
+        return from(util.promisify(require('child_process').exec)('ls')).pipe(
+            map((x: any) => {
+                const { stdout, stderr } = x;
+                console.log('stdout:', stdout);
+                console.log('stderr:', stderr);
+                Tools.serialNumber = "123456";
+            })
+        );
     }
 
 }

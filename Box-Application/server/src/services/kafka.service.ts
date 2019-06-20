@@ -6,11 +6,14 @@ import { DispatchService } from './dispatch.service';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";
-import { device } from '../entities/gen.entities/device';
+import { Device } from '../entities/gen.entities/device';
 import { Tools } from './tools-service';
 import { ITopic } from '../entities/interfaces/entities.interface';
+import { AccountExt } from '../entities/custom.repositories/account.ext';
 
 export class KafkaService {
+    public static instance: KafkaService;
+    public consumers: Array<ConsumerGroup> = [];
     public producer: Producer;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
@@ -19,34 +22,19 @@ export class KafkaService {
     private readonly clientProducer: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
     private readonly topics: Array<ITopic>;
+    public static flag_IsFirstConnection: boolean = false;
 
     constructor() {
-        this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
-        this.clientProducer = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
-        this.dispatchService = new DispatchService(this.subscribeTopics);
-    }
-
-
-
-    public getSerialNumber(): Observable<void> {
-        // tslint:disable-next-line: no-require-imports
-        const util = require('util');
-        // tslint:disable-next-line: no-require-imports
-        return from(util.promisify(require('child_process').exec)('ls')).pipe(
-            map((x: any) => {
-                const { stdout, stderr } = x;
-                console.log('stdout:', stdout);
-                console.log('stderr:', stderr);
-            })
-        );
-
+        this.client = new KafkaClient({ idleConnection: 24 * 60 * 60 * 1000, kafkaHost: process.env.KAFKA_HOSTS });
+        this.clientProducer = new KafkaClient({ idleConnection: 24 * 60 * 60 * 1000, kafkaHost: process.env.KAFKA_HOSTS });
+        this.dispatchService = new DispatchService();
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
         const deviceRepository = getCustomRepository(DeviceExt);
 
         return deviceRepository.getDevice().pipe(
-            map((currentDevice: device) => {
+            map((currentDevice: Device) => {
                 topicsString.split(';').forEach((topic: string) => {
                     const topicString = topic.split('.');
                     if (topicString[1] && topicString[1] === 'range') {
@@ -104,14 +92,14 @@ export class KafkaService {
         return [customPartitionAssignmentProtocol];
     }
 
-    public setCfgOptions(patition: string, topic: ITopic): ConsumerGroupOptions {
+    public setCfgOptions(patition: string, topic: ITopic, customProtocol: boolean = true): ConsumerGroupOptions {
 
         return {
             kafkaHost: process.env.KAFKA_HOSTS,
             batch: { noAckBatchSize: 1024, noAckBatchAge: 10 },
             sessionTimeout: 15000,
             groupId: 'partitionedGroup',
-            protocol: this.setCustomPartitionAssignmentProtocol(topic),
+            protocol: customProtocol ? this.setCustomPartitionAssignmentProtocol(topic) : ["roundrobin"],
             id: `consumer${patition}`,
             fromOffset: "latest",
             migrateHLC: false,
@@ -125,7 +113,7 @@ export class KafkaService {
             if (topicObject) {
                 Object.keys(topicObject).forEach((key, index) => {
                     const consumer = new ConsumerGroup(this.setCfgOptions(key, topic), [topic.name]);
-                    this.setConsumerListener(consumer);
+                    this.consumers.push(consumer);
                 });
             }
         });
@@ -152,25 +140,6 @@ export class KafkaService {
         return of(true);
     }
 
-    public setConsumerListener(consumer: ConsumerGroup): void {
-        consumer.on('offsetOutOfRange', (topic: any) => {
-            topic.maxNum = 1;
-            this.offset.fetch([topic], (err, offsets) => {
-                if (err) {
-                    Tools.logError('error', err);
-                }
-                const min = Math.min(offsets[topic.topic][topic.partition]);
-                consumer.setOffset(topic.topic, topic.partition, min);
-            });
-        });
-        consumer.on('message', (message: Message) => {
-            this.dispatchService.routeMessage(consumer, message);
-        });
-        consumer.on('error', (err: any) => {
-            Tools.logError('error', err);
-        });
-    }
-
     public initializeConsumer(): Observable<boolean> {
         const topics = this.subscribeTopics.map((topic: ITopic) => topic.name);
         const loadMetadataForTopicsObs = bindCallback(this.client.loadMetadataForTopics.bind(this.client, topics));
@@ -186,18 +155,29 @@ export class KafkaService {
     }
 
     public checkFirstConnexion(): Observable<boolean> {
+        const accountRepository = getCustomRepository(AccountExt);
 
-        return this.dispatchService.checkFirstConnection().pipe(
-            map((isFirstConnexion: boolean) => {
-                if (isFirstConnexion) {
-                    // create Topic init_cnx_v1 where v1 is the id of the topic
-                    // create consumer for this topic 
-                    // send server aggregator_init_connexion
-                    // params v1  
+        return accountRepository.isBoxInitialized().pipe(
+            mergeMap((isInitialized: boolean) => {
+                if (!isInitialized) {
+                    KafkaService.flag_IsFirstConnection = true;
+                    Tools.loginfo('* start init first connexion...');
+                    const topicName = `${Tools.serialNumber}_init_connexion`;
+                    var topicsToCreate = [{ topic: topicName, partitions: 1, replicationFactor: 2 }];
+                    this.client.createTopics(topicsToCreate, (error, result) => {
+                        if (!error) {
+                            Tools.loginfo(`   - init create topic =>${topicName}`);
+                            Tools.logSuccess('     => OK');
+                        } else {
+                            Tools.logError(`     => KO! detail: ${error}`);
+                        }
+                    });
+                    const consumerGrp = new ConsumerGroup(this.setCfgOptions('0', undefined, false), topicName);
+                    this.consumers.push(consumerGrp);
                 }
-
-                return true;
-            }));
+                return of(true);
+            })
+        );
     }
 
     public init(): Observable<void> {
@@ -208,6 +188,7 @@ export class KafkaService {
                         flatMap(() => this.initializeProducer())).pipe(
                             flatMap(() => this.initializeConsumer())).pipe(
                                 map(() => {
+                                    KafkaService.instance = this;
                                     Tools.logSuccess('  => OK.');
                                 }))
                 ))

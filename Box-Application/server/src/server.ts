@@ -19,33 +19,9 @@ import * as cookieParser from 'cookie-parser';
 import { KafkaService } from './services/kafka.service';
 import { XbeeService } from './services/xbee.service';
 import { Tools } from './services/tools-service';
+import { DispatchService } from './services/dispatch.service';
 
 export class Server {
-    // private Reset = "\x1b[0m";
-    // private Bright = "\x1b[1m";;
-    // private Dim = "\x1b[2m";
-    // private Underscore = "\x1b[4m";
-    // private Blink = "\x1b[5m";
-    // private Reverse = "\x1b[7m";
-    // private Hidden = "\x1b[8m";
-
-    // private FgBlack = "\x1b[30m";
-    // private FgRed = "\x1b[31m";
-    // private FgGreen = "\x1b[32m";
-    // private FgYellow = "\x1b[33m";
-    // private FgBlue = "\x1b[34m";
-    // private FgMagenta = "\x1b[35m";
-    // private FgCyan = "\x1b[36m";
-    // private FgWhite = "\x1b[37m";
-
-    // private BgBlack = "\x1b[40m";
-    // private BgRed = "\x1b[41m";
-    // private BgGreen = "\x1b[42m";
-    // private BgYellow = "\x1b[43m";
-    // private BgBlue = "\x1b[44m";
-    // private BgMagenta = "\x1b[45m";
-    // private BgCyan = "\x1b[46m";
-    // private BgWhite = "\x1b[47m";
 
     public app: express.Application;
 
@@ -54,18 +30,29 @@ export class Server {
     }
 
     public init(): Observable<express.Application> {
-        return this.initDependencies().pipe(
-            flatMap(() => this.initDb().pipe(
-                flatMap(() => this.initKafka().pipe(
-                    flatMap(() => this.initXbee().pipe(
-                        flatMap(() => this.initPassport().pipe(
-                            flatMap(() => this.initDbMongoose().pipe(
-                                flatMap(() => this.initRoutes()), map(() => this.app))
+        return Tools.getSerialNumber().pipe(
+            flatMap(() => this.initDependencies().pipe(
+                flatMap(() => this.initDb().pipe(
+                    flatMap(() => this.initKafka().pipe(
+                        flatMap(() => this.initDispatch().pipe(
+                            flatMap(() => this.initXbee().pipe(
+                                flatMap(() => this.initPassport().pipe(
+                                    flatMap(() => this.initDbMongoose().pipe(
+                                        flatMap(() => this.initRoutes()), map(() => this.app))
+                                    ))
+                                ))
                             ))
                         ))
                     ))
                 ))
             ));
+    }
+
+    public initDispatch(): Observable<void> {
+        Tools.loginfo('* start init dispatch...');
+        const dispatchService = new DispatchService();
+
+        return dispatchService.init();
     }
 
     public initDb(): Observable<void> {
@@ -90,17 +77,6 @@ export class Server {
 
     public initXbee(): Observable<void> {
         Tools.loginfo('* start init xbee...');
-        if (process.env.NODE_ENV === 'development') {
-            return of(true).pipe(
-                map((res: boolean) => {
-                    Tools.logWarn('  => current App server Xbee not needed');
-                }, (err: any) => {
-                    Tools.logError(`  => KO! ${err}`);
-
-                    return err;
-                }));
-        }
-
         const xbee = new XbeeService();
 
         return xbee.init();

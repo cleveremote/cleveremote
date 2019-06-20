@@ -1,3 +1,14 @@
+
+export interface ISynchronize {
+    synchronize(data: ISynchronizeParams): any;
+}
+
+export interface ISynchronizeParams {
+    entity: string;
+    data: any;
+    action: string;
+}
+
 export interface IPartitionTopic {
     rangePartitions: Array<number>;
     current: number;

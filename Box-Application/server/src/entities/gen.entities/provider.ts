@@ -1,10 +1,10 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {users} from "./users";
+import {User} from "./users";
 
 
 @Entity("provider",{schema:"public" } )
 @Index("provider_provider_uid_key",["provider_uid",],{unique:true})
-export class provider {
+export class Provider {
 
     @Column("character varying",{ 
         nullable:false,
@@ -16,9 +16,9 @@ export class provider {
         
 
    
-    @ManyToOne(type=>users, users=>users.providers,{  nullable:false,onDelete: 'CASCADE', })
+    @ManyToOne(type=>User, users=>users.providers,{  nullable:false,onDelete: 'CASCADE', })
     @JoinColumn({ name:'user_id'})
-    user:users | null;
+    user:User | null;
 
 
     @Column("character varying",{ 

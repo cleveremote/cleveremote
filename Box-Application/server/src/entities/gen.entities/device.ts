@@ -1,12 +1,12 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {account} from "./account";
-import {partition_config} from "./partition_config";
-import {transceiver} from "./transceiver";
+import {Account} from "./account";
+import {PartitionConfig} from "./partition_config";
+import {Transceiver} from "./transceiver";
 
 
 @Entity("device",{schema:"public" } )
 @Index("device_name_key",["name",],{unique:true})
-export class device {
+export class Device {
 
     @Column("character varying",{ 
         nullable:false,
@@ -32,14 +32,14 @@ export class device {
         })
     description:string | null;
    
-    @ManyToOne(type=>account, account=>account.devices,{  nullable:false,onDelete: 'CASCADE' })
+    @ManyToOne(type=>Account, account=>account.devices,{  nullable:false,onDelete: 'CASCADE' })
     @JoinColumn({ name:'account_id'})
-    account:account | null;
+    account:Account | null;
    
-    @OneToMany(type=>partition_config, partition_config=>partition_config.device,{ onDelete: 'CASCADE', cascade: true })
-    partition_configs:partition_config[];
+    @OneToMany(type=>PartitionConfig, partition_config=>partition_config.device,{ onDelete: 'CASCADE', cascade: true })
+    partition_configs:PartitionConfig[];
 
-    @OneToMany(type=>transceiver, transceiver=>transceiver.device,{ onDelete: 'CASCADE', cascade: true })
-    transceivers:transceiver[];
+    @OneToMany(type=>Transceiver, transceiver=>transceiver.device,{ onDelete: 'CASCADE', cascade: true })
+    transceivers:Transceiver[];
     
 }

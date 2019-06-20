@@ -11,19 +11,17 @@ import { Tools } from './tools-service';
 import { ITopic } from '../entities/interfaces/entities.interface';
 
 export class KafkaService {
+    public static instance: KafkaService;
+    public consumers: Array<ConsumerGroup> = [];
     public producer: Producer;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
     public publishTopics: Array<ITopic> = [];
     private readonly client: KafkaClient = undefined;
     private readonly clientProducer: KafkaClient = undefined;
-    private readonly dispatchService: DispatchService;
-    private readonly topics: Array<ITopic>;
-
     constructor() {
         this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
         this.clientProducer = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
-        this.dispatchService = new DispatchService(this);
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
@@ -39,8 +37,6 @@ export class KafkaService {
         Tools.logSuccess('     => OK');
 
         return of(true);
-        // Tools.loginfo('   - init Subscription topics');
-        // Tools.logError('      => KO');
     }
 
     public setPublicationTopics(topicsString: string): Observable<boolean> {
@@ -97,7 +93,7 @@ export class KafkaService {
             if (topicObject) {
                 Object.keys(topicObject).forEach((key, index) => {
                     const consumer = new ConsumerGroup(this.setCfgOptions(key, topic), [topic.name]);
-                    this.setConsumerListener(consumer);
+                    this.consumers.push(consumer);
                 });
             }
         });
@@ -126,43 +122,26 @@ export class KafkaService {
         });
 
         this.producer.on('ready', () => {
-            // setInterval(() => {
-            //     const payloads = [
-            //         { topic: 'box_action', messages: 'test-AGGREGATION', key: 'box_action.server_1' }
-            //     ];
+            setInterval(() => {
+                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const payloads = [
+                    { topic: 'box_action', messages: JSON.stringify(dataExample), key: 'box_action.server_1' }
+                ];
 
-            //     this.producer.send(payloads, (err, data) => {
-            //         console.log(data);
-            //     });
-            // }, 5000);
+                this.producer.send(payloads, (err, data) => {
+                    console.log(data);
+                });
+            }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
         });
 
         return of(true);
     }
-    public setConsumerListener(consumer: ConsumerGroup): void {
-        consumer.on('offsetOutOfRange', (topic: any) => {
-            topic.maxNum = 1;
-            this.offset.fetch([topic], (err, offsets) => {
-                if (err) {
-                    Tools.logError('error', err);
-                }
-                const min = Math.min(offsets[topic.topic][topic.partition]);
-                consumer.setOffset(topic.topic, topic.partition, min);
-            });
-        });
-        consumer.on('message', (message: Message) => {
-            this.dispatchService.routeMessage(consumer, message);
-        });
-        consumer.on('error', (err: any) => {
-            Tools.logError('error', err);
-        });
-    }
 
     public initializeConsumer(): Observable<boolean> {
         const topics = this.subscribeTopics.map((topic: ITopic) => topic.name);
-        const loadMetadataForTopicsObs = bindCallback(this.client.loadMetadataForTopics.bind(this.client, topics));
+        const loadMetadataForTopicsObs = bindCallback(this.client.loadMetadataForTopics.bind(this.client, []));
         const result = loadMetadataForTopicsObs();
 
         return result.pipe(map((results: any) => {
@@ -181,6 +160,7 @@ export class KafkaService {
                     flatMap(() => this.initializeProducer())).pipe(
                         flatMap(() => this.initializeConsumer())).pipe(
                             map(() => {
+                                KafkaService.instance = this;
                                 Tools.logSuccess('  => OK.');
                             }))
             ));

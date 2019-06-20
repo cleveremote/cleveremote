@@ -1,11 +1,11 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {device} from "./device";
-import {users} from "./users";
+import {Device} from "./device";
+import {User} from "./users";
 
 
 @Entity("account",{schema:"public" } )
 @Index("account_name_key",["name",],{unique:true})
-export class account {
+export class Account {
 
     @Column("character varying",{ 
         nullable:false,
@@ -30,13 +30,19 @@ export class account {
         name:"description"
         })
     description:string | null;
-        
+
+    
+    // @Column("boolean",{ 
+    //     nullable:true,
+    //     name:"activated"
+    //     })
+    // activated:boolean;
 
    
-    @OneToMany(type=>device, device=>device.account,{ onDelete: 'CASCADE', cascade: true  })
-    devices:device[];
+    @OneToMany(type=>Device, device=>device.account,{ onDelete: 'CASCADE', cascade: true  })
+    devices:Device[];
    
-    @OneToMany(type=>users, users=>users.account,{ onDelete: 'CASCADE', cascade: true })
-    users:users[];
+    @OneToMany(type=>User, users=>users.account,{ onDelete: 'CASCADE', cascade: true })
+    users:User[];
     
 }
