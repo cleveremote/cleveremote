@@ -77,7 +77,8 @@ export class KafkaService {
             userData: {},
             assign: (topicPartition: any, groupMembers: any, cb: (error: any, result: any) => void) => {
                 const ret: Array<any> = [];
-                groupMembers.forEach((groupMember, index) => {
+                const lst = groupMembers.filter((grp) => grp.subscription[0] === topic.name);
+                lst.forEach((groupMember, index) => {
                     const cfg = {} as any;
                     cfg.memberId = groupMember.id;
                     cfg.topicPartitions = {} as any;
@@ -111,10 +112,10 @@ export class KafkaService {
         this.subscribeTopics.forEach((topic: ITopic) => {
             const topicObject = clusterMetaData.metadata[topic.name];
             if (topicObject) {
-                Object.keys(topicObject).forEach((key, index) => {
-                    const consumer = new ConsumerGroup(this.setCfgOptions(key, topic), [topic.name]);
+                for (let index = topic.partitionTopic.rangePartitions[0]; index <= topic.partitionTopic.rangePartitions[1]; index++) {
+                    const consumer = new ConsumerGroup(this.setCfgOptions(index.toString(), topic), [topic.name]);
                     this.consumers.push(consumer);
-                });
+                }
             }
         });
     }

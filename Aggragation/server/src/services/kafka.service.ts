@@ -131,7 +131,7 @@ export class KafkaService {
                 this.producer.send(payloads, (err, data) => {
                     console.log(data);
                 });
-            }, 5000);
+            }, 100);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
         });

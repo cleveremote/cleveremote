@@ -76,16 +76,23 @@ export class Tools {
     }
 
     public static getSerialNumber(): Observable<void> {
+        Tools.loginfo(`* get box serial number`);
         // tslint:disable-next-line: no-require-imports
         const util = require('util');
 
         // tslint:disable-next-line: no-require-imports
-        return from(util.promisify(require('child_process').exec)('ls')).pipe(
+        return from(util.promisify(require('child_process').exec)('cat /proc/cpuinfo | grep ^Serial | cut -d":" -f2')).pipe(
             map((x: any) => {
                 const { stdout, stderr } = x;
-                console.log('stdout:', stdout);
-                console.log('stderr:', stderr);
-                Tools.serialNumber = "123456";
+                if (stdout) {
+                    Tools.serialNumber = stdout.replace(/(\r\n|\n|\r|\s)/gm, "");
+                    Tools.logSuccess(`  => OK. :${Tools.serialNumber}`);
+                } else {
+                    Tools.logSuccess(`  => KO. :${stderr}`);
+                }
+
+
+
             })
         );
     }
