@@ -10,6 +10,7 @@ import { Device } from '../entities/gen.entities/device';
 import { Tools } from './tools-service';
 import { ITopic } from '../entities/interfaces/entities.interface';
 import { AccountExt } from '../entities/custom.repositories/account.ext';
+import { CustomPartitionnerService } from './customPartitionner.service';
 
 export class KafkaService {
     public static instance: KafkaService;
@@ -94,13 +95,13 @@ export class KafkaService {
     }
 
     public setCfgOptions(patition: string, topic: ITopic, customProtocol: boolean = true): ConsumerGroupOptions {
-
+        const customPartitionner: CustomPartitionnerService = new CustomPartitionnerService(topic);
         return {
             kafkaHost: process.env.KAFKA_HOSTS,
             batch: { noAckBatchSize: 1024, noAckBatchAge: 10 },
             sessionTimeout: 15000,
             groupId: 'partitionedGroup',
-            protocol: customProtocol ? this.setCustomPartitionAssignmentProtocol(topic) : ["roundrobin"],
+            protocol: customProtocol ? customPartitionner.setCustomPartitionner() : ["roundrobin"],
             id: `consumer${patition}`,
             fromOffset: "latest",
             migrateHLC: false,
@@ -127,15 +128,15 @@ export class KafkaService {
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
 
-            setInterval(() => {
-                const payloads = [
-                    { topic: 'aggregator_dbsync', messages: 'test-AGGREGATION', key: 'server_1' }
-                ];
+            // setInterval(() => {
+            //     const payloads = [
+            //         { topic: 'aggregator_dbsync', messages: 'test-AGGREGATION', key: 'server_1' }
+            //     ];
 
-                this.producer.send(payloads, (err, data) => {
-                    console.log(data);
-                });
-            }, 5000);
+            //     this.producer.send(payloads, (err, data) => {
+            //         console.log(data);
+            //     });
+            // }, 5000);
         });
 
         return of(true);
