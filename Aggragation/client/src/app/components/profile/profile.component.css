@@ -1,5 +1,7 @@
-@media (min-width: 992px) {
-    .navbar {
-        height:50px;
-    }
+.navbar-start.center-items{
+    flex-grow: 1; justify-content: center;
+}
+
+.navbar {
+    background-color: #ececec;
 }

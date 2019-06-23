@@ -32,11 +32,11 @@ export class Account {
     description:string | null;
 
     
-    @Column("boolean",{ 
-        nullable:true,
-        name:"activated"
-        })
-    activated:boolean;
+    // @Column("boolean",{ 
+    //     nullable:true,
+    //     name:"activated"
+    //     })
+    // activated:boolean;
    
     @OneToMany(type=>Device, device=>device.account,{ onDelete: 'CASCADE', cascade: true  })
     devices:Device[];

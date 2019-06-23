@@ -3,7 +3,6 @@ import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { ApiRequestsService } from "../services/api-requests.service";
 import { UserIdleService } from 'angular-user-idle';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from '../auth/auth.service';
 import { DataService } from './websocket/websocket.service';
 import { Subject, timer } from 'rxjs';
@@ -13,17 +12,16 @@ import { take } from 'rxjs/operators';
 export class TimerService {
     public modalReference = null;
     public modalInstance = null;
-    private oauthTimerObs = null;
+    public oauthTimerObs = null;
     public counterLogout = 0;
     public isModalOpened = false;
-    private tokenTimer: any;
+    public tokenTimer: any;
     public userIdle: UserIdleService;
     public chatMessageAdded: any;
 
     constructor(private http: HttpClient,
         private router: Router,
-        private apiRequestsService: ApiRequestsService,
-        private modalService: NgbModal) {
+        private apiRequestsService: ApiRequestsService,) {
         this.chatMessageAdded = new Subject();
     }
 
@@ -32,7 +30,7 @@ export class TimerService {
             this.oauthTimerObs = timer(1000, 1000).pipe(take(10)).subscribe((count) => {
                 if (count !== null) {
                     if (!this.isModalOpened) {
-                        this.modalInstance = this.modalService.open(this.modalReference, { centered: true });
+                        this.modalInstance.nativeElement.classList.toggle('is-active');
                         this.isModalOpened = true;
                     }
                     this.counterLogout = (10 - count);
@@ -42,7 +40,7 @@ export class TimerService {
                     }
                 }
             });
-        }, (duration - 10) * 1000);
+        }, (duration-10) * 1000);
     }
 
     public initInactivity() {
@@ -51,7 +49,7 @@ export class TimerService {
         this.userIdle.onTimerStart().subscribe(count => {
             if (count !== null) {
                 if (!this.isModalOpened) {
-                    this.modalInstance = this.modalService.open(this.modalReference, { centered: true });
+                    this.modalInstance.nativeElement.classList.toggle('is-active');
                     this.isModalOpened = true;
                 }
                 this.counterLogout = (11 - count);
@@ -82,7 +80,7 @@ export class TimerService {
                 this.oauthTimerObs.unsubscribe();
                 this.oauthTimerObs = undefined;
             }
-            this.modalInstance.close();
+            this.modalInstance.nativeElement.classList.toggle('is-active');
             this.isModalOpened = false;
             if (this.tokenTimer) {
                 clearTimeout(this.tokenTimer);

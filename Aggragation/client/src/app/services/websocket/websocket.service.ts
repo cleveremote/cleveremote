@@ -42,7 +42,7 @@ export class DataService implements OnDestroy {
     this.observable = this.createObservable().pipe(share());
     this.obsMessage = this.timerService.chatMessageAdded.subscribe((data) => {
       if (data === 'refreshToken') {
-        this.refreshTokenAndWebSocket();
+        this.refreshTokenAndWebSocket().subscribe();
       }
     });
   }
@@ -62,7 +62,7 @@ export class DataService implements OnDestroy {
   public initWebSocket() {
     const token = this.authService.getToken();
     this.socket = webSocket({
-      url: "ws://86.238.41.71:4000",
+      url: "ws://86.242.39.179:4000",
       closeObserver: {
         next: (closeEvent) => {
           const customError = { code: closeEvent.code, reason: closeEvent.reason };
@@ -124,9 +124,10 @@ export class DataService implements OnDestroy {
     return Observable.throw(error || 'Socket.io server error');
   }
 
-  public refreshTokenAndWebSocket() {
-    this.authService.refreshToken().subscribe((response) => {
+  public refreshTokenAndWebSocket(): Observable<boolean> {
+    return this.authService.refreshToken().pipe(mergeMap((response: any) => {
       this.restartWebSocket();
-    });
+      return of(true);
+    }));
   }
 }

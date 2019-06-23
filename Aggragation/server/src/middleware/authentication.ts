@@ -22,9 +22,9 @@ export const authenticate = () => (target: any, propertyKey: string, descriptor:
                 const t = JSON.parse(JSON.stringify(user)) as IUser;
                 const token = jwt.sign(t,
                     String(process.env.JWT_SECRET),
-                    { expiresIn: 20 }
+                    { expiresIn: 200000 }
                 );
-                response.locals = { authentication: { success: true, user, token, expiresIn: 20 } };
+                response.locals = { authentication: { success: true, user, token, expiresIn: 200000 } };
                 next();
 
                 return;

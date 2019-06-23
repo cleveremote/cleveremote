@@ -4,7 +4,6 @@ import { AuthService } from "../../auth/auth.service";
 import { UserIdleService } from 'angular-user-idle';
 import { timer, Subscription } from 'rxjs';
 import { DataService } from '../../services/websocket/websocket.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TimerService } from '../../services/timer.service';
 
 export class Message {
@@ -39,13 +38,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private apiRequestsService: ApiRequestsService,
     private authService: AuthService,
     private dataService: DataService,
-    private modalService: NgbModal,
     private timerService: TimerService) { }
 
   ngOnInit() {
-    this.timerService.userIdle = this.userIdle;
-    this.timerService.modalReference = this.modal;
-    this.timerService.initInactivity();
+    // var burger = document.querySelector('.burger') as any;
+    // var nav = document.querySelector('#'+burger.dataset.target);
+   
+    // burger.addEventListener('click', function(){
+    //   burger.classList.toggle('is-active');
+    //   nav.classList.toggle('is-active');
+    // });
+     this.timerService.userIdle = this.userIdle;
+     this.timerService.modalInstance = this.modal;
+     this.timerService.initInactivity();
 
     this.webSocketsub = this.dataService.observable.subscribe((x) => {
       const t = x;
@@ -64,6 +69,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   logout() {
+    if (this.timerService.oauthTimerObs) {
+      this.timerService.oauthTimerObs.unsubscribe();
+      this.timerService.oauthTimerObs = undefined;
+    }
+
+    if (this.timerService.tokenTimer) {
+      clearTimeout(this.timerService.tokenTimer);
+      this.timerService.tokenTimer = 0;
+    }
+
     this.authService.logout();
   }
 
@@ -72,7 +87,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   openVerticallyCentered(content) {
-    this.modalReference = this.modalService.open(content, { centered: true });
+    this.modal.nativeElement.classList.toggle('is-active');
+    //this.modalReference = this.modalService.open(content, { centered: true });
   }
 
   ngOnDestroy() {

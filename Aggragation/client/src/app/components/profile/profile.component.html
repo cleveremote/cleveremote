@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-md navbar-dark bg-dark mx-auto">
+<!-- <nav class="navbar navbar-expand-md navbar-dark bg-dark mx-auto">
   <a class="navbar-brand" href="#"></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04"
     aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation"
@@ -35,14 +35,87 @@
       </li>
     </ul>
   </div>
+</nav> -->
+
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a>
+      <img src="assets/img/nouveu_logo_clv.svg" style="width: 175px;height: auto; margin-bottom: 12px;">
+    </a>
+
+    <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
+      data-target="navbarBasicExample">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-start">
+      <a class="navbar-item">
+        Home
+      </a>
+
+      <a class="navbar-item">
+        Documentation
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More
+        </a>
+
+        <div class="navbar-dropdown">
+          <a class="navbar-item">
+            About
+          </a>
+          <a class="navbar-item">
+            Jobs
+          </a>
+          <a class="navbar-item">
+            Contact
+          </a>
+          <hr class="navbar-divider">
+          <a class="navbar-item">
+            Report an issue
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="navbar-start center-items">
+      <a class="navbar-item">
+        Documentation
+      </a>
+      <a class="navbar-item">
+        Documentation
+      </a>
+      <a class="navbar-item">
+        Documentation
+      </a>
+
+    </div>
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <div class="buttons">
+          <a class="button is-primary">
+            <strong>Sign up</strong>
+          </a>
+          <a class="button is-light">
+            Log in
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </nav>
 
 
 
 
-
 <div class="container">
-  
+
   <a (click)="restartWatching(true)" class="btn btn-default btn-sm">Stay connected</a>
   <div class="page-header text-center">
     <h1><span class="fa fa-anchor"></span> Profile Page</h1>
@@ -66,16 +139,38 @@
 </div>
 
 
-<ng-template #modal let-modal>
+
+<div class="modal" #modal>
+  <div class="modal-background"></div>
+  <div class="modal-content">
+      <div class="modal-header">
+          <h4 class="col-12 modal-title text-center">Déconnexion dans {{timerService.counterLogout}} seconds<div
+              id="countdown"></div>
+          </h4>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success mr-auto" (click)="timerService.restartWatching(true)">Rester
+            connecté</button>
+          <button type="button" class="btn btn-danger" (click)="timerService.logout()">Déconnexion</button>
+      
+        </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<!-- <ng-template #modal let-modal>
   <div class="modal-header">
-      <h4 class="col-12 modal-title text-center">Déconnexion dans  {{timerService.counterLogout}} seconds<div id="countdown"></div></h4>
+    <h4 class="col-12 modal-title text-center">Déconnexion dans {{timerService.counterLogout}} seconds<div
+        id="countdown"></div>
+    </h4>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-success mr-auto" (click)="timerService.restartWatching(true)">Rester connecté</button>
+    <button type="button" class="btn btn-success mr-auto" (click)="timerService.restartWatching(true)">Rester
+      connecté</button>
     <button type="button" class="btn btn-danger" (click)="timerService.logout()">Déconnexion</button>
 
   </div>
-</ng-template>
+</ng-template> -->
 
 
 <button class="btn btn-outline-primary mb-2 mr-2" (click)="openVerticallyCentered(modal)">Modal vertically

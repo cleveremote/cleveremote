@@ -9,7 +9,7 @@
            "request": "attach",
            "name": "Attach",
            "protocol": "inspector",
-           "port": 5100,
+           "port": 5200,
            "address": "localhost",
            "sourceMaps": true,
            "trace": "sm",

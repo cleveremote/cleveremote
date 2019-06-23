@@ -81,7 +81,7 @@ module.exports = (passport: any) => {
     publicModule.logout_get = (req: any, res: any) => {
         req.session.destroy((e:any)=>{
             req.logout();
-            res.redirect('/home');
+            res.redirect('/login');
         });
     };
 

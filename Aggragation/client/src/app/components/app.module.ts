@@ -21,8 +21,6 @@ import { AuthInterceptor } from "../auth/auth-interceptor.service";
 import { DataService } from '../services/websocket/websocket.service';
 import { TestcmpComponent } from './testcmp/testcmp.component';
 import { UserIdleModule } from 'angular-user-idle';
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
-import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { TimerService } from '../services/timer.service';
 
 @NgModule({
@@ -37,8 +35,6 @@ import { TimerService } from '../services/timer.service';
     TestcmpComponent
   ],
   imports: [
-    NgbModule.forRoot(),
-    AngularFontAwesomeModule,
     UserIdleModule.forRoot({ idle: 3600, timeout: 10, ping: 2 }),
     BrowserModule,
     FormsModule,

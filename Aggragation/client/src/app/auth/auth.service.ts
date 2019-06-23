@@ -7,7 +7,6 @@ import { AuthData } from "./auth-data.model";
 import { ApiRequestsService } from "../services/api-requests.service";
 import { UserIdleService } from 'angular-user-idle';
 import { tap } from 'rxjs/operators';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TimerService } from '../services/timer.service';
 
 @Injectable({ providedIn: "root" })
@@ -28,6 +27,7 @@ export class AuthService implements OnDestroy {
     private apiRequestsService: ApiRequestsService,
     private timerService: TimerService
   ) {
+    this.refreshToken();
     this.obsMessage = this.timerService.chatMessageAdded.subscribe((data) => {
       if (data === 'logout') {
         this.logout();
