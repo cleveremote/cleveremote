@@ -1,0 +1,106 @@
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+
+
+    <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
+      data-target="navbarBasicExample">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-start">
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          Devices
+        </a>
+
+        <div class="navbar-dropdown">
+          <a class="navbar-item">
+            Device 1
+          </a>
+          <a class="navbar-item">
+            Device 2
+          </a>
+          <a class="navbar-item">
+            Device 3
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="navbar-start center-items">
+      <a class="navbar-item is-tab is-active">
+        <span class="icon has-text-info">
+          <fa-icon [icon]="['fas', 'map']"></fa-icon>
+        </span>
+        <span style="margin-left: 5px;">Schemes</span>
+
+      </a>
+      <a class="navbar-item is-tab is-active">
+        <span class="icon has-text-info">
+          <fa-icon [icon]="['fas', 'chart-pie']"></fa-icon>
+        </span>
+        <span style="margin-left: 5px;">Dashboard</span>
+
+      </a>
+      <a class="navbar-item is-tab">
+        <span class="icon has-text-info">
+          <fa-icon [icon]="['fas', 'cog']"></fa-icon>
+        </span>
+        <span style="margin-left: 5px;">Configuration</span>
+      </a>
+
+    </div>
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <div class="buttons">
+          <a class="button is-warning" routerLink="/" (click)="logout()">
+            Log out
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+
+
+<app-test-component></app-test-component>
+
+
+
+<div class="modal" #modal>
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="col-12 modal-title text-center">Déconnexion dans {{timerService.counterLogout}} seconds<div
+          id="countdown"></div>
+      </h4>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-success mr-auto" (click)="timerService.restartWatching(true)">Rester
+        connecté</button>
+      <button type="button" class="btn btn-danger" (click)="timerService.logout()">Déconnexion</button>
+
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<nav class="navbar footer-style is-fixed-bottom" role="navigation" aria-label="main navigation">
+  <div class="navbar-menu">
+    <div class="navbar-start center-items">
+      <div class="navbar-item">
+        © 2019 Copyright
+      </div>
+    </div>
+    <div class="navbar-end">
+      <img src="assets/img/nouveu_logo_clv.svg" style="width: 130px;height: auto;">
+    </div>
+  </div>
+</nav>

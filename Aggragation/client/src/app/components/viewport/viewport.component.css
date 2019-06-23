@@ -5,3 +5,7 @@
 .navbar {
     background-color: #ececec;
 }
+
+.navbar.footer-style {
+    background-color: #f9f9f9;
+}

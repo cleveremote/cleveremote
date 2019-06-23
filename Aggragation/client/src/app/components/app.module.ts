@@ -12,7 +12,7 @@ import { ConfigurationService } from '../services/configuration.service';
 import { SignupComponent } from './signup/signup.component';
 import { LoginComponent } from './login/login.component';
 import { HomeComponent } from './home/home.component';
-import { ProfileComponent } from './profile/profile.component';
+import { ViewportComponent } from './viewport/viewport.component';
 import { RouterModule } from "@angular/router";
 import { routing } from "./app.routing";
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
@@ -22,6 +22,11 @@ import { DataService } from '../services/websocket/websocket.service';
 import { TestcmpComponent } from './testcmp/testcmp.component';
 import { UserIdleModule } from 'angular-user-idle';
 import { TimerService } from '../services/timer.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { faBatteryEmpty } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
   declarations: [
@@ -30,12 +35,13 @@ import { TimerService } from '../services/timer.service';
     SignupComponent,
     LoginComponent,
     HomeComponent,
-    ProfileComponent,
+    ViewportComponent,
     PageNotFoundComponent,
     TestcmpComponent
   ],
   imports: [
     UserIdleModule.forRoot({ idle: 3600, timeout: 10, ping: 2 }),
+    FontAwesomeModule,
     BrowserModule,
     FormsModule,
     CommonModule,
@@ -54,4 +60,10 @@ import { TimerService } from '../services/timer.service';
   bootstrap: [AppComponent]
 })
 export class AppModule {
+  constructor() {
+    // Add an icon to the library for convenient access in other components
+    library.add(fas);
+    
+  }
+
 }

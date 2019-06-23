@@ -15,16 +15,16 @@ export class Message {
 }
 
 @Component({
-  selector: 'app-profile',
-  templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css'],
+  selector: 'app-viewport',
+  templateUrl: './viewport.component.html',
+  styleUrls: ['./viewport.component.css'],
   providers: [DataService]
 })
 
 
 
-export class ProfileComponent implements OnInit, OnDestroy {
-  @ViewChild('modal') modal: ElementRef;
+export class ViewportComponent implements OnInit, OnDestroy {
+  @ViewChild('modal', { static: true }) modal: ElementRef;
   public testEntries: any = [];
   public userData: any = {};
   public downloadTimer: any;
