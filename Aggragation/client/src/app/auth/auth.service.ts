@@ -79,7 +79,7 @@ export class AuthService implements OnDestroy {
         const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
         console.log(expirationDate);
         this.saveAuthData(token, expirationDate, this.userId);
-        this.router.navigate(["/profile"]);
+        this.router.navigate(["/"]);
       }
     });
   }
@@ -160,7 +160,7 @@ export class AuthService implements OnDestroy {
     this.isAuthenticated = false;
     this.authStatusListener.next(false);
     this.clearAuthData();
-    this.router.navigate(["/"]);
+    this.router.navigate(["/login"]);
     this.userId = null;
   }
 

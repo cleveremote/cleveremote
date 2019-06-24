@@ -27,6 +27,9 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faChartLine } from '@fortawesome/free-solid-svg-icons';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { faBatteryEmpty } from '@fortawesome/free-solid-svg-icons';
+import { SchemeComponent } from './scheme/scheme.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { ConfigurationComponent } from './configuration/configuration.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +40,10 @@ import { faBatteryEmpty } from '@fortawesome/free-solid-svg-icons';
     HomeComponent,
     ViewportComponent,
     PageNotFoundComponent,
-    TestcmpComponent
+    TestcmpComponent,
+    SchemeComponent,
+    DashboardComponent,
+    ConfigurationComponent
   ],
   imports: [
     UserIdleModule.forRoot({ idle: 3600, timeout: 10, ping: 2 }),
@@ -63,7 +69,6 @@ export class AppModule {
   constructor() {
     // Add an icon to the library for convenient access in other components
     library.add(fas);
-    
   }
 
 }

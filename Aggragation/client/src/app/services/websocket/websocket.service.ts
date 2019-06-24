@@ -62,7 +62,7 @@ export class DataService implements OnDestroy {
   public initWebSocket() {
     const token = this.authService.getToken();
     this.socket = webSocket({
-      url: "ws://86.242.39.179:4000",
+      url: "ws://localhost:3100",
       closeObserver: {
         next: (closeEvent) => {
           const customError = { code: closeEvent.code, reason: closeEvent.reason };

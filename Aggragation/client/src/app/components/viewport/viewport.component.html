@@ -33,21 +33,21 @@
     </div>
 
     <div class="navbar-start center-items">
-      <a class="navbar-item is-tab is-active">
+      <a class="navbar-item is-tab" (click)="goScheme()" [ngClass]="{'is-active' : contentToShow=== ITabTypes.SCHEMES}">
         <span class="icon has-text-info">
           <fa-icon [icon]="['fas', 'map']"></fa-icon>
         </span>
         <span style="margin-left: 5px;">Schemes</span>
 
       </a>
-      <a class="navbar-item is-tab is-active">
+      <a class="navbar-item is-tab" (click)="goDashboard()" [ngClass]="{'is-active' : contentToShow=== ITabTypes.DASHBOARD}">
         <span class="icon has-text-info">
           <fa-icon [icon]="['fas', 'chart-pie']"></fa-icon>
         </span>
         <span style="margin-left: 5px;">Dashboard</span>
 
       </a>
-      <a class="navbar-item is-tab">
+      <a class="navbar-item is-tab" (click)="goConfiguration()" [ngClass]="{'is-active' : contentToShow=== ITabTypes.CONFIGURATION}">
         <span class="icon has-text-info">
           <fa-icon [icon]="['fas', 'cog']"></fa-icon>
         </span>
@@ -68,9 +68,11 @@
 </nav>
 
 
+<router-outlet (activate)="onActivate($event)"></router-outlet>
 
-
-<app-test-component></app-test-component>
+<!-- <app-scheme-component *ngIf="contentToShow=== ITabTypes.SCHEMES"></app-scheme-component>
+<app-dashboard-component  *ngIf="contentToShow=== ITabTypes.DASHBOARD"></app-dashboard-component>
+<app-configuration-component  *ngIf="contentToShow=== ITabTypes.CONFIGURATION"></app-configuration-component> -->
 
 
 
