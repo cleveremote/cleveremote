@@ -1,14 +1,16 @@
-<div class="box" style="height: 100vh;   padding-top: 60px;padding-bottom: 160px">
+<div class="box" style="height: 100vh;   padding-top: 60px;padding-bottom: 60px">
 
-  <div class="content" style="height: 100%;overflow:auto;" *ngIf='testEntries && testEntries.length>0'>
+  <div class="content" style="height: 100%;overflow:auto;">
     <div *ngFor="let entry of testEntries">
       <pre>{{entry | json}}</pre>
     </div>
+    <div class="panel-block">
+      <button class="button is-link is-outlined is-fullwidth" (click)="getTests()">
+        get entries
+      </button>
+    </div>
   </div>
 
-  <div class="panel-block">
-    <button class="button is-link is-outlined is-fullwidth" (click)="getTests()">
-      get entries
-    </button>
-  </div>
+
+
 </div>

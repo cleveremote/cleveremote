@@ -32,14 +32,7 @@ export class TestcmpComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
 
-    // this.socket$ = new WebSocketSubject('ws://localhost:3000');
-
-    //     this.socket$
-    //         .subscribe(
-    //         (message) => this.serverMessages.push(message),
-    //         (err) => console.error(err),
-    //         () => console.warn('Completed!')
-    //         );
+    
 
     this.sub = this.dataService.observable.subscribe((x) => {
       const t = x;

@@ -1,3 +1,6 @@
+ sudo sshfs server@192.168.1.30:/home/server/devclv/cleveremote/Box-Application/ /mnt/shared-dev -o nonempty
+
+
 kafka conception
 ---------------
 server has custom publisher and roudrobin consumer.

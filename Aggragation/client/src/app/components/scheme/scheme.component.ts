@@ -1,5 +1,7 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { ApiRequestsService } from '../../services/api-requests.service';
+import { DataService } from '../../services/websocket/websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-scheme-component',
@@ -9,15 +11,24 @@ import { ApiRequestsService } from '../../services/api-requests.service';
 export class SchemeComponent implements OnInit {
   @Output() fromChildData: EventEmitter<any> = new EventEmitter();
   public data: string;
-  constructor(private apiRequestsService: ApiRequestsService) {
+  public sub: Subscription;
+  
+  constructor(private apiRequestsService: ApiRequestsService,
+    private dataService: DataService) {
   }
 
   ngOnInit() {
-
+    this.sub = this.dataService.observable.subscribe((x) => {
+      const t = x;
+    });
   }
 
   search(data) {
     // emit data to parent component
     this.fromChildData.emit({ TITI: 'TEST data SchemeComponent' });
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe();
   }
 }

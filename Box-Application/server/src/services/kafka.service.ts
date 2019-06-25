@@ -15,7 +15,7 @@ import { CustomPartitionnerService } from './customPartitionner.service';
 export class KafkaService {
     public static instance: KafkaService;
     public consumers: Array<ConsumerGroup> = [];
-    public producer: Producer;
+    public producer: HighLevelProducer;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
     public publishTopics: Array<ITopic> = [];
@@ -26,9 +26,8 @@ export class KafkaService {
     public static flag_IsFirstConnection: boolean = false;
 
     constructor() {
-        this.client = new KafkaClient({ idleConnection: 24 * 60 * 60 * 1000, kafkaHost: process.env.KAFKA_HOSTS });
-        this.clientProducer = new KafkaClient({ idleConnection: 24 * 60 * 60 * 1000, kafkaHost: process.env.KAFKA_HOSTS });
-        this.dispatchService = new DispatchService();
+        this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
+        this.clientProducer = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
@@ -67,6 +66,8 @@ export class KafkaService {
                 });
             }
         });
+        Tools.loginfo('   - init Publication topics');
+        Tools.logSuccess('     => OK');
 
         return of(true);
     }
@@ -122,24 +123,43 @@ export class KafkaService {
     }
 
     public initializeProducer(): Observable<boolean> {
-        this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 2 });
 
-        this.producer.on('ready', () => {
+        this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 2 });
+        const loadMetadataForTopicsObs = bindCallback(this.producer.on.bind(this.clientProducer, 'ready'));
+        const result = loadMetadataForTopicsObs();
+        if ((this.producer as any).ready) {
+            setInterval(() => {
+                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const payloads = [
+                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
+                ];
+
+                this.producer.send(payloads, (err, data) => {
+                    console.log(data);
+                });
+            }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
 
-            // setInterval(() => {
-            //     const payloads = [
-            //         { topic: 'aggregator_dbsync', messages: 'test-AGGREGATION', key: 'server_1' }
-            //     ];
+            return of(true);
+        }
 
-            //     this.producer.send(payloads, (err, data) => {
-            //         console.log(data);
-            //     });
-            // }, 5000);
-        });
+        return result.pipe(map((results: any) => {
+            setInterval(() => {
+                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const payloads = [
+                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
+                ];
 
-        return of(true);
+                this.producer.send(payloads, (err, data) => {
+                    console.log(data);
+                });
+            }, 5000);
+            Tools.loginfo('   - init Producer');
+            Tools.logSuccess('     => OK');
+
+            return true;
+        }));
     }
 
     public initializeConsumer(): Observable<boolean> {
@@ -157,29 +177,8 @@ export class KafkaService {
     }
 
     public checkFirstConnexion(): Observable<boolean> {
-        const accountRepository = getCustomRepository(AccountExt);
 
-        return accountRepository.isBoxInitialized().pipe(
-            mergeMap((isInitialized: boolean) => {
-                if (!isInitialized) {
-                    KafkaService.flag_IsFirstConnection = true;
-                    Tools.loginfo('* start init first connexion...');
-                    const topicName = `${Tools.serialNumber}_init_connexion`;
-                    var topicsToCreate = [{ topic: topicName, partitions: 1, replicationFactor: 2 }];
-                    this.client.createTopics(topicsToCreate, (error, result) => {
-                        if (!error) {
-                            Tools.loginfo(`   - init create topic =>${topicName}`);
-                            Tools.logSuccess('     => OK');
-                        } else {
-                            Tools.logError(`     => KO! detail: ${error}`);
-                        }
-                    });
-                    const consumerGrp = new ConsumerGroup(this.setCfgOptions('0', undefined, false), topicName);
-                    this.consumers.push(consumerGrp);
-                }
-                return of(true);
-            })
-        );
+        return of(true);
     }
 
     public init(): Observable<void> {

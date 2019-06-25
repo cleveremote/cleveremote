@@ -51,7 +51,8 @@ export class DispatchService {
                 this.proccessSyncConnexion(message.value);
                 break;
             case "aggregator_dbsync":
-                this.mapperService.dataBaseSynchronize(String(message.value));
+                // this.mapperService.dataBaseSynchronize(String(message.value));
+                const t = 2;
                 break;
             case "aggregator_logsync":
                 this.loggerService.logSynchronize(String(message.value));
