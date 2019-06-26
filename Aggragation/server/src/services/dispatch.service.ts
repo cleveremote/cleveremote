@@ -15,6 +15,7 @@ import { MailService } from "./mail-service";
 import { MapperService } from "./mapper.service";
 import { LoggerService } from "./logger.service";
 import { Tools } from "./tools-service";
+import { WebSocketService } from "./websocket.service";
 
 export class DispatchService {
     private mapperService: MapperService;
@@ -52,7 +53,7 @@ export class DispatchService {
                 break;
             case "aggregator_dbsync":
                 // this.mapperService.dataBaseSynchronize(String(message.value));
-                const t = 2;
+                WebSocketService.sendMessage('server_1', String(message.value));
                 break;
             case "aggregator_logsync":
                 this.loggerService.logSynchronize(String(message.value));

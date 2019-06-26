@@ -33,6 +33,18 @@ interface IWebSocketError {
 export class WebSocketService {
 
     public static wss: WebSocket.Server;
+
+    public static sendMessage(clientId: string, content: string): void {
+        if (WebSocketService.wss && WebSocketService.wss.clients) {
+            const clientArray = [...WebSocketService.wss.clients];
+            const clients = clientArray.filter((x: any) => x.userInfo && x.userInfo.user_id === 'server_1');
+            clients.forEach(client => {
+                const message = JSON.stringify(new Message(content, false, undefined));
+                client.send(message);
+            });
+        }
+    }
+
     constructor(serverInstance: http.Server) {
         WebSocketService.wss = new WebSocket.Server({
             server: serverInstance, verifyClient(info, cb): void {
@@ -71,6 +83,16 @@ export class WebSocketService {
                 const wss = WebSocketService.wss;
                 WebSocketService.wss.on('connection', (ws: WebSocket) => {
                     const extWs = ws as ExtWebSocket;
+
+                    jwt.verify(extWs.protocol, '123456789', (err, decoded) => {
+                        if (err) {
+                            console.log('error connection websocket');
+                        } else {
+                            (extWs as any).userInfo = decoded;
+                        }
+                    });
+
+
                     extWs.isAlive = true;
                     ws.on('pong', () => { extWs.isAlive = true; });
                     ws.onmessage = (event: IWebSocketEvent) => {
@@ -119,5 +141,7 @@ export class WebSocketService {
             event.target.send(this.createMessage(`You sent -> ${message.content}`, message.isBroadcast));
         }, 1000);
     }
+
+
 
 }
