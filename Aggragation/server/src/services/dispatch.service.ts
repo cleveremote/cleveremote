@@ -46,7 +46,7 @@ export class DispatchService {
             consumer.commit((error, data) => {
                 // Here the commit will work as expected
             });
-        }, 0);
+        }, 100);
         console.log(
             '%s read msg %s Topic="%s" Partition=%s Offset=%d',
             consumer.memberId, message.value, message.topic, message.partition, message.offset

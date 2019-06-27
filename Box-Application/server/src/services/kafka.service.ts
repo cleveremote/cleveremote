@@ -1,4 +1,4 @@
-import { map, tap, mergeMap, flatMap } from 'rxjs/operators';
+import { map, tap, mergeMap, flatMap, merge } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from } from 'rxjs';
 // tslint:disable-next-line:max-line-length
 import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse } from 'kafka-node';
@@ -11,6 +11,7 @@ import { Tools } from './tools-service';
 import { ITopic } from '../entities/interfaces/entities.interface';
 import { AccountExt } from '../entities/custom.repositories/account.ext';
 import { CustomPartitionnerService } from './customPartitionner.service';
+import { ProduceRequest } from 'kafka-node';
 
 export class KafkaService {
     public static instance: KafkaService;
@@ -132,9 +133,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.producer.send(payloads, (err, data) => {
-                    console.log(data);
-                });
+                this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -153,9 +152,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.producer.send(payloads, (err, data) => {
-                    console.log(data);
-                });
+                this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -248,9 +245,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.producer.send(payloads, (err, data) => {
-                    console.log(data);
-                });
+                this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -271,19 +266,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.producer.send(payloads, (err, data) => {
-
-                    const offset = new Offset(this.clientProducer);
-                    offset.fetchCommits('nonePartitionedGroup', [
-                        { topic: 'aggregator_dbsync', partition: 0 }
-                    ], (err: any, data: any) => {
-                        const t = 2; 
-                        // data // topicName // partition,lastoffsetcommited.
-                    });
-
-
-                    console.log(data);
-                });
+                this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -337,8 +320,58 @@ export class KafkaService {
                     }, timeToRetryConnection);
             }
         });
+    }
+    // const payloads:ProduceRequest[] = [
+    //     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
+    // ];
+    public sendMessage(payloads: Array<ProduceRequest>): Observable<boolean> {
+
+        const sendObs = bindCallback(this.producer.send.bind(this.producer, payloads));
+        const result = sendObs();
+        let currentOffset: any;
+
+        return result.pipe(mergeMap((data: any) => {
+
+            Tools.loginfo('   - message sent');
+
+            const offset = new Offset(this.clientProducer);
+            const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'nonePartitionedGroup', [
+                { topic: 'aggregator_dbsync', partition: Object.keys(data[1][payloads[0].topic])[0] }
+            ]));
+            const offsetObservable = offsetObs();
+            currentOffset = data[1][payloads[0].topic][Object.keys(data[1][payloads[0].topic])[0]];
 
 
+            return offsetObservable.pipe(mergeMap((results: any) => {
+                if (results.message || results[0]) {
+                    Tools.logSuccess('     => KO');
+                    return of(false);
+                }
+                if (results[1][payloads[0].topic][Object.keys(results[1][payloads[0].topic])[0]] === currentOffset + 1) {
+                    Tools.logSuccess('     => OK');
+                    return of(true);
+                }
+                Tools.logSuccess('     => KO');
+                return of(false);
+            }));;
+
+            const stop = new Rx.Subject();
+
+            // Rx.Observable.interval(500)
+            //   .take(2)
+            //   .repeatWhen(completed => completed.delay(1000))
+            //   .takeUntil(stop)
+            //   .subscribe(
+            //     x => log(`Next: ${x}`),
+            //     err => log(`Error: ${err}`),
+            //     () => log('Completed')
+            //   );
+            
+            // setTimeout(() => stop.next(true), 10000)
+
+            //return true;
+
+        }));
     }
 
 }
