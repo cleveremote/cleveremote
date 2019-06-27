@@ -278,6 +278,7 @@ export class KafkaService {
                         { topic: 'aggregator_dbsync', partition: 0 }
                     ], (err: any, data: any) => {
                         const t = 2; 
+                        // data // topicName // partition,lastoffsetcommited.
                     });
 
 
