@@ -10,10 +10,11 @@
            "name": "Attach",
            "protocol": "inspector",
            "port": 5300,
-           "address": "localhost",
+           "address": "192.168.1.10",
+           "remoteRoot": "/mnt/shared-dev/server/dist",
            "sourceMaps": true,
            "trace": "sm",
-           //"localRoot": "${workspaceRoot}/server/public",
+           "localRoot": "${workspaceRoot}/server/dist",
            "outFiles": [
                "${workspaceRoot}/server/dist/**/*.js"
            ]
