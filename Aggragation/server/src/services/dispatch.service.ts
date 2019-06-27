@@ -42,6 +42,11 @@ export class DispatchService {
     }
 
     public routeMessage(consumer: ConsumerGroup, message: Message): void {
+        setTimeout(() => {
+            consumer.commit((error, data) => {
+                // Here the commit will work as expected
+            });
+        }, 0);
         console.log(
             '%s read msg %s Topic="%s" Partition=%s Offset=%d',
             consumer.memberId, message.value, message.topic, message.partition, message.offset

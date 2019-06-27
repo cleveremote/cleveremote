@@ -81,12 +81,14 @@ export class KafkaService {
             groupId: 'nonePartitionedGroup',
             protocol: ["roundrobin"],
             id: `consumer${patition}`,
-            fromOffset: "latest",
+            fromOffset: "none",
             migrateHLC: false,
-            migrateRolling: true
+            migrateRolling: true,
+            autoCommit: false
         };
     }
-
+// Offsets to use for new groups other options could be 'earliest' or 'none' (none will emit an error if no offsets were saved)
+  // equivalent to Java client's auto.offset.reset
     public createConsumers(clusterMetaData: ClusterMetadataResponse): void {
         this.subscribeTopics.forEach((topic: ITopic) => {
             const topicObject = clusterMetaData.metadata[topic.name];

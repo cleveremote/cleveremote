@@ -19,15 +19,15 @@ export class KafkaService {
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
     public publishTopics: Array<ITopic> = [];
-    private readonly client: KafkaClient = undefined;
-    private readonly clientProducer: KafkaClient = undefined;
+    private client: KafkaClient = undefined;
+    private clientProducer: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
     private readonly topics: Array<ITopic>;
     public static flag_IsFirstConnection: boolean = false;
+    public reconnectInterval: any;
 
     constructor() {
-        this.client = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
-        this.clientProducer = new KafkaClient({ kafkaHost: process.env.KAFKA_HOSTS });
+        this.InitAndHandleFails();
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
@@ -123,8 +123,6 @@ export class KafkaService {
     }
 
     public initializeProducer(): Observable<boolean> {
-
-        this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 2 });
         const loadMetadataForTopicsObs = bindCallback(this.producer.on.bind(this.clientProducer, 'ready'));
         const result = loadMetadataForTopicsObs();
         if ((this.producer as any).ready) {
@@ -145,6 +143,10 @@ export class KafkaService {
         }
 
         return result.pipe(map((results: any) => {
+            if (this.reconnectInterval) {
+                clearTimeout(this.reconnectInterval);
+                this.reconnectInterval = undefined;
+            }
             setInterval(() => {
                 const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
                 const payloads = [
@@ -168,10 +170,15 @@ export class KafkaService {
         const result = loadMetadataForTopicsObs();
 
         return result.pipe(map((results: any) => {
-            this.createConsumers(results[1][1]);
-            Tools.loginfo('   - init Consumer');
-            Tools.logSuccess('     => OK');
+            if (!results && !results[1] && !results[1][1]) {
+                this.createConsumers(results[1][1]);
+                Tools.loginfo('   - init Consumer');
+                Tools.logSuccess('     => OK');
+                return true;
+            }
 
+            Tools.loginfo('   - init Consumer');
+            Tools.logSuccess('     => KO');
             return true;
         }));
     }
@@ -182,18 +189,155 @@ export class KafkaService {
     }
 
     public init(): Observable<void> {
-        return observableOf(true).pipe(
-            flatMap(() => this.checkFirstConnexion().pipe(
-                flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION).pipe(
-                    flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION))).pipe(
-                        flatMap(() => this.initializeProducer())).pipe(
+        try {
+            return observableOf(true).pipe(
+                flatMap(() => this.checkFirstConnexion().pipe(
+                    flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION).pipe(
+                        flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION))).pipe(
+                            //flatMap(() => this.initializeProducer())).pipe(
                             flatMap(() => this.initializeConsumer())).pipe(
                                 map(() => {
                                     KafkaService.instance = this;
                                     Tools.logSuccess('  => OK.');
                                 }))
-                ))
-            ));
+                    ))
+                ));
+
+        } catch (error) {
+            console.log("test error");
+
+        }
+    }
+    public initializeCLients() {
+
+        this.client = new KafkaClient({
+            connectRetryOptions: {
+                retries: 5,
+                factor: 0,
+                minTimeout: 1000,
+                maxTimeout: 1000,
+                randomize: true
+            },
+            idleConnection: 24 * 60 * 60 * 1000,
+            kafkaHost: process.env.KAFKA_HOSTS
+        });
+        this.clientProducer = new KafkaClient({
+            connectRetryOptions: {
+                retries: 5,
+                factor: 0,
+                minTimeout: 1000,
+                maxTimeout: 1000,
+                randomize: true
+            },
+            idleConnection: 24 * 60 * 60 * 1000,
+            kafkaHost: process.env.KAFKA_HOSTS
+        });
+
+        this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 2 });
+
+        const loadMetadataForTopicsObs = bindCallback(this.producer.on.bind(this.clientProducer, 'ready'));
+        const result = loadMetadataForTopicsObs();
+        if ((this.producer as any).ready) {
+            if (this.reconnectInterval) {
+                clearTimeout(this.reconnectInterval);
+                this.reconnectInterval = undefined;
+            }
+            setInterval(() => {
+                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const payloads = [
+                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
+                ];
+
+                this.producer.send(payloads, (err, data) => {
+                    console.log(data);
+                });
+            }, 5000);
+            Tools.loginfo('   - init Producer');
+            Tools.logSuccess('     => OK');
+
+
+        }
+
+        result.pipe(map((results: any) => {
+            Tools.loginfo('   - init Producer');
+            Tools.logSuccess('     => OK');
+            if (this.reconnectInterval) {
+                clearTimeout(this.reconnectInterval);
+                this.reconnectInterval = undefined;
+            }
+            setInterval(() => {
+                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const payloads = [
+                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
+                ];
+
+                this.producer.send(payloads, (err, data) => {
+
+                    const offset = new Offset(this.clientProducer);
+                    offset.fetchCommits('nonePartitionedGroup', [
+                        { topic: 'aggregator_dbsync', partition: 0 }
+                    ], (err: any, data: any) => {
+                        const t = 2; 
+                    });
+
+
+                    console.log(data);
+                });
+            }, 5000);
+            Tools.loginfo('   - init Producer');
+            Tools.logSuccess('     => OK');
+
+            return true;
+        })).subscribe();
+    }
+    public InitAndHandleFails() {
+        const timeToRetryConnection = 12 * 1000; // 12 seconds
+        this.reconnectInterval = undefined;
+        this.initializeCLients();
+
+        this.producer.on('error', (err: any) => {
+            console.info("error reconnect is called in producer error event");
+            this.producer.close();
+            this.client.close();
+            this.clientProducer.close(); // Comment out for client on close
+            if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
+                this.reconnectInterval =
+                    setTimeout(() => {
+                        console.info("reconnect is called in producer error event");
+                        this.InitAndHandleFails();
+                    }, timeToRetryConnection);
+            }
+        });
+
+        this.client.on('error', (err: any) => {
+            console.info("error reconnect is called in client error event");
+            this.producer.close();
+            this.client.close();
+            this.clientProducer.close();
+            if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
+                this.reconnectInterval =
+                    setTimeout(() => {
+                        console.info("reconnect is called in client error event");
+                        this.InitAndHandleFails();
+                    }, timeToRetryConnection);
+            }
+        });
+
+        this.clientProducer.on('error', (err: any) => {
+            console.info("error reconnect is called in clientProducer error event");
+            this.producer.close();
+            this.client.close();
+            this.clientProducer.close();
+            if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
+                this.reconnectInterval =
+                    setTimeout(() => {
+                        console.info("reconnect is called in clientProducer error event");
+                        this.InitAndHandleFails();
+                    }, timeToRetryConnection);
+            }
+        });
+
+
     }
 
 }

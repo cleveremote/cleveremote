@@ -3,5 +3,12 @@
   <span>SCHEME COMPONENT</span>
   <div>
     <button type="button" (click)="search()">search</button></div>
-    <div>{{data}}</div>
+  <div>{{data}}</div>
+
+  <div class="content" style="height: 100%;overflow:auto;">
+    <div *ngFor="let entry of entries">
+      <pre>{{entry | json}}</pre>
+    </div>
+  </div>
+
 </div>

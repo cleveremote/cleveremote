@@ -30,6 +30,9 @@ export class Server {
     }
 
     public init(): Observable<express.Application> {
+        process.on('uncaughtException', (err) => {
+            console.log('whoops! there was an error', err.stack);
+        });
         return Tools.getSerialNumber().pipe(
             flatMap(() => this.initDependencies().pipe(
                 flatMap(() => this.initDb().pipe(

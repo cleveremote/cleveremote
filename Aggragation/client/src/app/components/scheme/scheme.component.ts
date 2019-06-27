@@ -12,14 +12,14 @@ export class SchemeComponent implements OnInit {
   @Output() fromChildData: EventEmitter<any> = new EventEmitter();
   public data: string;
   public sub: Subscription;
-  
+  public entries:Array<string> = [];
   constructor(private apiRequestsService: ApiRequestsService,
     private dataService: DataService) {
   }
 
   ngOnInit() {
     this.sub = this.dataService.observable.subscribe((x) => {
-      const t = x;
+      this.entries.push(x.content);
     });
   }
 
