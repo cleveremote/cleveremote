@@ -1,4 +1,4 @@
-import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay } from 'rxjs/operators';
+import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject } from 'rxjs';
 // tslint:disable-next-line:max-line-length
 import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse } from 'kafka-node';
@@ -328,43 +328,40 @@ export class KafkaService {
 
         const sendObs = bindCallback(this.producer.send.bind(this.producer, payloads));
         const result = sendObs();
-        let currentOffset: any;
-        const stop: Subject<boolean> = new Subject<any>();
-
-
-        // interval(1000)
-        //     .take(10).repeatWhen(completed => completed.delay(1000))
-        //     .takeUntil(stop)
 
         return result.pipe(mergeMap((data: any) => {
-            const source = interval(1000);
-            const observable123 = source.pipe(take(10)).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeUntil(stop));
-            Tools.loginfo('   - message sent');
+            Tools.loginfo('   - message sent => ');
+            console.log(data);
 
             const offset = new Offset(this.clientProducer);
             const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'nonePartitionedGroup', [
                 { topic: 'aggregator_dbsync', partition: Object.keys(data[1][payloads[0].topic])[0] }
             ]));
+            // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset, ['aggregator_dbsync']));
             const offsetObservable = offsetObs();
-            currentOffset = data[1][payloads[0].topic][Object.keys(data[1][payloads[0].topic])[0]];
 
+            return of(data).pipe(
+                mergeMap((x: any) => {
+                    return offsetObservable.pipe(mergeMap((results: any) => {
+                        //console.log(offsets[topic][partition]);
+                        if (results.message || results[0]) {
+                            Tools.logSuccess('     => KO');
+                            return of(false);
+                        }
+                        if (results[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]] === x[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]] + 1) {
+                            Tools.logSuccess('     => OK');
+                            return of(true);
+                        }
+                        Tools.logSuccess('     => KO');
 
-            return observable123.pipe(offsetObservable.pipe(mergeMap((results: any) => {
-                if (results.message || results[0]) {
-                    Tools.logSuccess('     => KO');
+                        return of(false);
+                    })).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeWhile((value, index) => {
+                        const t = index;
+                        return !value && index < 5;
+                    }));
+                })
+            );
 
-                    return of(false);
-                }
-                if (results[1][payloads[0].topic][Object.keys(results[1][payloads[0].topic])[0]] === currentOffset + 1) {
-                    Tools.logSuccess('     => OK');
-                    stop.next(true);
-
-                    return of(true);
-                }
-                Tools.logSuccess('     => KO');
-
-                return of(false);
-            })));
 
             // const source = interval(1000);
 
