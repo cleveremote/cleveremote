@@ -1,5 +1,5 @@
-import { map, tap, mergeMap, flatMap, merge } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from } from 'rxjs';
+import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay } from 'rxjs/operators';
+import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject } from 'rxjs';
 // tslint:disable-next-line:max-line-length
 import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse } from 'kafka-node';
 import { DispatchService } from './dispatch.service';
@@ -324,14 +324,21 @@ export class KafkaService {
     // const payloads:ProduceRequest[] = [
     //     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
     // ];
-    public sendMessage(payloads: Array<ProduceRequest>): Observable<boolean> {
+    public sendMessage(payloads: Array<ProduceRequest>): Observable<any> {
 
         const sendObs = bindCallback(this.producer.send.bind(this.producer, payloads));
         const result = sendObs();
         let currentOffset: any;
+        const stop: Subject<boolean> = new Subject<any>();
+
+
+        // interval(1000)
+        //     .take(10).repeatWhen(completed => completed.delay(1000))
+        //     .takeUntil(stop)
 
         return result.pipe(mergeMap((data: any) => {
-
+            const source = interval(1000);
+            const observable123 = source.pipe(take(10)).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeUntil(stop));
             Tools.loginfo('   - message sent');
 
             const offset = new Offset(this.clientProducer);
@@ -342,31 +349,40 @@ export class KafkaService {
             currentOffset = data[1][payloads[0].topic][Object.keys(data[1][payloads[0].topic])[0]];
 
 
-            return offsetObservable.pipe(mergeMap((results: any) => {
+            return observable123.pipe(offsetObservable.pipe(mergeMap((results: any) => {
                 if (results.message || results[0]) {
                     Tools.logSuccess('     => KO');
+
                     return of(false);
                 }
                 if (results[1][payloads[0].topic][Object.keys(results[1][payloads[0].topic])[0]] === currentOffset + 1) {
                     Tools.logSuccess('     => OK');
+                    stop.next(true);
+
                     return of(true);
                 }
                 Tools.logSuccess('     => KO');
-                return of(false);
-            }));;
 
-            const stop = new Rx.Subject();
+                return of(false);
+            })));
+
+            // const source = interval(1000);
+
+            // interval(1000)
+            //     .take(10).repeatWhen(completed => completed.delay(1000))
+            //     .takeUntil(stop)
+            // const stop = new Rx.Subject();
 
             // Rx.Observable.interval(500)
-            //   .take(2)
-            //   .repeatWhen(completed => completed.delay(1000))
-            //   .takeUntil(stop)
-            //   .subscribe(
-            //     x => log(`Next: ${x}`),
-            //     err => log(`Error: ${err}`),
-            //     () => log('Completed')
-            //   );
-            
+            //     .take(2)
+            //     .repeatWhen(completed => completed.delay(1000))
+            //     .takeUntil(stop)
+            //     .subscribe(
+            //         x => log(`Next: ${x}`),
+            //         err => log(`Error: ${err}`),
+            //         () => log('Completed')
+            //     );
+
             // setTimeout(() => stop.next(true), 10000)
 
             //return true;
