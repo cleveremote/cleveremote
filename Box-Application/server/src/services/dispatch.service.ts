@@ -34,7 +34,7 @@ export class DispatchService {
             });
         });
 
-        if (KafkaService.flag_IsFirstConnection) {
+        if (KafkaService.flagIsFirstConnection) {
             const payloads = [
                 { topic: 'aggregator_init_connexion', messages: JSON.stringify({ serialNumber: Tools.serialNumber }), key: Tools.serialNumber }
             ];

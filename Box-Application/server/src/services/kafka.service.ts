@@ -14,18 +14,18 @@ import { CustomPartitionnerService } from './customPartitionner.service';
 import { ProduceRequest } from 'kafka-node';
 
 export class KafkaService {
+    public static flagIsFirstConnection = false;
     public static instance: KafkaService;
     public consumers: Array<ConsumerGroup> = [];
     public producer: HighLevelProducer;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
     public publishTopics: Array<ITopic> = [];
+    public reconnectInterval: any;
     private client: KafkaClient = undefined;
     private clientProducer: KafkaClient = undefined;
     private readonly dispatchService: DispatchService;
     private readonly topics: Array<ITopic>;
-    public static flag_IsFirstConnection: boolean = false;
-    public reconnectInterval: any;
 
     constructor() {
         this.InitAndHandleFails();
@@ -98,6 +98,7 @@ export class KafkaService {
 
     public setCfgOptions(patition: string, topic: ITopic, customProtocol: boolean = true): ConsumerGroupOptions {
         const customPartitionner: CustomPartitionnerService = new CustomPartitionnerService(topic);
+
         return {
             kafkaHost: process.env.KAFKA_HOSTS,
             batch: { noAckBatchSize: 1024, noAckBatchAge: 10 },
@@ -107,7 +108,8 @@ export class KafkaService {
             id: `consumer${patition}`,
             fromOffset: "latest",
             migrateHLC: false,
-            migrateRolling: true
+            migrateRolling: true,
+            autoCommit: false
         };
     }
 
@@ -133,7 +135,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.sendMessage(payloads).subscribe();
+                // this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -152,7 +154,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.sendMessage(payloads).subscribe();
+                // this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -171,11 +173,13 @@ export class KafkaService {
                 this.createConsumers(results[1][1]);
                 Tools.loginfo('   - init Consumer');
                 Tools.logSuccess('     => OK');
+
                 return true;
             }
 
             Tools.loginfo('   - init Consumer');
             Tools.logSuccess('     => KO');
+
             return true;
         }));
     }
@@ -191,7 +195,7 @@ export class KafkaService {
                 flatMap(() => this.checkFirstConnexion().pipe(
                     flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION).pipe(
                         flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION))).pipe(
-                            //flatMap(() => this.initializeProducer())).pipe(
+                            // flatMap(() => this.initializeProducer())).pipe(
                             flatMap(() => this.initializeConsumer())).pipe(
                                 map(() => {
                                     KafkaService.instance = this;
@@ -205,7 +209,7 @@ export class KafkaService {
 
         }
     }
-    public initializeCLients() {
+    public initializeCLients(): void {
 
         this.client = new KafkaClient({
             connectRetryOptions: {
@@ -240,12 +244,15 @@ export class KafkaService {
                 this.reconnectInterval = undefined;
             }
             setInterval(() => {
-                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const dataExample = {
+                    entity: 'Account', type: 'UPDATE',
+                    data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+                };
                 const payloads = [
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.sendMessage(payloads).subscribe();
+              //  this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
@@ -261,7 +268,10 @@ export class KafkaService {
                 this.reconnectInterval = undefined;
             }
             setInterval(() => {
-                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
+                const dataExample = {
+                    entity: 'Account', type: 'UPDATE',
+                    data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+                };
                 const payloads = [
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
@@ -274,7 +284,7 @@ export class KafkaService {
             return true;
         })).subscribe();
     }
-    public InitAndHandleFails() {
+    public InitAndHandleFails(): void {
         const timeToRetryConnection = 12 * 1000; // 12 seconds
         this.reconnectInterval = undefined;
         this.initializeCLients();
@@ -321,9 +331,7 @@ export class KafkaService {
             }
         });
     }
-    // const payloads:ProduceRequest[] = [
-    //     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
-    // ];
+
     public sendMessage(payloads: Array<ProduceRequest>): Observable<any> {
 
         const sendObs = bindCallback(this.producer.send.bind(this.producer, payloads));
@@ -333,13 +341,11 @@ export class KafkaService {
             Tools.loginfo('   - message sent => ');
             console.log(data);
 
-
-
             return of(data).pipe(
                 mergeMap((x: any) => {
                     const offset = new Offset(this.clientProducer);
                     const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'nonePartitionedGroup', [
-                        { topic: 'aggregator_dbsync', partition: Object.keys(data[1][payloads[0].topic])[0] }
+                        { topic: 'aggregator_dbsync', partition: Object.keys(x[1][payloads[0].topic])[0] }
                     ]));
                     // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset,  [
                     //     'aggregator_dbsync']));
@@ -347,50 +353,31 @@ export class KafkaService {
                     const offsetObservable = offsetObs();
 
                     return offsetObservable.pipe(mergeMap((results: any) => {
-                        //console.log(offsets[topic][partition]);
+                        // console.log(offsets[topic][partition]);
                         if (!!(results.message || results[0] !== null)) {
                             Tools.logSuccess('     => KO');
+
                             return of(false);
                         }
-                        const offsetRes = results[1][payloads[0].topic][Object.keys(results[1][payloads[0].topic])[payloads[0].partition]];
+                        const offsetRes = results[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
                         const offsetIn = x[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
-                        const partitionRes = Object.keys(results[1][payloads[0].topic])[payloads[0].partition];
+                        const partitionRes = Object.keys(results[1][payloads[0].topic])[0];
                         const partitionIn = Object.keys(x[1][payloads[0].topic])[0];
-                        if ((offsetRes === offsetIn+1) && partitionRes === partitionIn) {
+                        if ((offsetRes === offsetIn + 1) && partitionRes === partitionIn) {
                             Tools.logSuccess('     => OK ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
+
                             return of(true);
                         }
                         Tools.logSuccess('     => KO ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
                         return of(false);
-                    })).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeWhile((value, index) => {
-                        const t = index;
-                        return !value && index < 5;
                     }));
                 })
-            );
+            ).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeWhile((value, index) => {
+                const t = index;
 
-
-            // const source = interval(1000);
-
-            // interval(1000)
-            //     .take(10).repeatWhen(completed => completed.delay(1000))
-            //     .takeUntil(stop)
-            // const stop = new Rx.Subject();
-
-            // Rx.Observable.interval(500)
-            //     .take(2)
-            //     .repeatWhen(completed => completed.delay(1000))
-            //     .takeUntil(stop)
-            //     .subscribe(
-            //         x => log(`Next: ${x}`),
-            //         err => log(`Error: ${err}`),
-            //         () => log('Completed')
-            //     );
-
-            // setTimeout(() => stop.next(true), 10000)
-
-            //return true;
+                return !value && index < 5;
+            }));
 
         }));
     }
