@@ -58,8 +58,12 @@ cd C:\Users\dell\Downloads\kafka_2.11-0.10.2.0\kafka_2.11-0.10.2.0\bin\windows
 .\kafka-console-consumer.bat --bootstrap-server 192.168.1.30:32771,192.168.1.30:32770 --topic topic-mitosis
 .\kafka-console-producer.bat  --broker-list 192.168.1.30:32771,192.168.1.30:32770 --topic topic1_test
 .\kafka-topics.bat --list --zookeeper 192.168.1.30:2181
-.\kafka-consumer-groups.bat --zookeeper 192.168.1.30:2181 --group count_errors --describe
+.\kafka-consumer-groups.bat --zookeeper 192.168.1.30:2181 --group nonePartitionedGroup --describe
 .\kafka-topics.bat --alter --zookeeper 192.168.1.30:2181 --topic box_action --partitions 10
+
+.\kafka-consumer-groups.bat --bootstrap-server 192.168.1.30:9092 --group nonePartitionedGroup --topic aggregator_dbsync --reset-offsets --to-earliest --execute
+
+.\kafka-topics.bat --zookeeper 192.168.1.30:2181 --delete --topic aggregator_dbsync
 
 
 For dockerized kafka/zookeeper

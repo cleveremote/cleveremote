@@ -333,26 +333,34 @@ export class KafkaService {
             Tools.loginfo('   - message sent => ');
             console.log(data);
 
-            const offset = new Offset(this.clientProducer);
-            const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'nonePartitionedGroup', [
-                { topic: 'aggregator_dbsync', partition: Object.keys(data[1][payloads[0].topic])[0] }
-            ]));
-            // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset, ['aggregator_dbsync']));
-            const offsetObservable = offsetObs();
+
 
             return of(data).pipe(
                 mergeMap((x: any) => {
+                    const offset = new Offset(this.clientProducer);
+                    const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'nonePartitionedGroup', [
+                        { topic: 'aggregator_dbsync', partition: Object.keys(data[1][payloads[0].topic])[0] }
+                    ]));
+                    // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset,  [
+                    //     'aggregator_dbsync']));
+                    // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset, ['aggregator_dbsync']));
+                    const offsetObservable = offsetObs();
+
                     return offsetObservable.pipe(mergeMap((results: any) => {
                         //console.log(offsets[topic][partition]);
-                        if (results.message || results[0]) {
+                        if (!!(results.message || results[0] !== null)) {
                             Tools.logSuccess('     => KO');
                             return of(false);
                         }
-                        if (results[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]] === x[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]] + 1) {
-                            Tools.logSuccess('     => OK');
+                        const offsetRes = results[1][payloads[0].topic][Object.keys(results[1][payloads[0].topic])[payloads[0].partition]];
+                        const offsetIn = x[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
+                        const partitionRes = Object.keys(results[1][payloads[0].topic])[payloads[0].partition];
+                        const partitionIn = Object.keys(x[1][payloads[0].topic])[0];
+                        if ((offsetRes === offsetIn+1) && partitionRes === partitionIn) {
+                            Tools.logSuccess('     => OK ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
                             return of(true);
                         }
-                        Tools.logSuccess('     => KO');
+                        Tools.logSuccess('     => KO ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
                         return of(false);
                     })).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeWhile((value, index) => {

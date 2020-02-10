@@ -81,7 +81,7 @@ export class KafkaService {
             groupId: 'nonePartitionedGroup',
             protocol: ["roundrobin"],
             id: `consumer${patition}`,
-            fromOffset: "none",
+            fromOffset: "latest",
             migrateHLC: false,
             migrateRolling: true,
             autoCommit: false
