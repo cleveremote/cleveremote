@@ -122,7 +122,6 @@ export class KafkaService {
 
             const topicData = this.publishTopics.find((topic: ITopic) => topic.name === keyData[0] && topic.box === keyData[1]);
             let partition = 0;
-            // traitement speciale pour le init-connexion;
             if (topicData.partitionTopic.current > topicData.partitionTopic.rangePartitions[1]) {
                 topicData.partitionTopic.current = topicData.partitionTopic.rangePartitions[0];
             }
@@ -134,16 +133,6 @@ export class KafkaService {
         });
 
         this.producer.on('ready', () => {
-            // setInterval(() => {
-            //     const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
-            //     const payloads = [
-            //         { topic: 'box_action', messages: JSON.stringify(dataExample), key: 'box_action.server_1' }
-            //     ];
-
-            //     this.producer.send(payloads, (err, data) => {
-            //         console.log(data);
-            //     });
-            // }, 100);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
         });
