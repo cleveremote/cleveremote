@@ -169,7 +169,7 @@ export class KafkaService {
         const result = loadMetadataForTopicsObs();
 
         return result.pipe(map((results: any) => {
-            if (!results && !results[1] && !results[1][1]) {
+            if (results && results[1] && results[1][1]) {
                 this.createConsumers(results[1][1]);
                 Tools.loginfo('   - init Consumer');
                 Tools.logSuccess('     => OK');

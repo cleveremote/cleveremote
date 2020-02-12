@@ -1,7 +1,7 @@
-import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
-import {ConfigurationService} from './configuration.service';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ConfigurationService } from './configuration.service';
 
 @Injectable()
 export class ApiRequestsService {
@@ -12,10 +12,11 @@ export class ApiRequestsService {
   private signupEndpoint = 'signup/';
   private userEndpoint = 'user/';
   private logsEndpoint = 'logs/logger/';
+  private moduleExecution = 'module/execution/';
   private actionUrl: string;
 
   constructor(private http: HttpClient,
-              private configurationService: ConfigurationService) {
+    private configurationService: ConfigurationService) {
     this.actionUrl = `${configurationService.apiHost}${configurationService.apiPrefix}`;
   }
 
@@ -35,7 +36,7 @@ export class ApiRequestsService {
     return this.http.post<void>(this.actionUrl + this.loginEndpoint, jsonBody);
   }
 
-  getAllLogs(deviceId?:string): Observable<any> {
+  getAllLogs(deviceId?: string): Observable<any> {
     return this.http.get<void>(this.actionUrl + this.logsEndpoint + deviceId);
   }
 
@@ -43,10 +44,12 @@ export class ApiRequestsService {
     return this.http.get<void>(this.actionUrl + this.tokenEndpoint);
   }
 
-  
-
   postSignup(jsonBody): Observable<any> {
     return this.http.post<void>(this.actionUrl + this.signupEndpoint, jsonBody);
+  }
+
+  postExecution(jsonBody): Observable<any> {
+    return this.http.post<void>(this.actionUrl + this.moduleExecution, jsonBody);
   }
 
 }

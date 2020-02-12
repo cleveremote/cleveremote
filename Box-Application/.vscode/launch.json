@@ -4,21 +4,19 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-       {
-           "type": "node",
-           "request": "attach",
-           "name": "Attach",
-           "protocol": "inspector",
-           "port": 5300,
-           "address": "192.168.1.10",
-           "remoteRoot": "/mnt/shared-dev/server/dist",
-           "sourceMaps": true,
-           "trace": "sm",
-           "localRoot": "${workspaceRoot}/server/dist",
-           "outFiles": [
-               "${workspaceRoot}/server/dist/**/*.js"
-           ]
-       }
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach",
+            "protocol": "inspector",
+            "port": 5300,
+            "address": "localhost",
+            "sourceMaps": true,
+            "trace": "sm",
+            //"localRoot": "${workspaceRoot}/server/public",
+            "outFiles": [
+                "${workspaceRoot}/server/dist/**/*.js"
+            ]
+        }
     ]
 }
-

@@ -28,6 +28,10 @@ export class SchemeComponent implements OnInit {
     this.fromChildData.emit({ TITI: 'TEST data SchemeComponent' });
   }
 
+  moduleExecution(jsonBody): void {
+    this.apiRequestsService.postExecution({ test: "testdata", idModule: "1234" }).subscribe();
+  }
+
   ngOnDestroy() {
     this.sub.unsubscribe();
   }

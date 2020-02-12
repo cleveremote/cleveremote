@@ -51,10 +51,19 @@ export class DispatchService {
     }
 
     public routeMessage(consumer: ConsumerGroup, message: Message): void {
-        console.log(
-            '%s read msg %s Topic="%s" Partition=%s Offset=%d',
-            consumer.memberId, message.value, message.topic, message.partition, message.offset
-        );
+        setTimeout(() => {
+            consumer.commit((error, data) => {
+                if(!error){
+                    console.log(
+                        '%s read msg %s Topic="%s" Partition=%s Offset=%d',
+                        consumer.memberId, message.value, message.topic, message.partition, message.offset
+                    );
+                } else {
+                    console.log(error);
+                }
+                
+            });
+        }, 0);
 
         switch (message.topic) {
             case `${Tools.serialNumber}_init_connexion`:
