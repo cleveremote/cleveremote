@@ -11,6 +11,7 @@ import { of, interval, timer } from 'rxjs';
 import { AppError } from '../../errors/apperror.class';
 import { DispatchService } from '../../services/dispatch.service';
 import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
+import { WebSocketService } from '../../services/websocket.service';
 
 // tslint:disable-next-line: no-default-export
 export default class Execution extends Controller {
@@ -60,10 +61,10 @@ export default class Execution extends Controller {
             ))
         )).subscribe((x: any) => {
             if (x) {
+                WebSocketService.sendMessage('server_1', JSON.stringify(x));
                 this.sendSuccess(res, x);
             }
-        }
-        );
+        });
 
         // XbeeService.GetNodeDiscovery().subscribe(function (frame) {
         //         console.log("Success!",frame);
