@@ -1,4 +1,4 @@
-import { Message, ConsumerGroup } from "kafka-node";
+import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
 import { Observable, from, of } from "rxjs";
 import { getCustomRepository, getRepository } from "typeorm";
 import { AccountExt } from "../entities/custom.repositories/account.ext";
@@ -26,7 +26,7 @@ export class DispatchService {
     public init(): Observable<void> {
 
         KafkaService.instance.consumers.forEach(consumer => {
-            consumer.on('message', (message: Message) => {
+            consumer.on('data', (message: Message) => {
                 this.routeMessage(consumer, message);
             });
             consumer.on('error', (err: any) => {
@@ -50,27 +50,34 @@ export class DispatchService {
 
     }
 
-    public routeMessage(consumer: ConsumerGroup, message: Message): void {
-        setTimeout(() => {
-            consumer.commit((error, data) => {
-                if(!error){
-                    console.log(
-                        '%s read msg %s Topic="%s" Partition=%s Offset=%d',
-                        consumer.memberId, message.value, message.topic, message.partition, message.offset
-                    );
-                } else {
-                    console.log(error);
-                }
-                
-            });
-        }, 0);
+    public routeMessage(consumer: ConsumerGroupStream, message: Message): void {
+        consumer.commit(message, true, (error, data) => {
+            if (!error) {
+                console.log(
+                    'consumer read msg %s Topic="%s" Partition=%s Offset=%d',
+                    message.value, message.topic, message.partition, message.offset
+                );
+            } else {
+                console.log(error);
+            }
+
+        });
 
         switch (message.topic) {
             case `${Tools.serialNumber}_init_connexion`:
                 // this.proccessSyncConnexion(String(message.value));
                 break;
             case "box_action":
-                this.mapperService.dataBaseSynchronize(String(message.value));
+                // this.mapperService.dataBaseSynchronize(String(message.value));
+                const dataExample = {
+                    entity: 'Account', type: 'UPDATE',
+                    data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+                };
+                const payloads = [
+                    { topic: 'aggregator_dbsync', messages: JSON.stringify(message), key: 'server_1' }
+                ];
+
+                KafkaService.instance.sendMessage(payloads).subscribe();
                 break;
             case "box_dbsync":
                 // this.loggerService.logSynchronize(String(message.value));

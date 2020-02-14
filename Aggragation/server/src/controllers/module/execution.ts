@@ -4,11 +4,13 @@ import { Request, Response } from 'express';
 import { isAuthenticated } from '../../middleware/authentication';
 // import { XbeeService } from '../../config/xbee';
 import { MongoService } from '../../services/mongo.service';
-import { map, mergeMap } from 'rxjs/operators';
+import { map, mergeMap, retryWhen, tap, delayWhen } from 'rxjs/operators';
 import { ILog } from '../../entities/mongo.entities/logs';
 import { KafkaService } from '../../services/kafka.service';
-import { of } from 'rxjs';
+import { of, interval, timer } from 'rxjs';
 import { AppError } from '../../errors/apperror.class';
+import { DispatchService } from '../../services/dispatch.service';
+import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
 
 // tslint:disable-next-line: no-default-export
 export default class Execution extends Controller {
@@ -29,16 +31,46 @@ export default class Execution extends Controller {
                 messages: JSON.stringify(dataExample), key: 'box_action.server_1'
             }
         ];
-        let index = 1;
-        KafkaService.instance.sendMessage(payloads).subscribe((x: any) => {
-            const t = x;
-            if (index <= 30 && x) {
-                this.sendSuccess(res, success);
-            } else if (index > 30 &&  !x) {
-                this.sendSuccess(res, fail);
+        KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) => {
+
+            const t = 2;
+
+            return KafkaService.instance.checkReponseMessage(data).pipe(mergeMap((checkResponse: any) =>
+
+                of(false).pipe(
+                    map(val => {
+                        const yu = t;
+
+                        const responseArray = KafkaService.instance.arrayOfResponse;
+                        if (responseArray.length > 0) {
+
+                            for (let index = 0; index < responseArray.length; index++) {
+                                const element = responseArray[index];
+                                const result = JSON.parse(element.value);
+                                if (result.offset === checkResponse.oin) {
+                                    responseArray.splice(index, 1);
+
+                                    return { status: 'OK', message: "process success!" };
+                                }
+                            }
+                        }
+                        throw val;
+                    }),
+                    retryWhen(genericRetryStrategy({
+                        durationBeforeRetry: 1000,
+                        maxRetryAttempts : 8
+                      }))
+                )
+            ));
+
+        })).subscribe((x: any) => {
+            if (x) {
+                this.sendSuccess(res, x);
             }
-            index++;
-        });
+
+
+        }
+        );
 
         // XbeeService.GetNodeDiscovery().subscribe(function (frame) {
         //         console.log("Success!",frame);
@@ -47,7 +79,7 @@ export default class Execution extends Controller {
         //     });
         // const userCtrl = new UserController<Model<IUserModel>>(UserModule);
         // userCtrl.getAll(req, res);
-        
+
 
         // MongoService.createLogs(toto as ILog).pipe(
         //     mergeMap(data => MongoService.getLogs().pipe(

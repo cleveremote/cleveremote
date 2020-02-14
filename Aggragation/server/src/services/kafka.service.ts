@@ -1,7 +1,7 @@
-import { map, tap, mergeMap, flatMap, repeatWhen, delay, takeWhile } from 'rxjs/operators';
+import { map, tap, mergeMap, flatMap, repeatWhen, delay, takeWhile, retryWhen } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback } from 'rxjs';
 // tslint:disable-next-line:max-line-length
-import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse, ProduceRequest } from 'kafka-node';
+import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse, ProduceRequest, ProducerStream } from 'kafka-node';
 import { DispatchService } from './dispatch.service';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
@@ -9,14 +9,16 @@ import { DeviceExt } from "../entities/custom.repositories/device.ext";
 import { Device } from '../entities/gen.entities/device';
 import { Tools } from './tools-service';
 import { ITopic } from '../entities/interfaces/entities.interface';
+import { genericRetryStrategy } from './tools/generic-retry-strategy';
 
 export class KafkaService {
     public static instance: KafkaService;
     public consumers: Array<ConsumerGroup> = [];
-    public producer: Producer;
+    public producer: ProducerStream;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
     public publishTopics: Array<ITopic> = [];
+    public arrayOfResponse: Array<any> = [];
     private readonly client: KafkaClient = undefined;
     private readonly clientProducer: KafkaClient = undefined;
     constructor() {
@@ -113,24 +115,60 @@ export class KafkaService {
 
     public initializeProducer(): Observable<boolean> {
         // tslint:disable-next-line:max-line-length
-        this.producer = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
-            const keyData = key.split('.');
+        const testOption = {
+            kafkaClient: {
+                connectRetryOptions: {
+                    retries: 5,
+                    factor: 0,
+                    minTimeout: 1000,
+                    maxTimeout: 1000,
+                    randomize: true
+                },
+                idleConnection: 24 * 60 * 60 * 1000,
+                kafkaHost: process.env.KAFKA_HOSTS
+            },
+            producer: {
+                requireAcks: 1, partitionerType: 4, customPartitioner: (partitions: any, key: any) => {
+                    const keyData = key.split('.');
 
-            if (keyData === 'init-connexion') {
-                return 0;
+                    if (keyData === 'init-connexion') {
+                        return 0;
+                    }
+
+                    const topicData = this.publishTopics.find((topic: ITopic) => topic.name === keyData[0] && topic.box === keyData[1]);
+                    let partition = 0;
+                    if (topicData.partitionTopic.current > topicData.partitionTopic.rangePartitions[1]) {
+                        topicData.partitionTopic.current = topicData.partitionTopic.rangePartitions[0];
+                    }
+
+                    partition = topicData.partitionTopic.current;
+                    topicData.partitionTopic.current++;
+
+                    return partition;
+                }
             }
+        };
 
-            const topicData = this.publishTopics.find((topic: ITopic) => topic.name === keyData[0] && topic.box === keyData[1]);
-            let partition = 0;
-            if (topicData.partitionTopic.current > topicData.partitionTopic.rangePartitions[1]) {
-                topicData.partitionTopic.current = topicData.partitionTopic.rangePartitions[0];
-            }
 
-            partition = topicData.partitionTopic.current;
-            topicData.partitionTopic.current++;
+        this.producer = new ProducerStream(testOption);
+        // const t = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
+        //     const keyData = key.split('.');
 
-            return partition;
-        });
+        //     if (keyData === 'init-connexion') {
+        //         return 0;
+        //     }
+
+        //     const topicData = this.publishTopics.find((topic: ITopic) => topic.name === keyData[0] && topic.box === keyData[1]);
+        //     let partition = 0;
+        //     if (topicData.partitionTopic.current > topicData.partitionTopic.rangePartitions[1]) {
+        //         topicData.partitionTopic.current = topicData.partitionTopic.rangePartitions[0];
+        //     }
+
+        //     partition = topicData.partitionTopic.current;
+        //     topicData.partitionTopic.current++;
+
+        //     return partition;
+        // });
 
         this.producer.on('ready', () => {
             Tools.loginfo('   - init Producer');
@@ -156,54 +194,110 @@ export class KafkaService {
 
     public sendMessage(payloads: Array<ProduceRequest>): Observable<any> {
 
-        const sendObs = bindCallback(this.producer.send.bind(this.producer, payloads));
+
+        const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
         const result = sendObs();
 
         return result.pipe(mergeMap((data: any) => {
             Tools.loginfo('   - message sent => ');
             console.log(data);
 
-            return of(data).pipe(
-                mergeMap((x: any) => {
-                    const offset = new Offset(this.clientProducer);
-                    const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'partitionedGroup', [
-                        { topic: payloads[0].topic, partition: Object.keys(x[1][payloads[0].topic])[0] }
-                    ]));
-                    // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset,  [
-                    //     'aggregator_dbsync']));
-                    // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset, ['aggregator_dbsync']));
-                    const offsetObservable = offsetObs();
+            return of(data);
 
-                    return offsetObservable.pipe(mergeMap((results: any) => {
+        }));
+
+
+        // const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
+        // const result = sendObs();
+
+        // return result.pipe(mergeMap((data: any) => {
+        //     Tools.loginfo('   - message sent => ');
+        //     console.log(data);
+
+        //     return of(data).pipe(
+        //         mergeMap((x: any) => {
+        //             const offset = new Offset(this.clientProducer);
+        //             const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'partitionedGroup', [
+        //                 { topic: payloads[0].topic, partition: Object.keys(x[1][payloads[0].topic])[0] }
+        //             ]));
+        //             // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset,  [
+        //             //     'aggregator_dbsync']));
+        //             // const offsetObs = bindCallback(offset.fetchLatestOffsets.bind(offset, ['aggregator_dbsync']));
+        //             const offsetObservable = offsetObs();
+
+        //             return offsetObservable.pipe(mergeMap((results: any) => {
+        //                 // console.log(offsets[topic][partition]);
+        //                 if (!!(results.message || results[0] !== null)) {
+        //                     Tools.logSuccess('     => KO');
+
+        //                     return of(false);
+        //                 }
+        //                 const offsetRes = results[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
+        //                 const offsetIn = x[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
+        //                 const partitionRes = Object.keys(results[1][payloads[0].topic])[0];
+        //                 const partitionIn = Object.keys(x[1][payloads[0].topic])[0];
+        //                 if ((offsetRes === offsetIn + 1) && partitionRes === partitionIn) {
+        //                     Tools.logSuccess('     => OK ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
+
+        //                     return of(true);
+        //                 }
+        //                 Tools.logSuccess('     => KO ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
+
+        //                 return of(false);
+        //             }));
+        //         })
+        //     ).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeWhile((value, index) => {
+        //         const t = index;
+
+        //         return !value && index < 30;
+        //     }, true)).pipe(map((x) => {
+        //         return x;
+        //     }));
+
+        // }));
+    }
+
+    public checkReponseMessage(data: any): Observable<any> {
+
+        return of(data).pipe(
+            mergeMap((x: any) => {
+                const t = 2;
+
+                const topicInfo = Object.keys(data[1])[0];
+                const offset = new Offset(this.clientProducer);
+                const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'partitionedGroup', [
+                    { topic: topicInfo, partition: Object.keys(data[1][topicInfo])[0] }
+                ]));
+                const offsetObservable = offsetObs();
+
+                return offsetObservable.pipe(
+                    map((results: any) => {
                         // console.log(offsets[topic][partition]);
                         if (!!(results.message || results[0] !== null)) {
                             Tools.logSuccess('     => KO');
 
-                            return of(false);
+                            throw false;
                         }
-                        const offsetRes = results[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
-                        const offsetIn = x[1][payloads[0].topic][Object.keys(x[1][payloads[0].topic])[0]];
-                        const partitionRes = Object.keys(results[1][payloads[0].topic])[0];
-                        const partitionIn = Object.keys(x[1][payloads[0].topic])[0];
+                        const offsetRes = results[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
+                        const offsetIn = data[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
+                        const partitionRes = Object.keys(results[1][topicInfo])[0];
+                        const partitionIn = Object.keys(data[1][topicInfo])[0];
                         if ((offsetRes === offsetIn + 1) && partitionRes === partitionIn) {
                             Tools.logSuccess('     => OK ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
-                            return of(true);
+                            return { pin: partitionIn, oin: offsetIn };
                         }
                         Tools.logSuccess('     => KO ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
-                        return of(false);
-                    }));
-                })
-            ).pipe(repeatWhen(completed => completed.pipe(delay(1000)))).pipe(takeWhile((value, index) => {
-                const t = index;
-
-                return !value && index < 30;
-            }, true)).pipe(map((x) => {
-                return x;
-            }));
-
-        }));
+                        throw false;
+                    })
+                );
+            }),
+            retryWhen(genericRetryStrategy({
+                durationBeforeRetry: 10,
+                maxRetryAttempts : 800
+              }))
+        );
     }
 
     public init(): Observable<void> {

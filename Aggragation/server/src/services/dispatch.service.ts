@@ -20,6 +20,7 @@ import { WebSocketService } from "./websocket.service";
 export class DispatchService {
     private mapperService: MapperService;
     private loggerService: LoggerService;
+    
 
     constructor() {
         this.mapperService = new MapperService();
@@ -50,7 +51,7 @@ export class DispatchService {
                 );
             });
         }, 0);
-        
+
 
         switch (message.topic) {
             case "aggregator_init_connexion":
@@ -58,7 +59,8 @@ export class DispatchService {
                 break;
             case "aggregator_dbsync":
                 // this.mapperService.dataBaseSynchronize(String(message.value));
-                WebSocketService.sendMessage('server_1', String(message.value));
+                KafkaService.instance.arrayOfResponse.push(message);
+                // WebSocketService.sendMessage('server_1', String(message.value));
                 break;
             case "aggregator_logsync":
                 this.loggerService.logSynchronize(String(message.value));
@@ -83,10 +85,10 @@ export class DispatchService {
                     }
                 ];
 
-                KafkaService.instance.producer.send(payloads, (err: any, result: any) => {
-                    console.log(data);
-                    this.sendActivationMail();
-                });
+                // KafkaService.instance.producer.send(payloads, (err: any, result: any) => {
+                //     console.log(data);
+                //     this.sendActivationMail();
+                // });
             })
         );
     }

@@ -1,7 +1,7 @@
 import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject } from 'rxjs';
 // tslint:disable-next-line:max-line-length
-import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse } from 'kafka-node';
+import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse, ConsumerGroupStream } from 'kafka-node';
 import { DispatchService } from './dispatch.service';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
@@ -16,7 +16,7 @@ import { ProduceRequest } from 'kafka-node';
 export class KafkaService {
     public static flagIsFirstConnection = false;
     public static instance: KafkaService;
-    public consumers: Array<ConsumerGroup> = [];
+    public consumers: Array<ConsumerGroupStream> = [];
     public producer: HighLevelProducer;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
@@ -118,7 +118,7 @@ export class KafkaService {
             const topicObject = clusterMetaData.metadata[topic.name];
             if (topicObject) {
                 for (let index = topic.partitionTopic.rangePartitions[0]; index <= topic.partitionTopic.rangePartitions[1]; index++) {
-                    const consumer = new ConsumerGroup(this.setCfgOptions(index.toString(), topic), [topic.name]);
+                    const consumer = new ConsumerGroupStream(this.setCfgOptions(index.toString(), topic), [topic.name]);
                     this.consumers.push(consumer);
                 }
             }
@@ -276,7 +276,7 @@ export class KafkaService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
                 ];
 
-                this.sendMessage(payloads).subscribe();
+                // this.sendMessage(payloads).subscribe();
             }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
