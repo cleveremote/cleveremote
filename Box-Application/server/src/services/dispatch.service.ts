@@ -13,6 +13,7 @@ import { KafkaService } from "./kafka.service";
 import { MapperService } from "./mapper.service";
 import { LoggerService } from "./logger.service";
 import { Tools } from "./tools-service";
+import { genericRetryStrategy } from "./tools/generic-retry-strategy";
 
 export class DispatchService {
     private mapperService: MapperService;
@@ -39,9 +40,9 @@ export class DispatchService {
                 { topic: 'aggregator_init_connexion', messages: JSON.stringify({ serialNumber: Tools.serialNumber }), key: Tools.serialNumber }
             ];
 
-            KafkaService.instance.producer.send(payloads, (err, data) => {
-                Tools.logError('error', err);
-            });
+            // KafkaService.instance.producer.send(payloads, (err, data) => {
+            //     Tools.logError('error', err);
+            // });
         }
 
         Tools.logSuccess('  => OK.');
@@ -77,7 +78,10 @@ export class DispatchService {
                     { topic: 'aggregator_dbsync', messages: JSON.stringify(message), key: 'server_1' }
                 ];
 
-                KafkaService.instance.sendMessage(payloads).subscribe();
+                // KafkaService.instance.sendMessage(payloads).subscribe();
+                KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) =>
+                    KafkaService.instance.checkReponseMessage(data)
+                )).subscribe();
                 break;
             case "box_dbsync":
                 // this.loggerService.logSynchronize(String(message.value));

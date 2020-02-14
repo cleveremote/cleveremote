@@ -1,4 +1,4 @@
-import { Message, ConsumerGroup } from "kafka-node";
+import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
 import { Observable, from, of } from "rxjs";
 import { getCustomRepository, getRepository } from "typeorm";
 import { AccountExt } from "../entities/custom.repositories/account.ext";
@@ -20,7 +20,7 @@ import { WebSocketService } from "./websocket.service";
 export class DispatchService {
     private mapperService: MapperService;
     private loggerService: LoggerService;
-    
+
 
     constructor() {
         this.mapperService = new MapperService();
@@ -29,7 +29,7 @@ export class DispatchService {
 
     public init(): Observable<void> {
         KafkaService.instance.consumers.forEach(consumer => {
-            consumer.on('message', (message: Message) => {
+            consumer.on('data', (message: Message) => {
                 this.routeMessage(consumer, message);
             });
             consumer.on('error', (err: any) => {
@@ -42,15 +42,13 @@ export class DispatchService {
 
     }
 
-    public routeMessage(consumer: ConsumerGroup, message: Message): void {
-        setTimeout(() => {
-            consumer.commit((error, data) => {
-                console.log(
-                    '%s read msg %s Topic="%s" Partition=%s Offset=%d',
-                    consumer.memberId, message.value, message.topic, message.partition, message.offset
-                );
-            });
-        }, 0);
+    public routeMessage(consumer: ConsumerGroupStream, message: Message): void {
+        consumer.commit(message, true, (error, data) => {
+            console.log(
+                'consumer read msg %s Topic="%s" Partition=%s Offset=%d',
+                message.value, message.topic, message.partition, message.offset
+            );
+        });
 
 
         switch (message.topic) {

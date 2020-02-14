@@ -1,8 +1,7 @@
-import { map, tap, mergeMap, flatMap, repeatWhen, delay, takeWhile, retryWhen } from 'rxjs/operators';
+import { map, tap, mergeMap, flatMap, retryWhen } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback } from 'rxjs';
 // tslint:disable-next-line:max-line-length
-import { Offset, KafkaClient, Producer, ConsumerGroup, ConsumerGroupOptions, Message, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, MetadataResponse, ProduceRequest, ProducerStream } from 'kafka-node';
-import { DispatchService } from './dispatch.service';
+import { Offset, KafkaClient, ConsumerGroup, ConsumerGroupOptions, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";
@@ -13,7 +12,7 @@ import { genericRetryStrategy } from './tools/generic-retry-strategy';
 
 export class KafkaService {
     public static instance: KafkaService;
-    public consumers: Array<ConsumerGroup> = [];
+    public consumers: Array<ConsumerGroupStream> = [];
     public producer: ProducerStream;
     public offset: Offset;
     public subscribeTopics: Array<ITopic> = [];
@@ -106,7 +105,7 @@ export class KafkaService {
             const topicObject = clusterMetaData.metadata[topic.name];
             if (topicObject) {
                 Object.keys(topicObject).forEach((key, index) => {
-                    const consumer = new ConsumerGroup(this.setCfgOptions(key, topic), [topic.name]);
+                    const consumer = new ConsumerGroupStream(this.setCfgOptions(key, topic), [topic.name]);
                     this.consumers.push(consumer);
                 });
             }
@@ -115,7 +114,7 @@ export class KafkaService {
 
     public initializeProducer(): Observable<boolean> {
         // tslint:disable-next-line:max-line-length
-        const testOption = {
+        const cfgOption = {
             kafkaClient: {
                 connectRetryOptions: {
                     retries: 5,
@@ -150,7 +149,7 @@ export class KafkaService {
         };
 
 
-        this.producer = new ProducerStream(testOption);
+        this.producer = new ProducerStream(cfgOption);
         // const t = new HighLevelProducer(this.clientProducer, { requireAcks: 1, partitionerType: 4 }, (partitions: any, key: any) => {
         //     const keyData = key.split('.');
 
@@ -282,7 +281,7 @@ export class KafkaService {
                         const offsetIn = data[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
                         const partitionRes = Object.keys(results[1][topicInfo])[0];
                         const partitionIn = Object.keys(data[1][topicInfo])[0];
-                        if ((offsetRes === offsetIn + 1) && partitionRes === partitionIn) {
+                        if ((offsetRes >= offsetIn + 1) && partitionRes === partitionIn) {
                             Tools.logSuccess('     => OK ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
                             return { pin: partitionIn, oin: offsetIn };
@@ -295,8 +294,8 @@ export class KafkaService {
             }),
             retryWhen(genericRetryStrategy({
                 durationBeforeRetry: 10,
-                maxRetryAttempts : 800
-              }))
+                maxRetryAttempts: 800
+            }))
         );
     }
 

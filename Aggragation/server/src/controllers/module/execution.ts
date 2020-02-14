@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { isAuthenticated } from '../../middleware/authentication';
 // import { XbeeService } from '../../config/xbee';
 import { MongoService } from '../../services/mongo.service';
-import { map, mergeMap, retryWhen, tap, delayWhen } from 'rxjs/operators';
+import { map, mergeMap, retryWhen, tap, delayWhen, catchError } from 'rxjs/operators';
 import { ILog } from '../../entities/mongo.entities/logs';
 import { KafkaService } from '../../services/kafka.service';
 import { of, interval, timer } from 'rxjs';
@@ -31,15 +31,11 @@ export default class Execution extends Controller {
                 messages: JSON.stringify(dataExample), key: 'box_action.server_1'
             }
         ];
-        KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) => {
-
-            const t = 2;
-
-            return KafkaService.instance.checkReponseMessage(data).pipe(mergeMap((checkResponse: any) =>
+        KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) =>
+            KafkaService.instance.checkReponseMessage(data).pipe(mergeMap((checkResponse: any) =>
 
                 of(false).pipe(
                     map(val => {
-                        const yu = t;
 
                         const responseArray = KafkaService.instance.arrayOfResponse;
                         if (responseArray.length > 0) {
@@ -58,17 +54,14 @@ export default class Execution extends Controller {
                     }),
                     retryWhen(genericRetryStrategy({
                         durationBeforeRetry: 1000,
-                        maxRetryAttempts : 8
-                      }))
+                        maxRetryAttempts: 8
+                    })), catchError(error => error)
                 )
-            ));
-
-        })).subscribe((x: any) => {
+            ))
+        )).subscribe((x: any) => {
             if (x) {
                 this.sendSuccess(res, x);
             }
-
-
         }
         );
 
