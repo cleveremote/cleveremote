@@ -65,6 +65,20 @@ cd C:\Users\dell\Downloads\kafka_2.11-0.10.2.0\kafka_2.11-0.10.2.0\bin\windows
 
 .\kafka-topics.bat --zookeeper 192.168.1.30:2181 --delete --topic aggregator_dbsync
 
+./kafka-topics.bat --describe --zookeeper 192.168.1.30:2181 --topic aggregator_dbsync
+
+
+./kafka-configs.bat --zookeeper 192.168.1.30:2181  --entity-type brokers --entity-default --alter --add-config log.retention.check.interval.ms=6000
+
+PS C:\Users\dell\Downloads\kafka\bin\windows> ./kafka-configs.bat --zookeeper 192.168.1.30:2181  --entity-type topics --entity-name aggregator_dbsync --alter --add-config retention.ms=6000
+Completed Updating config for entity: topic 'aggregator_dbsync'.
+PS C:\Users\dell\Downloads\kafka\bin\windows> ./kafka-configs.bat --zookeeper 192.168.1.30:2181  --entity-type topics --entity-name box_action --alter --add-config retention.ms=6000
+Completed Updating config for entity: topic 'box_action'.
+
+
+./kafka-configs.bat --zookeeper 192.168.1.30:2181  --entity-type topics --entity-name box_action_response --alter --add-config retention.ms=6000
+./kafka-configs.bat --zookeeper 192.168.1.30:2181  --entity-type topics --entity-name box_action --alter --add-config retention.ms=6000
+
 
 For dockerized kafka/zookeeper
 

@@ -57,19 +57,19 @@ export class Tools {
     }
 
     public static loginfo(message: string): void {
-        console.log('\x1b[36m', message, '\x1b[0m');
+        console.log('\x1b[36m', `${message} executed At ${Date()}`, '\x1b[0m');
     }
 
     public static logError(message: string, err?: any): void {
-        console.log('\x1b[31m', message, '\x1b[0m');
+        console.log('\x1b[31m', `${message} executed At ${Date()}`, '\x1b[0m');
     }
 
     public static logWarn(message: string): void {
-        console.log('\x1b[33m', message, '\x1b[0m');
+        console.log('\x1b[33m', `${message} executed At ${Date()}`, '\x1b[0m');
     }
 
     public static logSuccess(message: string): void {
-        console.log('\x1b[32m', message, '\x1b[0m');
+        console.log('\x1b[32m', `${message} executed At ${Date()}`, '\x1b[0m');
     }
 
 }

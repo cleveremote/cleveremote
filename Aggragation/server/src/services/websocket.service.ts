@@ -1,9 +1,11 @@
 import * as WebSocket from 'ws';
 import * as http from "http";
-import { map, tap } from 'rxjs/operators';
+import { map, tap, mergeMap, retryWhen, catchError } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 import { Tools } from './tools-service';
+import { KafkaService } from './kafka/kafka.service';
+import { genericRetryStrategy } from './tools/generic-retry-strategy';
 
 interface ExtWebSocket extends WebSocket {
     isAlive: boolean;
@@ -103,7 +105,7 @@ export class WebSocketService {
                         const t = 2;
                     };
                     ws.onerror = (e: IWebSocketError) => { Tools.logWarn(`Client disconnected - reason: ${e.error}`); };
-                    ws.send(this.createMessage('Hi there, I am a WebSocket server'));
+                    ws.send(this.createMessage('Connected to the WebSocket server'));
                 });
                 this.stayConnected();
             }));
@@ -138,10 +140,63 @@ export class WebSocketService {
                         }
                     });
             }
-            event.target.send(this.createMessage(`You sent -> ${message.content}`, message.isBroadcast));
+            //event.target.send(this.createMessage(`You sent -> ${message.content}`, message.isBroadcast));
+            this.test(event);
         }, 1000);
     }
 
+    public test(event: any): void {
+        const success = { source: 'OK', module: "string", value: "string", date: new Date() };
+        const fail = { source: 'FAIL', module: "string", value: "string", date: new Date() };
+        const dataExample = {
+            entity: 'Account', type: 'UPDATE',
+            data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+        };
+        const payloads = [
+            {
+                topic: 'box_action',
+                messages: JSON.stringify(dataExample), key: 'box_action.server_1'
+            }
+        ];
+        KafkaService.instance.sendMessage(payloads, true).pipe(mergeMap((checkResponse: any) =>
 
+            of(false).pipe(
+                map(val => {
+
+                    const responseArray = KafkaService.instance.arrayOfResponse;
+                    if (responseArray.length > 0) {
+
+                        for (let index = 0; index < responseArray.length; index++) {
+                            const element = responseArray[index];
+                            const result = JSON.parse(element.value);
+                            if (result.offset === checkResponse.oin) {
+                                responseArray.splice(index, 1);
+
+                                return { status: 'OK', message: "process success!" };
+                            }
+                        }
+                    }
+                    throw { status: 'KO', message: "process timeOut!" };
+                }),
+                retryWhen(genericRetryStrategy({
+                    durationBeforeRetry: 200,
+                    maxRetryAttempts: 40
+                })), catchError((error: any) => {
+                    console.log(JSON.stringify(error));
+
+                    return error;
+                }))
+        )).subscribe((x: any) => {
+            if (x) {
+                //WebSocketService.sendMessage('server_1', JSON.stringify(x));
+                // this.sendSuccess(res, x);
+                event.target.send(this.createMessage(`response -> ${JSON.stringify(x)}`, false));
+            }
+        },
+            (e: any) => {
+                // this.sendSuccess(res, JSON.stringify(e));
+                event.target.send(this.createMessage(`response -> ${JSON.stringify(e)}`, false));
+            });
+    }
 
 }

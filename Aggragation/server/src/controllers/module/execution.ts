@@ -6,7 +6,7 @@ import { isAuthenticated } from '../../middleware/authentication';
 import { MongoService } from '../../services/mongo.service';
 import { map, mergeMap, retryWhen, tap, delayWhen, catchError } from 'rxjs/operators';
 import { ILog } from '../../entities/mongo.entities/logs';
-import { KafkaService } from '../../services/kafka.service';
+import { KafkaService } from '../../services/kafka/kafka.service';
 import { of, interval, timer } from 'rxjs';
 import { AppError } from '../../errors/apperror.class';
 import { DispatchService } from '../../services/dispatch.service';
@@ -32,39 +32,43 @@ export default class Execution extends Controller {
                 messages: JSON.stringify(dataExample), key: 'box_action.server_1'
             }
         ];
-        KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) =>
-            KafkaService.instance.checkReponseMessage(data).pipe(mergeMap((checkResponse: any) =>
+        KafkaService.instance.sendMessage(payloads, true).pipe(mergeMap((checkResponse: any) =>
 
-                of(false).pipe(
-                    map(val => {
+            of(false).pipe(
+                map(val => {
 
-                        const responseArray = KafkaService.instance.arrayOfResponse;
-                        if (responseArray.length > 0) {
+                    const responseArray = KafkaService.instance.arrayOfResponse;
+                    if (responseArray.length > 0) {
 
-                            for (let index = 0; index < responseArray.length; index++) {
-                                const element = responseArray[index];
-                                const result = JSON.parse(element.value);
-                                if (result.offset === checkResponse.oin) {
-                                    responseArray.splice(index, 1);
+                        for (let index = 0; index < responseArray.length; index++) {
+                            const element = responseArray[index];
+                            const result = JSON.parse(element.value);
+                            if (result.offset === checkResponse.oin) {
+                                responseArray.splice(index, 1);
 
-                                    return { status: 'OK', message: "process success!" };
-                                }
+                                return { status: 'OK', message: "process success!" };
                             }
                         }
-                        throw val;
-                    }),
-                    retryWhen(genericRetryStrategy({
-                        durationBeforeRetry: 1000,
-                        maxRetryAttempts: 8
-                    })), catchError(error => error)
-                )
-            ))
+                    }
+                    throw { status: 'KO', message: "process timeOut!" };
+                }),
+                retryWhen(genericRetryStrategy({
+                    durationBeforeRetry: 200,
+                    maxRetryAttempts: 40
+                })), catchError((error: any) => {
+                    console.log(JSON.stringify(error));
+
+                    return error;
+                }))
         )).subscribe((x: any) => {
             if (x) {
                 WebSocketService.sendMessage('server_1', JSON.stringify(x));
                 this.sendSuccess(res, x);
             }
-        });
+        },
+            (e) => {
+                this.sendSuccess(res, JSON.stringify(e));
+            });
 
         // XbeeService.GetNodeDiscovery().subscribe(function (frame) {
         //         console.log("Success!",frame);

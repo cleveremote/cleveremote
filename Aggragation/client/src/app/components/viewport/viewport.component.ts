@@ -79,7 +79,7 @@ export class ViewportComponent implements OnInit, OnDestroy {
         this.contentToShow = ITabTypes.CONFIGURATION;
         break;
     }
-
+    this.goScheme();
   }
 
   public showTab(tabName: string, e: Event): void {

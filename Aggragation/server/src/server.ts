@@ -16,7 +16,7 @@ import * as logger from 'morgan';
 import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
-import { KafkaService } from './services/kafka.service';
+import { KafkaService } from './services/kafka/kafka.service';
 import { XbeeService } from './services/xbee.service';
 import { Tools } from './services/tools-service';
 import { DispatchService } from './services/dispatch.service';
@@ -66,7 +66,7 @@ export class Server {
             }));
     }
 
-    public initKafka(): Observable<void> {
+    public initKafka(): Observable<boolean> {
         Tools.loginfo('* start init kafka...');
         const kafkaInstance = new KafkaService();
 
@@ -93,7 +93,6 @@ export class Server {
 
     public initDbMongoose(): Observable<void> {
         Tools.loginfo('* start init mongoDB...');
-        // tslint:disable-next-line:max-line-length
         const db = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
 
         return observableOf(

@@ -1,4 +1,4 @@
-import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat, retryWhen } from 'rxjs/operators';
+import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat, retryWhen, catchError } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject } from 'rxjs';
 // tslint:disable-next-line:max-line-length
 import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
@@ -24,8 +24,6 @@ export class KafkaService {
     public reconnectInterval: any;
     private client: KafkaClient = undefined;
     private clientProducer: KafkaClient = undefined;
-    private readonly dispatchService: DispatchService;
-    private readonly topics: Array<ITopic>;
 
     constructor() {
         this.InitAndHandleFails();
@@ -119,6 +117,18 @@ export class KafkaService {
             if (topicObject) {
                 for (let index = topic.partitionTopic.rangePartitions[0]; index <= topic.partitionTopic.rangePartitions[1]; index++) {
                     const consumer = new ConsumerGroupStream(this.setCfgOptions(index.toString(), topic), [topic.name]);
+                    consumer.on('error', (err: any) => {
+                        Tools.logError(`error on consumerGroupStream`, err);
+                        // handle a broker not available error
+                        if (err && err.name === "BrokerNotAvailableError") {
+                            Tools.loginfo("attempting reconnect");
+                            consumer.client.refreshMetadata([topic.name], (err: any) => {
+                                // handle errors here
+                            });
+                        } else {
+                            Tools.logError(err.stack);
+                        }
+                    });
                     this.consumers.push(consumer);
                 }
             }
@@ -209,6 +219,7 @@ export class KafkaService {
 
         }
     }
+
     public initializeCLients(): void {
 
         this.client = new KafkaClient({
@@ -271,23 +282,13 @@ export class KafkaService {
                 clearTimeout(this.reconnectInterval);
                 this.reconnectInterval = undefined;
             }
-            setInterval(() => {
-                const dataExample = {
-                    entity: 'Account', type: 'UPDATE',
-                    data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
-                };
-                const payloads = [
-                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
-                ];
-
-                // this.sendMessage(payloads).subscribe();
-            }, 5000);
             Tools.loginfo('   - init Producer');
             Tools.logSuccess('     => OK');
 
             return true;
         })).subscribe();
     }
+
     public InitAndHandleFails(): void {
         const timeToRetryConnection = 12 * 1000; // 12 seconds
         this.reconnectInterval = undefined;
@@ -336,9 +337,7 @@ export class KafkaService {
         });
     }
 
-
     public sendMessage(payloads: Array<ProduceRequest>): Observable<any> {
-
 
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
         const result = sendObs();
@@ -367,16 +366,15 @@ export class KafkaService {
 
                 return offsetObservable.pipe(
                     map((results: any) => {
-                        // console.log(offsets[topic][partition]);
+                        const partitionIn = Object.keys(data[1][topicInfo])[0];
+                        const offsetIn = data[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
                         if (!!(results.message || results[0] !== null)) {
                             Tools.logSuccess('     => KO');
 
-                            throw false;
+                            throw { pin: partitionIn, oin: offsetIn };
                         }
                         const offsetRes = results[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
-                        const offsetIn = data[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
                         const partitionRes = Object.keys(results[1][topicInfo])[0];
-                        const partitionIn = Object.keys(data[1][topicInfo])[0];
                         if ((offsetRes >= offsetIn + 1) && partitionRes === partitionIn) {
                             Tools.logSuccess('     => OK ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
@@ -384,14 +382,14 @@ export class KafkaService {
                         }
                         Tools.logSuccess('     => KO ' + 'time = ' + Date() + ' [partitionIn,offsetIn]=[' + partitionIn + ',' + offsetIn + ']' + ' [partitionRes,offsetRes]=[' + partitionRes + ',' + offsetRes + ']');
 
-                        throw false;
+                        throw { pin: partitionIn, oin: offsetIn };
                     })
                 );
             }),
             retryWhen(genericRetryStrategy({
-                durationBeforeRetry: 10,
-                maxRetryAttempts : 800
-              }))
+                durationBeforeRetry: 200,
+                maxRetryAttempts: 40
+            }))
         );
     }
 

@@ -1,6 +1,6 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { ApiRequestsService } from '../../services/api-requests.service';
-import { DataService } from '../../services/websocket/websocket.service';
+import { DataService, Message } from '../../services/websocket/websocket.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -12,7 +12,7 @@ export class SchemeComponent implements OnInit {
   @Output() fromChildData: EventEmitter<any> = new EventEmitter();
   public data: string;
   public sub: Subscription;
-  public entries:Array<string> = [];
+  public entries: Array<string> = [];
   constructor(private apiRequestsService: ApiRequestsService,
     private dataService: DataService) {
   }
@@ -29,10 +29,12 @@ export class SchemeComponent implements OnInit {
   }
 
   moduleExecution(jsonBody): void {
-    this.apiRequestsService.postExecution({ test: "testdata", idModule: "1234" }).subscribe();
+    //this.apiRequestsService.postExecution({ test: "testdata", idModule: "1234" }).subscribe();
+    const toto = JSON.stringify(new Message('sender', 'content', false));
+    this.dataService.socket.next(JSON.stringify({ op: 'hello' }));
   }
 
-  ngOnDestroy() {
-    this.sub.unsubscribe();
+    ngOnDestroy() {
+      this.sub.unsubscribe();
+    }
   }
-}

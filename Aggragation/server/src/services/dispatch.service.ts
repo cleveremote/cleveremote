@@ -10,7 +10,7 @@ import { PartitionConfig } from "../entities/gen.entities/partition_config";
 import { User } from "../entities/gen.entities/users";
 import { UserExt } from "../entities/custom.repositories/user.ext";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";
-import { KafkaService } from "./kafka.service";
+import { KafkaService } from "./kafka/kafka.service";
 import { MailService } from "./mail-service";
 import { MapperService } from "./mapper.service";
 import { LoggerService } from "./logger.service";
@@ -30,7 +30,7 @@ export class DispatchService {
     public init(): Observable<void> {
         KafkaService.instance.consumers.forEach(consumer => {
             consumer.on('data', (message: Message) => {
-                this.routeMessage(consumer, message);
+                this.consumeDataProccess(consumer, message);
             });
             consumer.on('error', (err: any) => {
                 Tools.logError('error', err);
@@ -42,20 +42,28 @@ export class DispatchService {
 
     }
 
-    public routeMessage(consumer: ConsumerGroupStream, message: Message): void {
+    public consumeDataProccess(consumer: ConsumerGroupStream, message: Message): void {
         consumer.commit(message, true, (error, data) => {
-            console.log(
-                'consumer read msg %s Topic="%s" Partition=%s Offset=%d',
-                message.value, message.topic, message.partition, message.offset
-            );
+            if (!error) {
+                console.log('consumer read msg %s Topic="%s" Partition=%s Offset=%d', message.value, message.topic, message.partition, message.offset);
+                this.routeMessage(message);
+            } else {
+                console.log(error);
+            }
         });
+    }
 
-
+    public routeMessage(message: Message): void {
         switch (message.topic) {
             case "aggregator_init_connexion":
                 this.proccessSyncConnexion(message.value);
                 break;
             case "aggregator_dbsync":
+                // this.mapperService.dataBaseSynchronize(String(message.value));
+                // KafkaService.instance.arrayOfResponse.push(message);
+                // WebSocketService.sendMessage('server_1', String(message.value));
+                break;
+            case "box_action_response":
                 // this.mapperService.dataBaseSynchronize(String(message.value));
                 KafkaService.instance.arrayOfResponse.push(message);
                 // WebSocketService.sendMessage('server_1', String(message.value));

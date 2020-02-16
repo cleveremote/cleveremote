@@ -58,37 +58,43 @@ export class DispatchService {
                     'consumer read msg %s Topic="%s" Partition=%s Offset=%d',
                     message.value, message.topic, message.partition, message.offset
                 );
+
+                switch (message.topic) {
+                    case `${Tools.serialNumber}_init_connexion`:
+                        // this.proccessSyncConnexion(String(message.value));
+                        break;
+                    case "box_action":
+                        // this.mapperService.dataBaseSynchronize(String(message.value));
+                        const dataExample = {
+                            entity: 'Account', type: 'UPDATE',
+                            data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+                        };
+                        const payloads = [
+                            { topic: 'box_action_response', messages: JSON.stringify(message), key: 'server_1' }
+                        ];
+
+                        KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) =>
+                            KafkaService.instance.checkReponseMessage(data)
+                        )).subscribe(
+                            () => { },
+                            (e) => {
+                                Tools.logError('error on send message => ' + JSON.stringify(e));
+                            });
+                        break;
+                    case "box_dbsync":
+                         this.loggerService.logSynchronize(String(message.value));
+                        break;
+                    default:
+                        break;
+                }
+
             } else {
                 console.log(error);
             }
 
         });
 
-        switch (message.topic) {
-            case `${Tools.serialNumber}_init_connexion`:
-                // this.proccessSyncConnexion(String(message.value));
-                break;
-            case "box_action":
-                // this.mapperService.dataBaseSynchronize(String(message.value));
-                const dataExample = {
-                    entity: 'Account', type: 'UPDATE',
-                    data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
-                };
-                const payloads = [
-                    { topic: 'aggregator_dbsync', messages: JSON.stringify(message), key: 'server_1' }
-                ];
 
-                // KafkaService.instance.sendMessage(payloads).subscribe();
-                KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) =>
-                    KafkaService.instance.checkReponseMessage(data)
-                )).subscribe();
-                break;
-            case "box_dbsync":
-                // this.loggerService.logSynchronize(String(message.value));
-                break;
-            default:
-                break;
-        }
     }
 
     public proccessSyncConnexion(value: string | Buffer): Observable<boolean> {
