@@ -40,7 +40,7 @@ export class KafkaService extends KafkaInit {
             mergeMap((x: any) => {
                 const topicInfo = Object.keys(data[1])[0];
                 const offset = new Offset(this.clientProducer);
-                const offsetObs = bindCallback(offset.fetchCommits.bind(offset, 'partitionedGroup', [
+                const offsetObs = bindCallback(offset.fetchCommits.bind(offset, process.env.BOX_GROUPID, [
                     { topic: topicInfo, partition: Object.keys(data[1][topicInfo])[0] }
                 ]));
 

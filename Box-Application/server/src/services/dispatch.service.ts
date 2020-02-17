@@ -9,7 +9,7 @@ import { Device } from "../entities/gen.entities/device";
 import { PartitionConfig } from "../entities/gen.entities/partition_config";
 import { User } from "../entities/gen.entities/users";
 import { UserExt } from "../entities/custom.repositories/user.ext";
-import { KafkaService } from "./kafka.service";
+import { KafkaService } from "./kafka/kafka.service";
 import { MapperService } from "./mapper.service";
 import { LoggerService } from "./logger.service";
 import { Tools } from "./tools-service";
@@ -73,16 +73,14 @@ export class DispatchService {
                             { topic: 'box_action_response', messages: JSON.stringify(message), key: 'server_1' }
                         ];
 
-                        KafkaService.instance.sendMessage(payloads).pipe(mergeMap((data: any) =>
-                            KafkaService.instance.checkReponseMessage(data)
-                        )).subscribe(
+                        KafkaService.instance.sendMessage(payloads, true).subscribe(
                             () => { },
                             (e) => {
                                 Tools.logError('error on send message => ' + JSON.stringify(e));
                             });
                         break;
                     case "box_dbsync":
-                         this.loggerService.logSynchronize(String(message.value));
+                        this.loggerService.logSynchronize(String(message.value));
                         break;
                     default:
                         break;

@@ -10,7 +10,7 @@ import { PartitionConfig } from "../entities/gen.entities/partition_config";
 import { User } from "../entities/gen.entities/users";
 import { UserExt } from "../entities/custom.repositories/user.ext";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";
-import { KafkaService } from "./kafka.service";
+import { KafkaService } from "./kafka/kafka.service";
 import { MailService } from "./mail-service";
 import { TransceiverConfigExt } from "../entities/custom.repositories/transceiverConfig.ext";
 import { Transceiver } from "../entities/gen.entities/transceiver";

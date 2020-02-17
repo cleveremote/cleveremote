@@ -17,6 +17,7 @@
     "member-access": [
       true
     ],
+    "max-line-length": [false, 140],
     "quotemark": [
       false,
       "single",

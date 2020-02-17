@@ -16,7 +16,7 @@ import * as logger from 'morgan';
 import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
-import { KafkaService } from './services/kafka.service';
+import { KafkaService } from './services/kafka/kafka.service';
 import { XbeeService } from './services/xbee.service';
 import { Tools } from './services/tools-service';
 import { DispatchService } from './services/dispatch.service';
@@ -71,7 +71,7 @@ export class Server {
             }));
     }
 
-    public initKafka(): Observable<void> {
+    public initKafka(): Observable<boolean> {
         Tools.loginfo('* start init kafka...');
         const kafkaInstance = new KafkaService();
 
