@@ -87,7 +87,7 @@ export class PassportService {
                 PassportService.passport.use(new GoogleStrategy({
                     clientID: "940995958052-0kb6df6obe0shlcasd5ibl0f6qcdqjpo.apps.googleusercontent.com",
                     clientSecret: "ZBhopSvoHFrHTVoyC4DJm5j-",
-                    callbackURL: "http://192.168.1.30:4200/api/auth/google/callback"
+                    callbackURL: "http://localhost:4200/api/auth/google/callback"
                 },
                     (accessToken: any, refreshToken: any, params: any, profile: any, done: any) => {
                         process.nextTick(() => {

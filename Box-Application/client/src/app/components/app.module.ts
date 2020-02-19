@@ -39,7 +39,7 @@ import { TimerService } from '../services/timer.service';
   imports: [
     NgbModule.forRoot(),
     AngularFontAwesomeModule,
-    UserIdleModule.forRoot({ idle: 3600, timeout: 10, ping: 2 }),
+    UserIdleModule.forRoot({ idle: 3600, timeout: 3600, ping: 2 }),
     BrowserModule,
     FormsModule,
     CommonModule,

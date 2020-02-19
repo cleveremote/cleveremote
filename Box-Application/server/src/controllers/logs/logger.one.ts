@@ -6,6 +6,7 @@ import { isAuthenticated } from '../../middleware/authentication';
 import { MongoService } from '../../services/mongo.service';
 import { map, mergeMap } from 'rxjs/operators';
 import { ILog } from '../../entities/mongo.entities/logs';
+import { XbeeService } from '../../services/xbee.service';
 
 // tslint:disable-next-line: no-default-export
 export default class Logger extends Controller {
@@ -14,21 +15,17 @@ export default class Logger extends Controller {
 
     @isAuthenticated()
     public get(req: Request, res: Response): void {
-        // XbeeService.GetNodeDiscovery().subscribe(function (frame) {
-        //         console.log("Success!",frame);
-        //     }, function (e) {
-        //         console.log("Command failed:\n", e);
-        //     });
-        // const userCtrl = new UserController<Model<IUserModel>>(UserModule);
-        // userCtrl.getAll(req, res);
-        const toto = { source: 'toto', module: "string", value: "string", date: new Date() };
+        XbeeService.GetNodeDiscovery();
+        // // const userCtrl = new UserController<Model<IUserModel>>(UserModule);
+        // // userCtrl.getAll(req, res);
+        // const toto = { source: 'toto', module: "string", value: "string", date: new Date() };
 
-        MongoService.createLogs(toto as ILog).pipe(
-            mergeMap(data => MongoService.getLogs().pipe(
-                map(logs => logs)
-            ))
-        ).subscribe((result: Array<ILog>) => {
-            this.sendSuccess(res, result);
-        });
+        // MongoService.createLogs(toto as ILog).pipe(
+        //     mergeMap(data => MongoService.getLogs().pipe(
+        //         map(logs => logs)
+        //     ))
+        // ).subscribe((result: Array<ILog>) => {
+        //     this.sendSuccess(res, result);
+        // });
     }
 }

@@ -14,9 +14,9 @@ export default class Token extends Controller {
         const user = JSON.parse(JSON.stringify(req.user))as IUser;
         const token = jwt.sign(user,
             String(process.env.JWT_SECRET),
-            { expiresIn: 20 }
+            { expiresIn: 3600 }
         );
-        this.sendSuccess(res, { success: true, user, token, expiresIn: 20 });
+        this.sendSuccess(res, { success: true, user, token, expiresIn: 3600 });
     }
 
 }

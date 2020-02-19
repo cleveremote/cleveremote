@@ -1,18 +1,70 @@
 import * as WebSocket from 'ws';
 import * as http from "http";
-import { map, tap } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, from } from 'rxjs';
+import { map, tap, mergeMap, catchError, ignoreElements, filter, pluck, takeUntil, flatMap, merge } from 'rxjs/operators';
+import { of as observableOf, from as observableFrom, Observable, of, observable, from, empty, timer } from 'rxjs';
 import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
+
 
 export class XbeeService {
 
     public static xbee: any;
 
-    public static GetNodeDiscovery(): Observable<any> {
-        return XbeeService.xbee.localCommand({
-            command: "ND"
-        }).pipe(map((response: any) => response));
+    public static GetNodeDiscovery(): void {
+        
+       
+            // return XbeeService.xbee.localCommand({
+            //     command: "AS"
+            // }).pipe(map((response: any) => {
+            //  return  response;
+            // })).subscribe();
+        var xbee_api = require("xbee-api");
+        var xbee_api = require("xbee-api");
+
+
+        // we want to ignore the command stream result as well as any error (for no
+        // reply resulting from no found nodes)
+        const nodeDiscoveryCommandStream = XbeeService.xbee.localCommand({ command: "AS" }).pipe(
+            catchError(() => {
+                const t = 2;
+
+                return empty();
+            }),
+            ignoreElements()
+        );
+
+        const nodeDiscoveryRepliesStream = XbeeService.xbee.allPackets.pipe(
+            filter((packet: any) => { 
+                return packet.type === xbee_api.constants.FRAME_TYPE.AT_COMMAND_RESPONSE && packet.command === "AS"; 
+            }),
+            pluck("nodeIdentification")
+        );
+
+        XbeeService.xbee
+            .localCommand({
+                command: "NT"
+            })
+            .pipe(
+                flatMap((ntResult: any) => {
+                    // Fulfill promise when NT expires
+                    // NT is 1/10 seconds
+                    var timeoutMs = ntResult.readInt16BE(0) * 100;
+                    console.log("Got node discovery timeout:", timeoutMs, "ms");
+                    return nodeDiscoveryRepliesStream.pipe(
+                        takeUntil(timer(timeoutMs + 1000)),
+                        merge(nodeDiscoveryCommandStream)
+                    );
+                })
+            )
+            .subscribe((nodeIdentification: any) => {
+                console.log("Found node:\n", nodeIdentification);
+            }, (e: any) => {
+                console.log("Command failed:\n", e);
+                XbeeService.xbee.close();
+            },  () => {
+                console.log("Timeout reached; done finding nodes");
+                XbeeService.xbee.close();
+            });
     }
 
     public static switchDigital(port: string, value: boolean, address: string): Observable<any> {
@@ -28,15 +80,14 @@ export class XbeeService {
             map(() => XbeeService.xbee));
     }
 
-    public initListners(): Observable<void> {
+    public initListners(): Observable<boolean> {
         const exists = portName => SerialPort.list().then(ports => ports.some(port => port.comName === portName));
-        const xbeeObs = Observable.create(observer => {
+        const xbeeObs = new Observable<any>(observer => {
             let xbee: any;
             try {
                 xbee = xbeeRx({
-                    serialport: '/dev/ttyUSB0',
-                    api_mode: 2,
-                    defaultTimeoutMs: 5000 * 10,
+                    // serialport: '/dev/ttyUSB0',
+                    serialport: 'COM6',
                     serialPortOptions: {
                         baudRate: 9600
                     },
@@ -49,19 +100,24 @@ export class XbeeService {
             observer.next(xbee);
         });
 
-        return from(exists('/dev/ttyUSB0')).pipe(map((isOk: any) => {
+        //  return of(exists('/dev/ttyUSB0')).pipe(map((isOk: any) => {
+        return of(exists('COM6')).pipe(mergeMap((isOk: boolean) => {
             if (isOk) {
                 return xbeeObs.pipe(
                     map((xbee: any) => {
                         XbeeService.xbee = xbee;
                         console.log('* init Xbee OK.');
+
+                        return true;
                     }, (err: any) => {
                         console.error(`! init Xbee KO ${err}`);
 
-                        return err;
+                        return false;
                     }));
             }
             console.warn(`  - Xbee port not found!`);
+
+            return of(false);
         }));
 
         // return xbeeObs.pipe(
