@@ -17,12 +17,10 @@ import { KafkaInit } from './kafka.init';
 export class KafkaService extends KafkaInit {
     public static instance: KafkaService;
 
-
     public checkFirstConnexion(): Observable<boolean> {
 
         return of(true);
     }
-
 
     public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false): Observable<any> {
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
@@ -44,40 +42,6 @@ export class KafkaService extends KafkaInit {
         }));
 
     }
-
-    // public checkReponseMessage(data: any): Observable<any> {
-
-    //     return of(data).pipe(
-    //         mergeMap((x: any) => {
-    //             const topicInfo = Object.keys(data[1])[0];
-    //             const offset = new Offset(this.clientProducer);
-    //             const offsetObs = bindCallback(offset.fetchCommits.bind(offset, process.env.BOX_GROUPID, [
-    //                 { topic: topicInfo, partition: Object.keys(data[1][topicInfo])[0] }
-    //             ]));
-
-    //             return offsetObs().pipe(
-    //                 map((results: any) => {
-    //                     if (!!(results.message || results[0] !== null)) {
-    //                         Tools.logSuccess('     => KO');
-    //                         throw false;
-    //                     }
-    //                     const offsetRes: number = results[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
-    //                     const offsetIn: number = data[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
-    //                     const partitionRes = Object.keys(results[1][topicInfo])[0];
-    //                     const partitionIn = Object.keys(data[1][topicInfo])[0];
-    //                     if ((offsetRes >= offsetIn + 1) && partitionRes === partitionIn) {
-    //                         Tools.logSuccess(`     => OK [PartitionIn,OffsetIn]=[${partitionIn},${offsetIn}] [PartitionRes,OffsetRes]=[${partitionRes},${offsetRes}]`);
-
-    //                         return { pin: partitionIn, oin: offsetIn };
-    //                     }
-    //                     Tools.logSuccess(`     => KO [PartitionIn,OffsetIn]=[${partitionIn},${offsetIn}] [PartitionRes,OffsetRes]=[${partitionRes},${offsetRes}]`);
-    //                     throw { status: 'KO', message: "process timeOut!" };
-    //                 })
-    //             );
-    //         }),
-    //         retryWhen(genericRetryStrategy({ durationBeforeRetry: 200, maxRetryAttempts: 40 }))
-    //     );
-    // }
 
     public checkReponseMessage(data: any): Observable<any> {
 
