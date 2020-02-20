@@ -20,9 +20,12 @@ export class ModuleService extends DeviceService {
         return {};
     }
 
-    public executeModule(): any {
-        // on/off/get
-        return {};
+    public switchDigital(port: string, value: boolean, address: string): Observable<any> {
+        return this.xbee.remoteCommand({
+            command: port,
+            commandParameter: [value ? 5 : 4],
+            destination64: address// '0013a20040b971f3'
+        }).pipe(map((response: any) => response));
     }
 
     public configureModule(configuration: any): any {

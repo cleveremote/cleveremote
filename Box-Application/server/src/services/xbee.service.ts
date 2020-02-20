@@ -10,71 +10,7 @@ export class XbeeService {
 
     public static xbee: any;
 
-    public static GetNodeDiscovery(): void {
-        
-       
-            // return XbeeService.xbee.localCommand({
-            //     command: "AS"
-            // }).pipe(map((response: any) => {
-            //  return  response;
-            // })).subscribe();
-        var xbee_api = require("xbee-api");
-        var xbee_api = require("xbee-api");
-
-
-        // we want to ignore the command stream result as well as any error (for no
-        // reply resulting from no found nodes)
-        const nodeDiscoveryCommandStream = XbeeService.xbee.localCommand({ command: "AS" }).pipe(
-            catchError(() => {
-                const t = 2;
-
-                return empty();
-            }),
-            ignoreElements()
-        );
-
-        const nodeDiscoveryRepliesStream = XbeeService.xbee.allPackets.pipe(
-            filter((packet: any) => { 
-                return packet.type === xbee_api.constants.FRAME_TYPE.AT_COMMAND_RESPONSE && packet.command === "AS"; 
-            }),
-            pluck("nodeIdentification")
-        );
-
-        XbeeService.xbee
-            .localCommand({
-                command: "NT"
-            })
-            .pipe(
-                flatMap((ntResult: any) => {
-                    // Fulfill promise when NT expires
-                    // NT is 1/10 seconds
-                    var timeoutMs = ntResult.readInt16BE(0) * 100;
-                    console.log("Got node discovery timeout:", timeoutMs, "ms");
-                    return nodeDiscoveryRepliesStream.pipe(
-                        takeUntil(timer(timeoutMs + 1000)),
-                        merge(nodeDiscoveryCommandStream)
-                    );
-                })
-            )
-            .subscribe((nodeIdentification: any) => {
-                console.log("Found node:\n", nodeIdentification);
-            }, (e: any) => {
-                console.log("Command failed:\n", e);
-                XbeeService.xbee.close();
-            },  () => {
-                console.log("Timeout reached; done finding nodes");
-                XbeeService.xbee.close();
-            });
-    }
-
-    public static switchDigital(port: string, value: boolean, address: string): Observable<any> {
-        return XbeeService.xbee.remoteCommand({
-            command: port,
-            commandParameter: [value ? 5 : 4],
-            destination64: address// '0013a20040b971f3'
-        }).pipe(map((response: any) => response));
-    }
-
+    
     public init(): Observable<void> {
         return this.initListners().pipe(
             map(() => XbeeService.xbee));
@@ -118,7 +54,26 @@ export class XbeeService {
             console.warn(`  - Xbee port not found!`);
 
             return of(false);
-        }));
+        })).pipe(
+                map(() => {
+                    console.log('* init xbee OK');
+                    var allPacketSub = XbeeService.xbee.allPackets
+                        .subscribe(function (packet) {
+                            console.log("Packet recieved:", packet);
+                        });
+                    var monitorIODataSub = XbeeService.xbee
+                        .monitorIODataPackets()
+                        .subscribe(function (ioSamplePacket) {
+                            console.log("Analog sample from AD1:", ioSamplePacket.analogSamples.AD1);
+                        });
+                    var monitorTransmissionsSub = XbeeService.xbee
+                        .monitorTransmissions()
+                        .subscribe(function (transmissionPacket) {
+                            // do something with the packet
+                            console.log("Recieved remote transmission:", transmissionPacket.data);
+                        });
+                    return true;
+                }));
 
         // return xbeeObs.pipe(
         //     map((xbee: any) => {
