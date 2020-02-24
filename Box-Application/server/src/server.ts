@@ -20,6 +20,7 @@ import { KafkaService } from './services/kafka/kafka.service';
 import { XbeeService } from './services/xbee.service';
 import { Tools } from './services/tools-service';
 import { DispatchService } from './services/dispatch.service';
+import { XbeeHelper } from './services/xbee/xbee.helper';
 
 export class Server {
 
@@ -30,6 +31,11 @@ export class Server {
     }
 
     public init(): Observable<express.Application> {
+
+
+        const cbeeHelper = new XbeeHelper();
+        cbeeHelper.testFunction();
+        
         process.on('uncaughtException', (err) => {
             console.log('whoops! there was an error', err.stack);
         });
