@@ -223,3 +223,105 @@ export default class TestClass<T extends any> extends Base<T> {
     }
 }
 ```
+
+ function _ExplicitAdressing() {
+        console.log("nadime coucou");
+        const broadcast = false;
+        var frame = {
+            type: 0x11, // xbee_api.constants.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST
+            id: 0x01, // optional, nextFrameId() is called per default
+            destination64: "0013A20040C04982", // default is broadcast address
+            destination16: "fffe", // default is "fffe" (unknown/broadcast)
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x00,
+            clusterId: "0032",
+            profileId: "0000",
+            broadcastRadius: 0x00, // optional, 0x00 is default
+            options: 0x00, // optional, 0x00 is default
+            data: "0100" // Can either be string or byte array.
+        },
+            responseStream;
+
+        if (debug) {
+            console.log("Sending", command, "to", destination64, "with parameter", commandParameter || []);
+        }
+
+        responseStream = _sendFrameStreamResponse(frame, 5000, xbee_api.constants.FRAME_TYPE.ZIGBEE_EXPLICIT_RX).pipe(
+            rx.operators.flatMap(function (frame) {
+                if (frame.commandStatus === xbee_api.constants.COMMAND_STATUS.REMOTE_CMD_TRANS_FAILURE) {
+                    // if there was a remote command transmission failure, throw error
+                    return rx.throwError(new Error(xbee_api.constants.COMMAND_STATUS[frame.commandStatus]));
+                }
+                // any other response is returned
+                return rx.of(frame);
+            })
+        );
+
+        if (broadcast) {
+            return responseStream;
+        } else {
+            // if not broadcast, there can be only one response packet
+            return responseStream.pipe(rx.operators.take(1));
+        }
+    }
+
+
+    7B 
+00 01 00 01
+34 12 00 00 00 00 00 00
+7D 49 C0 40 00 A2 13 00
+3B 9A
+35 02 
+0F 76
+
+response of the router 
+7D 
+00 02 00 02 
+34 12 00 00 00 00 00 00
+82 49 C0 40 00 A2 13 00
+00 00
+34 02 
+00 4F 
+
+34 12 00 00 00 00 00 00
+F3 71 B9 40 00 A2 13 00 
+8A 5C
+12 00
+01 FF
+
+
+coordinator 34                     110100 parent
+router 35                             110101
+end device 12                      01001
+
+
+
+get all defices with ND 
+devices[] add manually coordinator information
+
+request rtg info 0032
+rtg table 
+lqi               0031
+
+
+
+http://ftp1.digi.com/support/images/APP_NOTE_XBee_ZigBee_Device_Profile.pdf
+Explicite adressing commande frame 0032
+7E 00 16 11 7A 00 13 A2 00 40 C0 49 82 FF FE 00 00 00 32 00 00 00 00 7A 1E 2D
+response 
+7E 00 07 8B 7A 00 00 00 00 00 FA
+ressponse explicite RX indicator 
+7E 00 49 91 00 13 A2 00 40 C0 49 82 00 00 00 00 80 32 00 00 01 
+7A 00 28 1E 0A 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 00 00 03 00 00 53
+
+Explicite adressing commande frame 0031
+7E 00 07 8B 7A 00 00 00 00 00 FA
+response 
+7E 00 07 8B 7A 00 00 00 00 00 FA
+ressponse explicite RX indicator 8031
+7E 00 2D 91 00 13 A2 00 40 C0 49 82 00 00 00 00 80 31 00 00 01 
+7B 00 01 00 01 34 12 00 00 00 00 00 00 
+7D 49 C0 40 00 A2 13 00
+3B 9A 35 02 0F 76 6D
+
+
