@@ -11,6 +11,10 @@ export class TransceiverService extends DeviceService {
         return {};
     }
 
+    public testBroadcast(): Observable<any> {
+        return this.xbee._ExplicitAdressing();
+    }
+
     public GetNodeDiscovery(): Observable<any> {
 
         // we want to ignore the command stream result as well as any error (for no

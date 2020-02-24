@@ -1,6 +1,15 @@
  sudo  sshfs server@192.168.1.30:/home/server/devclv/cleveremote/Box-Application/ /mnt/shared-dev -o nonempty
  when not in sudo mode
  
+///////////// XBEE
+sampling
+Packet recieved: { type: 146,
+  remote64: '0013a20040c0497d',
+  remote16: '21be',
+  receiveOptions: 1,
+  digitalSamples: { DIO4: 1, DIO11: 1, DIO12: 0 },
+  analogSamples: { AD1: 606, AD2: 612, AD3: 623 },
+  numSamples: 1 }
 
 
 kafka conception
