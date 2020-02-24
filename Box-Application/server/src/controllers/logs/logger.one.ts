@@ -25,6 +25,16 @@ export default class Logger extends Controller {
             }, () => {
                 console.log("Timeout reached; done finding nodes");
             });
+
+        // trans.testBroadcast().subscribe( (frame) =>{
+        //     // response will be [ 0 ] from the response frame
+        //     console.log("Got response from " + frame.remote16 + ": " + frame.commandData);
+        //     this.sendSuccess(res, "frame.commandData");
+        // },  (e:any) =>{
+        //     console.log("Command transmission failed:\n", e);
+        //     this.sendError(res,e);
+        // });
+
         // // const userCtrl = new UserController<Model<IUserModel>>(UserModule);
         // // userCtrl.getAll(req, res);
         // const toto = { source: 'toto', module: "string", value: "string", date: new Date() };
