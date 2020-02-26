@@ -51,7 +51,7 @@ export class ProfileComponent implements AfterContentInit {
     this.apiRequestsService.getAllLogs('server_1').subscribe(response => {
       const t = 2;
     });
-    const dataset = this.initData();
+    const dataset = this.initData(2);
     this.updategraph(dataset);
 
     // const data = this.initData();
@@ -61,11 +61,10 @@ export class ProfileComponent implements AfterContentInit {
       this.testUpdate(dataA);
     }, 5000);
 
-    // setTimeout(() => {
-    //   const dataB = this.initData(2);
-    //   this.testUpdate(dataB);
-    //   this.testUpdate(dataB);
-    // }, 10000);
+    setTimeout(() => {
+      const dataB = this.initData(1);
+      this.testUpdate(dataB);
+    }, 10000);
 
   }
 
@@ -83,9 +82,8 @@ export class ProfileComponent implements AfterContentInit {
 
   public testUpdate(dataset) {
     this.link = this.svg.selectAll(".links")
-      .data(dataset.links);
-    this.link.enter()
-      .append("line")
+      .data(dataset.links)
+      .join("line")
       .attr("class", "links")
       .attr('marker-end', 'url(#arrowhead)');
 
@@ -95,11 +93,8 @@ export class ProfileComponent implements AfterContentInit {
       this.link.exit().remove();
 
     this.edgepaths = this.svg.selectAll(".edgepath")
-      .data(dataset.links);
-
-    
-    this.edgepaths.enter()
-      .append('path')
+      .data(dataset.links)
+      .join("path")
       .attr('class', 'edgepath')
       .attr('fill-opacity', 0)
       .attr('stroke-opacity', 0)
@@ -108,12 +103,8 @@ export class ProfileComponent implements AfterContentInit {
       this.edgepaths.exit().remove();
     
       this.edgelabels = this.svg.selectAll(".edgelabel")
-      .data(dataset.links);
-
-
-    
-    this.edgelabels.enter()
-      .append('text')
+      .data(dataset.links)
+      .join('text')
       .style("pointer-events", "none")
       .attr('class', 'edgelabel')
       .attr('id', function (d, i) { return 'edgelabel' + i })
@@ -129,11 +120,8 @@ export class ProfileComponent implements AfterContentInit {
       this.edgelabels.exit().remove();
 
     this.node = this.svg.selectAll(".nodes")
-      .data(dataset.nodes);
-
-    
-    this.node.enter()
-      .append("g")
+      .data(dataset.nodes)
+      .join("g")
       .attr("class", "nodes")
       .call(this.d3.drag()
         .on("start", (d: any) => {
@@ -442,6 +430,13 @@ export class ProfileComponent implements AfterContentInit {
     };
 
     this.simulation$ = this.simulation()
+      .nodes(dataset.nodes)
+      .on("tick", this.ticked$);
+
+    this.simulation$.force("link")
+      .links(dataset.links);
+
+      this.simulation$ = this.simulation()
       .nodes(dataset.nodes)
       .on("tick", this.ticked$);
 
