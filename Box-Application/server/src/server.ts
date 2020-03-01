@@ -34,7 +34,7 @@ export class Server {
 
 
         const cbeeHelper = new XbeeHelper();
-        cbeeHelper.testFunction();
+       // cbeeHelper.testFunction();
         
         process.on('uncaughtException', (err) => {
             console.log('whoops! there was an error', err.stack);
