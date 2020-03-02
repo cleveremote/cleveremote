@@ -1,8 +1,6 @@
  sudo  sshfs server@192.168.1.30:/home/server/devclv/cleveremote/Box-Application/ /mnt/shared-dev -o nonempty
  when not in sudo mode
  
-https://forms.na1.netsuite.com/app/site/hosting/scriptlet.nl?script=457&deploy=2&compid=818164&h=5928a16f2b6f9582b799&article=xbee-cyclic-sleep-example-indirect-messaging
-
 ///////////// XBEE
 sampling
 Packet recieved: { type: 146,
@@ -355,84 +353,3 @@ ressponse explicite RX indicator 8031
 
 
 01000011 34 coor
-
-
-
-##############@
-
-ADIO1 in-out / AD1 /SPI
-ADIO2 in-out / AD2 /SPI
-ADIO3 in-out / AD3 /SPI
-ADIO4 in-out     /SPI
-ADIO5 in-out
-ADIO6 in-out
-
-
-transciever config 
-endDevice / router
-=> sleep / no sleep
-
-if (router)
-
-full_digital_input
-=> detect on change config
-
-full_digital_output
-=> detect on change config
-
-
-full_analog_output
-=> sampling time
-IR value in ms 
-see https://www.digi.com/resources/documentation/Digidocs/90002002/Content/Reference/r_examples_sleep.htm?TocPath=Manage%20End%20Devices%7C_____15
-
-https://forms.na1.netsuite.com/app/site/hosting/scriptlet.nl?script=457&deploy=2&compid=818164&h=5928a16f2b6f9582b799&article=xbee-cyclic-sleep-example-indirect-messaging
-
-custom_io
-=> detect on change config
-
-
-if (endDevice)
-IR needed
-IC no needed
-
-
-config coordinator / routers
-ST
-SP
-
-//for coordinators & routers
-full_digital_input
-ADIO1: in
-ADIO2: in
-ADIO3: in
-ADIO4: in
-ADIO5: in
-ADIO6: in
-
-full_digital_output
-ADIO1: out
-ADIO2: out
-ADIO3: out
-ADIO4: out
-ADIO5: out
-ADIO6: out
-
-full_analog_output
-ADIO1: analog
-ADIO2: analog
-ADIO3: analog
-
-custom_io
-ADIO1: free
-ADIO2: free
-ADIO3: free
-ADIO4: free
-ADIO5: free
-ADIO6: free
-
-
-
-
-config router 
-config endDevice
