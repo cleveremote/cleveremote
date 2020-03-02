@@ -2,7 +2,7 @@ import { Observable, throwError, timer } from 'rxjs';
 import { mergeMap, finalize } from 'rxjs/operators';
 
 export const genericRetryStrategy = ({
-    maxRetryAttempts = 3,
+    maxRetryAttempts = 3000,
     durationBeforeRetry = 1000,
     excludedStatusCodes = []
 }: {
