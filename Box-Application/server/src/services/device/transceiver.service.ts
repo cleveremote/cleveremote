@@ -4,6 +4,7 @@ import { filter, pluck, catchError, ignoreElements, flatMap, takeUntil, merge, m
 import { empty, timer, Observable, of, forkJoin } from "rxjs";
 import { XbeeHelper } from "../xbee/xbee.helper";
 import { XbeeService } from "../xbee.service";
+import { config } from "dotenv";
 
 export class TransceiverService extends DeviceService {
 
@@ -251,6 +252,95 @@ export class TransceiverService extends DeviceService {
             }
             ));
 
+    }
+
+    // config like [{cmd:'D1':params:[1]}....]
+    public applyConfig(adrress: string, configuration: Array<any>): Observable<any> {
+        const cmdObs: Array<Observable<boolean>> = [];
+
+        configuration.forEach((el, index) => {
+            cmdObs.push(XbeeHelper.executeRemoteCommand(el.cmd, adrress, el.params).pipe(map((ao: any) => true)));
+        });
+
+        return forkJoin(cmdObs).pipe(
+            mergeMap((results: Array<boolean>) => {
+
+                for (const result of results) {
+                    if (!result) {
+                        return of(false);
+                    }
+                }
+
+                return XbeeHelper.executeRemoteCommand('WR', adrress, undefined, 0x02).pipe(map((ao: any) => true));
+            }
+
+            )).pipe(mergeMap((result: boolean) => {
+                if (result) {
+                    console.log('save config to data base');
+                }
+
+                return of(true);
+            }));
+    }
+
+    public setMaxSleepCycle(devices: Array<any>): Observable<any> {
+        const cmdObs: Array<Observable<any>> = [];
+        const coordinator = devices.filter(device => device.type === 0)[0];
+        const routers = devices.filter(device => device.type === 1);
+        const endDevices = devices.filter(device => device.type === 2);
+        // the max SP of endDevice all routers an coordinator must have greater value
+        const maxSPValue = Math.max.apply(Math, endDevices.map((device: any) => {
+            const configObj: Array<any> = JSON.parse(device.config);
+            const spAttribute = configObj.find((cfg: any) => cfg.cmd === 'SP');
+
+            return spAttribute.param;
+        }));
+
+        const configCoordinatorObj: Array<any> = JSON.parse(coordinator.config);
+        const spCoordinatorAttribute = configCoordinatorObj.find((cfg: any) => cfg.cmd === 'SP');
+        if (spCoordinatorAttribute < maxSPValue) {
+            // update SP of coordinator
+            cmdObs.push(XbeeHelper.executeRemoteCommand('SP', coordinator.adrress, [maxSPValue])
+                .pipe(mergeMap((res: any) => of({ res: true, device: coordinator }))));
+        }
+
+        routers.forEach(router => {
+            const configRouterObj: Array<any> = JSON.parse(router.config);
+            const spRouterAttribute = configRouterObj.find((cfg: any) => cfg.cmd === 'SP');
+            if (spRouterAttribute < maxSPValue) {
+                // update SP of router
+                cmdObs.push(XbeeHelper.executeRemoteCommand('SP', router.adrress, [maxSPValue])
+                    .pipe(mergeMap((res: any) => of({ res: true, device: router }))));
+
+            }
+        });
+
+        return forkJoin(cmdObs)
+            .pipe(mergeMap((results: Array<any>) => {
+                const writeCmdObs: Array<Observable<any>> = [];
+                for (const result of results) {
+                    if (!result.res) {
+                        return of(false);
+                    }
+                    writeCmdObs.push(XbeeHelper.executeRemoteCommand('WR', result.device.address, undefined, 0x02)
+                        .pipe(mergeMap((res: any) => of({ res: true, device: result.device }))));
+                }
+
+                return forkJoin(writeCmdObs);
+            }))
+            .pipe(mergeMap((results: Array<any>) => {
+
+                for (const result of results) {
+                    if (result.res) {
+                        console.log('save config to data base');
+                    } else {
+                        console.log('fail to write execute');
+                    }
+
+                }
+                // make fork join to save
+                return of(true);
+            }));
     }
 
 }

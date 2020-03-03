@@ -2,24 +2,25 @@ import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap, mergeMap, catchError, ignoreElements, filter, pluck, takeUntil, flatMap, merge } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, from, empty, timer } from 'rxjs';
-import * as xbeeRx from 'xbee-rx'; // no types ... :(
+// import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
 import { XbeeService } from '../xbee.service';
 import * as  hexToBinary from 'hex-to-binary';
 import endianness from 'endianness';
+import * as xbeeRx from '../xbee/xbee-rx';
 
 export class XbeeHelper {
     public static position = 0;
-    public static executeRemoteCommand(cmd: string, address: string, params?: Array<number>): Observable<any> {
+    public static executeRemoteCommand(cmd: string, address: string, params?: Array<number>, options?: number): Observable<any> {
         const localCommandObj = { command: cmd, destination64: address, timeoutMs: 60000 } as any;
         if (params) {
             localCommandObj.commandParameter = params;
         }
-
+        
         return XbeeService.xbee.remoteCommand(localCommandObj).pipe(map((response: any) => response));
     }
 
-    public static executeLocalCommand(cmd: string, params?: number): Observable<any> {
+    public static executeLocalCommand(cmd: string, params?: number, options?: number): Observable<any> {
         const localCommandObj = { command: cmd } as any;
         if (params) {
             localCommandObj.commandParameter = [params];
