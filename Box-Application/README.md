@@ -353,3 +353,23 @@ ressponse explicite RX indicator 8031
 
 
 01000011 34 coor
+
+
+
+timeoutset in remotecommand option 02 to ac apply command
+
+digital out high 5
+digital out low 4
+digital input 3
+analog 2
+
+
+IR =>  *1ms => valeur hexadecimal
+IC => 0xFFFF FOR all digital dio
+v+ => 0,0x0700-0x0c00 => 2100 - 3600
+
+sleep mode
+SM => 5 
+SN periods of sleep
+SP period *10ms => hexavalue
+ST time before sleep

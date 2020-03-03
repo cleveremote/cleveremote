@@ -231,4 +231,26 @@ export class TransceiverService extends DeviceService {
         return of(true);
     }
 
+    public testWriteCommande() {
+        var allPacketSub = XbeeService.xbee.allPackets
+            .subscribe(function (packet, response) {
+                console.log("Packet recieved:", packet);
+            });
+
+        return XbeeHelper.executeRemoteCommand('D1', '0013a20040b971f3', [5])
+            .pipe(mergeMap((ao: any) => {
+                console.log('test write');
+                return of(true);
+            }
+            ));
+
+        return XbeeHelper.executeRemoteCommand('WR', '0013a20040b971f3')
+            .pipe(mergeMap((ao: any) => {
+                console.log('test write');
+                return of(true);
+            }
+            ));
+
+    }
+
 }

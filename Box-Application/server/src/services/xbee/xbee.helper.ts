@@ -10,8 +10,8 @@ import endianness from 'endianness';
 
 export class XbeeHelper {
     public static position = 0;
-    public static executeRemoteCommand(cmd: string, address: string, params: number): Observable<any> {
-        const localCommandObj = { command: cmd, destination64: address } as any;
+    public static executeRemoteCommand(cmd: string, address: string, params?: Array<number>): Observable<any> {
+        const localCommandObj = { command: cmd, destination64: address, timeoutMs: 60000 } as any;
         if (params) {
             localCommandObj.commandParameter = params;
         }
