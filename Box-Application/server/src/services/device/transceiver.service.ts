@@ -19,23 +19,25 @@ export class TransceiverService extends DeviceService {
     }
 
     public joiningDeviceListener(): void {
-        this.xbee.allPackets.pipe(filter((packet: any) => packet.type === 0x95)).subscribe(
+        this.xbee.allPackets.pipe(filter((packet: any) => {
+            return packet.type === 0x95;
+        })).subscribe(
             (packet: any) => {
                 // TODO check if alreadyExists if not call scan.
                 console.log('node joined the network', packet);
             }
-        );
+        )
     }
 
     public getSleepAttributes(adrress?: string | ArrayBuffer): Observable<any> {
         if (adrress) {
-            return XbeeHelper.executeRemoteCommand(1000, 'SP', adrress)
+            return XbeeHelper.executeRemoteCommand(60000, 'SP', adrress)
                 .pipe(mergeMap((sp: any) =>
-                    XbeeHelper.executeRemoteCommand(1000, 'ST', adrress)
+                    XbeeHelper.executeRemoteCommand(60000, 'ST', adrress)
                         .pipe(mergeMap((st: any) =>
-                            XbeeHelper.executeRemoteCommand(1000, 'SM', adrress)
+                            XbeeHelper.executeRemoteCommand(60000, 'SM', adrress)
                                 .pipe(mergeMap((sm: any) =>
-                                    XbeeHelper.executeRemoteCommand(1000, 'SN', adrress)
+                                    XbeeHelper.executeRemoteCommand(60000, 'SN', adrress)
                                         .pipe(mergeMap((sn: any) =>
                                             of({ SP: sp, ST: st, SM: sm, SN: sn })
                                         ))
@@ -46,12 +48,9 @@ export class TransceiverService extends DeviceService {
 
         return XbeeHelper.executeLocalCommand('SP')
             .pipe(mergeMap((sp: any) =>
-                XbeeHelper.executeLocalCommand('SM')
-                    .pipe(mergeMap((sm: any) =>
-                        XbeeHelper.executeLocalCommand('SN')
-                            .pipe(mergeMap((sn: any) =>
-                                of({ SP: sp, ST: undefined, SM: sm, SN: sn })
-                            ))
+                XbeeHelper.executeLocalCommand('SN')
+                    .pipe(mergeMap((sn: any) =>
+                        of({ SP: sp, ST: undefined, SM: undefined, SN: sn })
                     ))
             ));
     }
@@ -101,14 +100,14 @@ export class TransceiverService extends DeviceService {
             mergeMap((nodes: Array<any>) => {
                 const obsLst: Array<Observable<any>> = [];
                 nodes.forEach(node => {
-                    if (node.type === 2) { // => router
-                        obsLst.push(this.scanUnitaire(node.dest16, node.sh, node.sl));
+                    if (node.deviceType === 1) { // => router
+                        obsLst.push(this.scanUnitaire(node.remote16, node.remote64));
                     }
                 });
                 if (obsLst.length > 0) {
                     return forkJoin(obsLst).pipe(mergeMap((results: Array<any>) => {
                         const res = results;
-                        return of([]);
+                        return of(results);
                     }));
                 }
                 return of([]);
@@ -140,29 +139,29 @@ export class TransceiverService extends DeviceService {
                             .pipe(mergeMap((ch: any) =>
                                 XbeeHelper.executeLocalCommand('AO', 1)
                                     .pipe(mergeMap((ao: any) =>
-                                        this.scanUnitaire(result.my.commandData.buffer, result.sh.commandData.buffer, result.sl.commandData.buffer)
+                                        this.scanUnitaire( XbeeHelper.toHexString(result.my.commandData), XbeeHelper.toHexString(XbeeHelper.concatBuffer(result.sh.commandData.buffer, result.sl.commandData.buffer)))
                                     ))
                             ))
                     ))
             ));
     }
 
-    public scanUnitaire(dest16: string | ArrayBuffer | SharedArrayBuffer, sh: string | ArrayBuffer | SharedArrayBuffer, sl: string | ArrayBuffer | SharedArrayBuffer): Observable<any> {
-        return this.requestRtg(0, dest16, sh, sl)
+    public scanUnitaire(dest16: string | ArrayBuffer | SharedArrayBuffer, address: string | ArrayBuffer | SharedArrayBuffer): Observable<any> {
+        return this.requestRtg(0, dest16, address)
             .pipe(mergeMap((resultRtg: any) =>
-                this.requestLqi(0, dest16, sh, sl)
+                this.requestLqi(0, dest16, address)
                     .pipe(mergeMap((resultLqi: any) =>
-                        of({ source: { destination16: dest16, destination64: { SH: sh, SL: sl } }, routing: resultRtg, lqi: resultLqi })
+                        of({ source: { destination16: dest16, destination64: address }, routing: resultRtg, lqi: resultLqi })
                     ))
             ));
     }
 
-    public requestRtg(start: any, dest16: string | ArrayBuffer | SharedArrayBuffer, sh: string | ArrayBuffer | SharedArrayBuffer, sl: string | ArrayBuffer | SharedArrayBuffer, lstRtg?: any): Observable<any> {
+    public requestRtg(start: any, dest16: string | ArrayBuffer | SharedArrayBuffer, address: string | ArrayBuffer | SharedArrayBuffer, lstRtg?: any): Observable<any> {
         let recResult = lstRtg;
         if (!recResult) {
             recResult = [];
         }
-        const dest64 = XbeeHelper.concatBuffer(sh, sl);
+        const dest64 = address;//XbeeHelper.concatBuffer(sh, sl);
         const type = xbee_api.constants.FRAME_TYPE.ZIGBEE_EXPLICIT_RX;
         const frame = {
             type: 0x11, // xbee_api.constants.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST
@@ -181,19 +180,19 @@ export class TransceiverService extends DeviceService {
             const object = XbeeHelper.routingTable(resultRtg.data);
             recResult.push(object);
             if (object.routingtableentries > Number(object.routingtablelistcount) + Number(object.startindex)) {
-                return this.requestRtg(XbeeHelper.decimalToHexString(Number(object.routingtablelistcount) + Number(object.startindex)), dest16, sh, sl, recResult);
+                return this.requestRtg(XbeeHelper.decimalToHexString(Number(object.routingtablelistcount) + Number(object.startindex)), dest16, address, recResult);
             }
 
             return of(recResult);
         }));
     }
 
-    public requestLqi(start: any, dest16: string | ArrayBuffer | SharedArrayBuffer, sh: string | ArrayBuffer | SharedArrayBuffer, sl: string | ArrayBuffer | SharedArrayBuffer, lstlqi?: any): Observable<any> {
+    public requestLqi(start: any, dest16: string | ArrayBuffer | SharedArrayBuffer, address: string | ArrayBuffer | SharedArrayBuffer, lstlqi?: any): Observable<any> {
         let recResult = lstlqi;
         if (!recResult) {
             recResult = [];
         }
-        const dest64 = XbeeHelper.concatBuffer(sh, sl);
+        const dest64 = address;
         const type = xbee_api.constants.FRAME_TYPE.ZIGBEE_EXPLICIT_RX;
         const frame = {
             type: 0x11, // xbee_api.constants.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST
@@ -212,7 +211,7 @@ export class TransceiverService extends DeviceService {
             const object = XbeeHelper.lqiTable(resultlqi.data);
             recResult.push(object);
             if (object.neighbortableentries > Number(object.neighborlqilistcount) + Number(object.startindex)) {
-                return this.requestLqi(XbeeHelper.decimalToHexString(Number(object.neighborlqilistcount) + Number(object.startindex)), dest16, sh, sl, recResult);
+                return this.requestLqi(XbeeHelper.decimalToHexString(Number(object.neighborlqilistcount) + Number(object.startindex)), dest16, address, recResult);
             }
 
             return of(recResult);

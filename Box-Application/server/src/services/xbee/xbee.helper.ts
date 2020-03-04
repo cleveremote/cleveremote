@@ -23,7 +23,7 @@ export class XbeeHelper {
             .pipe(mergeMap((res: boolean) => XbeeService.xbee.remoteCommand(localCommandObj)
                 .pipe(map((response: any) => {
                     if (response.commandStatus === 0) {
-                        console.log('success');
+                        console.log('success', response);
                         return response;
                     }
                     console.log('error response', response);
@@ -61,7 +61,7 @@ export class XbeeHelper {
         item['routingtableentries'] = routingtableentriesObj.value;
         item['startindex'] = startindexObj.value;
         item['routingtablelistcount'] = routingtablelistcountObj.value;
-        item['routingtablelist'] = routingtablelistObj.value;
+        item['routingtablelist'] = routingtablelistObj;
 
         return item;
     }
@@ -108,7 +108,7 @@ export class XbeeHelper {
         item['neighbortableentries'] = neighbortableentriesObj.value;
         item['startindex'] = startindexObj.value;
         item['neighborlqilistcount'] = neighborlqilistcountObj.value;
-        item['neighborlqilist'] = neighborlqilistObj.value;
+        item['neighborlqilist'] = neighborlqilistObj;
 
         return item;
     }
@@ -149,7 +149,7 @@ export class XbeeHelper {
         const length = 8;
         const value = buffer.slice(position, position + length);
         pos += length;
-        return XbeeHelper.addressBufferToString(value);
+        return { value: XbeeHelper.addressBufferToString(value), position: pos };
     }
 
     public static readUInt16(buffer, position: number): any {
@@ -160,7 +160,8 @@ export class XbeeHelper {
 
     public static readUInt8(buffer, position: number): any {
         let pos = position;
-        return { value: buffer.readUInt8(position), position: pos++ };
+        pos++;
+        return { value: buffer.readUInt8(position), position: pos };
     }
 
     public static addressBufferToString(buffer: Buffer): string {
@@ -181,7 +182,7 @@ export class XbeeHelper {
         tmp.set(new Uint8Array(buffer1), 0);
         tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
 
-        return tmp.buffer;
+        return tmp;
     }
 
     public static decimalToHexString(element: number): Array<number> {
