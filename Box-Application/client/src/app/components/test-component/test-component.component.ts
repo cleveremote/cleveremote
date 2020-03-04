@@ -19,7 +19,7 @@ export class TestComponentComponent implements OnInit {
   }
 
   public getTests(): void {
-    this.apiRequestsService.getAllLogs('server_1').subscribe(response => this.testEntries = response);
+   // this.apiRequestsService.getAllLogs('server_1').subscribe(response => this.testEntries = response);
   }
 
   public onSubmit(): void {

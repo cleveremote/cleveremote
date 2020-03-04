@@ -78,7 +78,7 @@ export class XbeeService {
                 // changeEndianness(val); /// '3412FF00AA'
 
 
-                console.log('* init xbee OK');
+                // console.log('* init xbee OK');
                 // var allPacketSub = XbeeService.xbee.allPackets
                 //     .subscribe(function (packet, response) {
                 //         console.log("Packet recieved:", packet);

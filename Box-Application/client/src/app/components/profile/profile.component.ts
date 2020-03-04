@@ -50,9 +50,7 @@ export class ProfileComponent implements AfterContentInit {
 
   ngAfterContentInit() {
 
-    this.apiRequestsService.getAllLogs('server_1').subscribe(response => {
-      const t = 2;
-    });
+
     this.initSvg();
 
     const dataset = this.initData(2);
@@ -395,5 +393,12 @@ export class ProfileComponent implements AfterContentInit {
     return this.d3.scaleOrdinal() //=d3.scaleOrdinal(d3.schemeSet2)
       .domain(["Team A", "Team B", "Team C", "Team D", "Team E"])
       .range(['#ff9e6d', '#86cbff', '#c2e5a0', '#fff686', '#9e79db']) as any;
+  }
+
+
+  public seConfig() {
+    this.apiRequestsService.getAllLogs('server_1').subscribe(response => {
+      const t = 2;
+    });
   }
 }

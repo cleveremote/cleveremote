@@ -1,23 +1,45 @@
 import * as WebSocket from 'ws';
 import * as http from "http";
-import { map, tap, mergeMap, catchError, ignoreElements, filter, pluck, takeUntil, flatMap, merge } from 'rxjs/operators';
+import { map, tap, mergeMap, catchError, ignoreElements, filter, pluck, takeUntil, flatMap, merge, retryWhen } from 'rxjs/operators';
 import { of as observableOf, from as observableFrom, Observable, of, observable, from, empty, timer } from 'rxjs';
 // import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
 import { XbeeService } from '../xbee.service';
 import * as  hexToBinary from 'hex-to-binary';
 import endianness from 'endianness';
-import * as xbeeRx from '../xbee/xbee-rx';
+import * as xbeeRx from 'xbee-rx';
+import { genericRetryStrategy } from '../tools/generic-retry-strategy';
 
 export class XbeeHelper {
     public static position = 0;
-    public static executeRemoteCommand(cmd: string, address: string, params?: Array<number>, options?: number): Observable<any> {
-        const localCommandObj = { command: cmd, destination64: address, timeoutMs: 60000 } as any;
+    public static executeRemoteCommand(timeoutMs: number, cmd: string, address: string, params?: Array<number> | string, option?: number): Observable<any> {
+        const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeoutMs, options: option } as any;
         if (params) {
             localCommandObj.commandParameter = params;
         }
-        
-        return XbeeService.xbee.remoteCommand(localCommandObj).pipe(map((response: any) => response));
+        console.log('Commande log', cmd);
+        return of(true)
+            .pipe(mergeMap((res: boolean) => {
+                const t = 2;
+                return XbeeService.xbee.remoteCommand(localCommandObj).pipe(map((response: any) => {
+                    if (response.commandStatus === 0) {
+                        console.log('success');
+                        return response;
+                    } else {
+                        console.log('error response', response);
+                        throw { response };
+                    }
+
+                }));
+            }),
+                catchError((error) => {
+                    console.log('error catch');
+                    throw { error };
+                }),
+                retryWhen(genericRetryStrategy({ durationBeforeRetry: 1, maxRetryAttempts: 100 }))
+            )
+
+
     }
 
     public static executeLocalCommand(cmd: string, params?: number, options?: number): Observable<any> {

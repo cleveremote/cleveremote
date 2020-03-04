@@ -20,7 +20,11 @@ export default class Logger extends Controller {
     public get(req: Request, res: Response): void {
         const trans = new TransceiverService();
 
-        trans.testWriteCommande().subscribe();
+        trans.applyFullDigital('0013a20040b971f3', false, true)
+        .subscribe((res1)=>{
+            console.log('finish');
+            this.sendSuccess(res, "frame.commandData");
+        });
         // trans.GetNodeDiscovery().pipe(
         //     mergeMap((result: any) => {
         //         const t = result;
