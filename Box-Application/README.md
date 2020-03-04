@@ -369,7 +369,20 @@ IC => 0xFFFF FOR all digital dio
 v+ => 0,0x0700-0x0c00 => 2100 - 3600
 
 sleep mode
-SM => 5 
-SN periods of sleep
+SM => 5
+SO 0 
 SP period *10ms => hexavalue
+SN periods of sleep
 ST time before sleep
+
+
+
+
+
+-get modules
+-save config
+-save transcienvers
+-get allPacket if a packet is recieved check adress if adress not exists exec scan. 
+
+
+

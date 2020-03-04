@@ -12,34 +12,30 @@ import { genericRetryStrategy } from '../tools/generic-retry-strategy';
 
 export class XbeeHelper {
     public static position = 0;
-    public static executeRemoteCommand(timeoutMs: number, cmd: string, address: string, params?: Array<number> | string, option?: number): Observable<any> {
-        const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeoutMs, options: option } as any;
+    public static executeRemoteCommand(timeout: number, cmd: string, address: string | ArrayBuffer, params?: Array<number> | string, option?: number): Observable<any> {
+        const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeout, options: option } as any;
         if (params) {
             localCommandObj.commandParameter = params;
         }
         console.log('Commande log', cmd);
+
         return of(true)
-            .pipe(mergeMap((res: boolean) => {
-                const t = 2;
-                return XbeeService.xbee.remoteCommand(localCommandObj).pipe(map((response: any) => {
+            .pipe(mergeMap((res: boolean) => XbeeService.xbee.remoteCommand(localCommandObj)
+                .pipe(map((response: any) => {
                     if (response.commandStatus === 0) {
                         console.log('success');
                         return response;
-                    } else {
-                        console.log('error response', response);
-                        throw { response };
                     }
-
-                }));
-            }),
-                catchError((error) => {
+                    console.log('error response', response);
+                    throw { response };
+                }))
+            ),
+                catchError((e: any) => {
                     console.log('error catch');
-                    throw { error };
+                    throw { e };
                 }),
                 retryWhen(genericRetryStrategy({ durationBeforeRetry: 1, maxRetryAttempts: 100 }))
-            )
-
-
+            );
     }
 
     public static executeLocalCommand(cmd: string, params?: number, options?: number): Observable<any> {
@@ -47,16 +43,7 @@ export class XbeeHelper {
         if (params) {
             localCommandObj.commandParameter = [params];
         }
-
         return XbeeService.xbee.localCommand(localCommandObj).pipe(map((response: any) => response));
-    }
-
-    public static testFunction(testRep: number, position?: number): void {
-        if (position) {
-            XbeeHelper.position = position;
-        }
-
-        console.log("test static vlaue position test num " + testRep, XbeeHelper.position);
     }
 
     public static routingTable(buffer): { [s: string]: number | string } {
@@ -126,6 +113,69 @@ export class XbeeHelper {
         return item;
     }
 
+    public static readListNeighborLqi(buffer: any, length: number, position: number): any {
+        const value = [];
+        const lqiLstLength = length;
+        for (let i = 0; i < lqiLstLength; i++) {
+            const item: { [s: string]: number | string } = {};
+            const extPandIdObj = XbeeHelper.readIeeeAddr(buffer, position);
+            const extAddrObj = XbeeHelper.readIeeeAddr(buffer, extPandIdObj.position);
+            const nwkAddrObj = XbeeHelper.readUInt16(buffer, extAddrObj.position);
+            const value1Obj = XbeeHelper.readUInt8(buffer, nwkAddrObj.position);
+            const deviceType = value1Obj.value & 0x03;
+            const rxOnWhenIdle = (value1Obj.value & 0x0C) >> 2;
+            const relationship = (value1Obj.value & 0x70) >> 4;
+            const permitJoinObj = XbeeHelper.readUInt8(buffer, value1Obj.position);
+            const depthObj = XbeeHelper.readUInt8(buffer, permitJoinObj.position);
+            const lqiObj = XbeeHelper.readUInt8(buffer, depthObj.position);
+
+            item['extPandId'] = extPandIdObj.value;
+            item['extAddr'] = extAddrObj.value;
+            item['nwkAddr'] = nwkAddrObj.value;
+            item['deviceType'] = deviceType;
+            item['rxOnWhenIdle'] = rxOnWhenIdle;
+            item['relationship'] = relationship;
+            item['permitJoin'] = permitJoinObj.value & 0x03;
+            item['depth'] = depthObj.value;
+            item['lqi'] = lqiObj.value;
+            value.push(item);
+        }
+        return value;
+    }
+
+
+    public static readIeeeAddr(buffer, position: number): any {
+        let pos = position;
+        const length = 8;
+        const value = buffer.slice(position, position + length);
+        pos += length;
+        return XbeeHelper.addressBufferToString(value);
+    }
+
+    public static readUInt16(buffer, position: number): any {
+        let pos = position;
+        pos += 2;
+        return { value: buffer.readUInt16LE(position), position: pos };
+    }
+
+    public static readUInt8(buffer, position: number): any {
+        let pos = position;
+        return { value: buffer.readUInt8(position), position: pos++ };
+    }
+
+    public static addressBufferToString(buffer: Buffer): string {
+        let address = '0x';
+        for (let i = 0; i < buffer.length; i++) {
+            const value = buffer.readUInt8(buffer.length - i - 1);
+            if (value <= 15) {
+                address += '0' + value.toString(16);
+            } else {
+                address += value.toString(16);
+            }
+        }
+        return address;
+    }
+
     public static concatBuffer(buffer1, buffer2): ArrayBuffer {
         const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
         tmp.set(new Uint8Array(buffer1), 0);
@@ -154,90 +204,8 @@ export class XbeeHelper {
     }
 
     public static toHexString(byteArray): string {
-        return Array.from(byteArray, (byte: any) => {
-            return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-        }).join('');
+        return Array.from(byteArray, (byte: any) =>
+            ('0' + (byte & 0xFF).toString(16)).slice(-2)
+        ).join('');
     }
-
-    private static readListNeighborLqi(buffer: any, length: number, position: number): any {
-        const value = [];
-        const lqiLstLength = length;
-        for (let i = 0; i < lqiLstLength; i++) {
-            const item: { [s: string]: number | string } = {};
-
-            const extPandIdObj = XbeeHelper.readIeeeAddr(buffer, position);
-            const extAddrObj = XbeeHelper.readIeeeAddr(buffer, extPandIdObj.position);
-            const nwkAddrObj = XbeeHelper.readUInt16(buffer, extAddrObj.position);
-
-            const value1Obj = XbeeHelper.readUInt8(buffer, nwkAddrObj.position);
-            const deviceType = value1Obj.value & 0x03;
-            const rxOnWhenIdle = (value1Obj.value & 0x0C) >> 2;
-            const relationship = (value1Obj.value & 0x70) >> 4;
-
-            const permitJoinObj = XbeeHelper.readUInt8(buffer, value1Obj.position);
-            const depthObj = XbeeHelper.readUInt8(buffer, permitJoinObj.position);
-            const lqiObj = XbeeHelper.readUInt8(buffer, depthObj.position);
-
-
-
-            item['extPandId'] = extPandIdObj.value;
-            item['extAddr'] = extAddrObj.value;
-            item['nwkAddr'] = nwkAddrObj.value;
-
-            item['deviceType'] = deviceType;
-            item['rxOnWhenIdle'] = rxOnWhenIdle;
-            item['relationship'] = relationship;
-
-            item['permitJoin'] = permitJoinObj.value & 0x03;
-            item['depth'] = depthObj.value;
-            item['lqi'] = lqiObj.value;
-
-            value.push(item);
-        }
-
-        return value;
-    }
-
-
-    private static readIeeeAddr(buffer, position: number): any {
-        let pos = position;
-        const length = 8;
-        const value = buffer.slice(position, position + length);
-        pos += length;
-
-        return XbeeHelper.addressBufferToString(value);
-    }
-
-    private static readUInt16(buffer, position: number): any {
-        let pos = position;
-        pos += 2;
-
-        return { value: buffer.readUInt16LE(position), position: pos };
-    }
-
-    private static readUInt8(buffer, position: number): any {
-        let pos = position;
-
-        return { value: buffer.readUInt8(position), position: pos++ };
-    }
-
-    private static addressBufferToString(buffer: Buffer): string {
-        let address = '0x';
-        for (let i = 0; i < buffer.length; i++) {
-            const value = buffer.readUInt8(buffer.length - i - 1);
-            if (value <= 15) {
-                address += '0' + value.toString(16);
-            } else {
-                address += value.toString(16);
-            }
-        }
-
-        return address;
-    }
-
-
-
-
-
-
 }
