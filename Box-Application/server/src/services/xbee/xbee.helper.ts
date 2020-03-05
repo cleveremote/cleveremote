@@ -70,6 +70,17 @@ export class XbeeHelper {
         const value = [];
         const routingLstLength = length;
 
+
+        let obj = { value: undefined, position: position } as any;
+        for (let i = 0; i < routingLstLength; i++) {
+            obj = XbeeHelper.buildItemRtg(buffer, obj.position);
+            value.push(obj.value);
+        }
+
+        return value;
+    }
+
+    public static buildItemRtg(buffer: any, position: number): any {
         const statusLookup: { [n: number]: string } = {
             0: 'ACTIVE',
             1: 'DISCOVERY_UNDERWAY',
@@ -77,19 +88,16 @@ export class XbeeHelper {
             3: 'INACTIVE'
         };
 
-        for (let i = 0; i < routingLstLength; i++) {
-            const destNwkAddrObj = XbeeHelper.readUInt16(buffer, position);
-            const routeStatusObj = XbeeHelper.readUInt8(buffer, destNwkAddrObj.position);
-            const nextHopNwkAddrObj = XbeeHelper.readUInt16(buffer, routeStatusObj.position);
+        const destNwkAddrObj = XbeeHelper.readUInt16(buffer, position);
+        const routeStatusObj = XbeeHelper.readUInt8(buffer, destNwkAddrObj.position);
+        const nextHopNwkAddrObj = XbeeHelper.readUInt16(buffer, routeStatusObj.position);
 
-            const item: { [s: string]: number | string } = {};
-            item['destNwkAddr'] = destNwkAddrObj.value;
-            item['routeStatus'] = statusLookup[routeStatusObj.value];
-            item['nextHopNwkAddr'] = nextHopNwkAddrObj.value;
-            value.push(item);
-        }
+        const item: { [s: string]: number | string } = {};
+        item['destNwkAddr'] = destNwkAddrObj.value;
+        item['routeStatus'] = statusLookup[routeStatusObj.value];
+        item['nextHopNwkAddr'] = nextHopNwkAddrObj.value;
 
-        return value;
+        return { value: item, position: nextHopNwkAddrObj.position };
     }
 
     public static lqiTable(buffer): { [s: string]: number | string } {
@@ -116,31 +124,38 @@ export class XbeeHelper {
     public static readListNeighborLqi(buffer: any, length: number, position: number): any {
         const value = [];
         const lqiLstLength = length;
+        let obj = { value: undefined, position: position } as any;
         for (let i = 0; i < lqiLstLength; i++) {
-            const item: { [s: string]: number | string } = {};
-            const extPandIdObj = XbeeHelper.readIeeeAddr(buffer, position);
-            const extAddrObj = XbeeHelper.readIeeeAddr(buffer, extPandIdObj.position);
-            const nwkAddrObj = XbeeHelper.readUInt16(buffer, extAddrObj.position);
-            const value1Obj = XbeeHelper.readUInt8(buffer, nwkAddrObj.position);
-            const deviceType = value1Obj.value & 0x03;
-            const rxOnWhenIdle = (value1Obj.value & 0x0C) >> 2;
-            const relationship = (value1Obj.value & 0x70) >> 4;
-            const permitJoinObj = XbeeHelper.readUInt8(buffer, value1Obj.position);
-            const depthObj = XbeeHelper.readUInt8(buffer, permitJoinObj.position);
-            const lqiObj = XbeeHelper.readUInt8(buffer, depthObj.position);
-
-            item['extPandId'] = extPandIdObj.value;
-            item['extAddr'] = extAddrObj.value;
-            item['nwkAddr'] = nwkAddrObj.value;
-            item['deviceType'] = deviceType;
-            item['rxOnWhenIdle'] = rxOnWhenIdle;
-            item['relationship'] = relationship;
-            item['permitJoin'] = permitJoinObj.value & 0x03;
-            item['depth'] = depthObj.value;
-            item['lqi'] = lqiObj.value;
-            value.push(item);
+            obj = XbeeHelper.buildItemLqi(buffer, obj.position);
+            value.push(obj.value);
         }
         return value;
+    }
+
+    public static buildItemLqi(buffer: any, position: number): any {
+        const item: { [s: string]: number | string } = {};
+        const extPandIdObj = XbeeHelper.readIeeeAddr(buffer, position);
+        const extAddrObj = XbeeHelper.readIeeeAddr(buffer, extPandIdObj.position);
+        const nwkAddrObj = XbeeHelper.readUInt16(buffer, extAddrObj.position);
+        const value1Obj = XbeeHelper.readUInt8(buffer, nwkAddrObj.position);
+        const deviceType = value1Obj.value & 0x03;
+        const rxOnWhenIdle = (value1Obj.value & 0x0C) >> 2;
+        const relationship = (value1Obj.value & 0x70) >> 4;
+        const permitJoinObj = XbeeHelper.readUInt8(buffer, value1Obj.position);
+        const depthObj = XbeeHelper.readUInt8(buffer, permitJoinObj.position);
+        const lqiObj = XbeeHelper.readUInt8(buffer, depthObj.position);
+
+        item['extPandId'] = extPandIdObj.value;
+        item['extAddr'] = extAddrObj.value;
+        item['nwkAddr'] = nwkAddrObj.value;
+        item['deviceType'] = deviceType;
+        item['rxOnWhenIdle'] = rxOnWhenIdle;
+        item['relationship'] = relationship;
+        item['permitJoin'] = permitJoinObj.value & 0x03;
+        item['depth'] = depthObj.value;
+        item['lqi'] = lqiObj.value;
+
+        return { value: item, position: lqiObj.position };
     }
 
 
@@ -194,6 +209,14 @@ export class XbeeHelper {
         return XbeeHelper.hexToBytes(toConvert.toString(16).toUpperCase());
     }
 
+    public static readInt(array) {
+        var value = 0;
+        for (var i = 0; i < array.length; i++) {
+            value = (value * 256) + array[i];
+        }
+        return value;
+    }
+
     // Convert a hex string to a byte array
     public static hexToBytes(hex): Array<number> {
         const bytes = [];
@@ -209,4 +232,14 @@ export class XbeeHelper {
             ('0' + (byte & 0xFF).toString(16)).slice(-2)
         ).join('');
     }
+
+    public static byteArrayToNumber(byteArray): number {
+        var value = 0;
+        for (var i = byteArray.length - 1; i >= 0; i--) {
+            value = (value * 256) + byteArray[i];
+        }
+
+        return value;
+    }
+
 }

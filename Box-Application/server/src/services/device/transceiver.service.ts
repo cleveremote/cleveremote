@@ -1,58 +1,99 @@
 import { DeviceService } from "./device.service";
 import * as xbee_api from "xbee-api";
-import { filter, pluck, catchError, ignoreElements, flatMap, takeUntil, merge, map, mergeMap, concatMap, scan, reduce, delay, take } from "rxjs/operators";
+import { filter, pluck, catchError, ignoreElements, flatMap, takeUntil, merge, map, mergeMap, concatMap, scan, reduce, delay, take, tap } from "rxjs/operators";
 import { empty, timer, Observable, of, forkJoin } from "rxjs";
 import { XbeeHelper } from "../xbee/xbee.helper";
 import { XbeeService } from "../xbee.service";
-import { config } from "dotenv";
+import { Transceiver } from "../../classes/xbee/transceiver.class";
+import { TRANSCIEVER_TYPE } from "../../classes/xbee/device.class";
+import { IOCfg, TYPE_IOCFG } from "../../classes/xbee/iocfg.class";
 
 export class TransceiverService extends DeviceService {
 
+    public transceivers: Array<Transceiver> = [];
 
-    public configuretransceiver(configuration: any): any {
-        // configuration module port Digital/out/in/spi/ad...
-        return {};
+    public initTransceivers(): Observable<boolean> {
+        return this.requestXbeeNodes()
+            .pipe(mergeMap((nodes: any) => {
+                let cmdObs: Observable<any>;
+                nodes.forEach(node => {
+                    cmdObs = cmdObs.pipe(mergeMap((result: any) => this.getSleepAttributes(node).pipe(map((ao: any) => true))));
+                });
+                return cmdObs;
+            }))
+            .pipe(mergeMap((nodes: any) =>
+                this.scanAll(this.transceivers.filter(transceiver => transceiver.infos.type === 0)[0])))
+            .pipe(mergeMap((nodes: any) =>
+                this.startListenJoinTransceiver()));
     }
 
-    public testBroadcast(): Observable<any> {
-        return this.xbee._ExplicitAdressing();
+    public requestXbeeNodes(): Observable<boolean> {
+        const coordinatorInformationObs = XbeeHelper.executeLocalCommand('SH')
+            .pipe(mergeMap((sh: any) =>
+                XbeeHelper.executeLocalCommand('SL')
+                    .pipe(mergeMap((sl: any) =>
+                        XbeeHelper.executeLocalCommand('MY')
+                            .pipe(map((my: any) => {
+                                const coordinator = this.buildCoordinatorTransceiver(my, sh, sl);
+                                return this.setTransceiver(coordinator);
+                            }))
+                    ))
+            ));
+        return coordinatorInformationObs
+            .pipe(mergeMap((coordinator: Transceiver) =>
+                this.GetNodeDiscovery().pipe(mergeMap((nodes: any) => {
+                    nodes.forEach(node => this.setTransceiver(node));
+                    return of(true);
+                }))
+            ));
     }
 
-    public joiningDeviceListener(): void {
-        this.xbee.allPackets.pipe(filter((packet: any) => {
-            return packet.type === 0x95;
-        })).subscribe(
-            (packet: any) => {
-                // TODO check if alreadyExists if not call scan.
-                console.log('node joined the network', packet);
-            }
-        )
+    public startListenJoinTransceiver(): Observable<boolean> {
+        return this.xbee.allPackets.pipe(filter((packet: any) => packet.type === 0x95))
+            .pipe(mergeMap((packet: any) => {
+                const transceiver = this.setTransceiver(packet);
+                console.log('node joined the network', transceiver);
+                return of(true);
+            }));
     }
 
-    public getSleepAttributes(adrress?: string | ArrayBuffer): Observable<any> {
-        if (adrress) {
-            return XbeeHelper.executeRemoteCommand(60000, 'SP', adrress)
+    public setTransceiver(data: any): Transceiver {
+        let transceiver = this.transceivers.find((trans: Transceiver) => trans.id === (data.remote64 || data.sender64));
+        if (transceiver) {
+            transceiver = new Transceiver(data);
+            // return save to database
+            return transceiver;
+        }
+        this.transceivers.push(new Transceiver(data));
+        // save database
+        return transceiver;
+    }
+
+    public getSleepAttributes(transceiver: Transceiver): Observable<any> {
+        if (transceiver.infos.type === TRANSCIEVER_TYPE.COORDINATOR) {
+            return XbeeHelper.executeLocalCommand('SP')
                 .pipe(mergeMap((sp: any) =>
-                    XbeeHelper.executeRemoteCommand(60000, 'ST', adrress)
-                        .pipe(mergeMap((st: any) =>
-                            XbeeHelper.executeRemoteCommand(60000, 'SM', adrress)
-                                .pipe(mergeMap((sm: any) =>
-                                    XbeeHelper.executeRemoteCommand(60000, 'SN', adrress)
-                                        .pipe(mergeMap((sn: any) =>
-                                            of({ SP: sp, ST: st, SM: sm, SN: sn })
-                                        ))
-                                ))
+                    XbeeHelper.executeLocalCommand('SN')
+                        .pipe(map((sn: any) =>
+                            transceiver.setsleepCfg({ SP: sp, ST: undefined, SM: undefined, SN: sn })
                         ))
                 ));
         }
 
-        return XbeeHelper.executeLocalCommand('SP')
+        return XbeeHelper.executeRemoteCommand(60000, 'SP', transceiver.id)
             .pipe(mergeMap((sp: any) =>
-                XbeeHelper.executeLocalCommand('SN')
-                    .pipe(mergeMap((sn: any) =>
-                        of({ SP: sp, ST: undefined, SM: undefined, SN: sn })
+                XbeeHelper.executeRemoteCommand(60000, 'ST', transceiver.id)
+                    .pipe(mergeMap((st: any) =>
+                        XbeeHelper.executeRemoteCommand(60000, 'SM', transceiver.id)
+                            .pipe(mergeMap((sm: any) =>
+                                XbeeHelper.executeRemoteCommand(60000, 'SN', transceiver.id)
+                                    .pipe(map((sn: any) =>
+                                        transceiver.setsleepCfg({ SP: sp, ST: st, SM: sm, SN: sn })
+                                    ))
+                            ))
                     ))
             ));
+
     }
 
     public GetNodeDiscovery(): Observable<any> {
@@ -81,18 +122,9 @@ export class TransceiverService extends DeviceService {
             }));
     }
 
-    public scanAll(): Observable<any> {
-        const dataSource = []; // { source: { destination16: dest16, destination64: { SH: sh, SL: sl } }, routing: resultRtg, lqi: resultLqi }
-        return this.coordinatorInitScan()
-            .pipe(mergeMap((coordinatorSource: any) => {
-                dataSource.push(coordinatorSource);
-                return this.scan().pipe(mergeMap((otherSources: Array<any>) => {
-                    otherSources.forEach(source => {
-                        dataSource.push(source);
-                    });
-                    return of(dataSource);
-                }));
-            }));
+    public scanAll(coordinator: Transceiver): Observable<boolean> {
+        return this.coordinatorInitScan(coordinator)
+            .pipe(mergeMap((coordinatorSource: any) => this.scan()));
     }
 
     public scan(): Observable<any> {
@@ -100,72 +132,54 @@ export class TransceiverService extends DeviceService {
             mergeMap((nodes: Array<any>) => {
                 const obsLst: Array<Observable<any>> = [];
                 nodes.forEach(node => {
+                    const transceiver = this.setTransceiver(node);
+                    console.log('node joined the network', transceiver);
                     if (node.deviceType === 1) { // => router
-                        obsLst.push(this.scanUnitaire(node.remote16, node.remote64));
+                        obsLst.push(this.scanUnitaire(transceiver));
                     }
                 });
-                if (obsLst.length > 0) {
-                    return forkJoin(obsLst).pipe(mergeMap((results: Array<any>) => {
-                        const res = results;
-                        return of(results);
-                    }));
-                }
-                return of([]);
+                return obsLst.length > 0 ? forkJoin(obsLst).pipe(mergeMap((results: Array<any>) => of(true))) : of([]);
             }));
     }
 
-    public appendCoordinator(): any {
-        // get coordinator information
-        return {};
-    }
-
-    public coordinatorInitScan(): Observable<any> {
-        const coordinatorInformationObs = XbeeHelper.executeLocalCommand('SH')
-            .pipe(mergeMap((sh: any) =>
-                XbeeHelper.executeLocalCommand('SL')
-                    .pipe(mergeMap((sl: any) =>
-                        XbeeHelper.executeLocalCommand('MY')
-                            .pipe(mergeMap((my: any) =>
-                                of({ sh, sl, my })
-                            ))
-                    ))
-            ));
-
-        return coordinatorInformationObs
-            .pipe(mergeMap((result: any) =>
-                XbeeHelper.executeLocalCommand('OP')
-                    .pipe(mergeMap((op: any) =>
-                        XbeeHelper.executeLocalCommand('CH')
-                            .pipe(mergeMap((ch: any) =>
-                                XbeeHelper.executeLocalCommand('AO', 1)
-                                    .pipe(mergeMap((ao: any) =>
-                                        this.scanUnitaire( XbeeHelper.toHexString(result.my.commandData), XbeeHelper.toHexString(XbeeHelper.concatBuffer(result.sh.commandData.buffer, result.sl.commandData.buffer)))
-                                    ))
+    //TODO AFTER finish scan set AO to 0
+    public coordinatorInitScan(coordinator: Transceiver): Observable<any> {
+        return XbeeHelper.executeLocalCommand('OP')
+            .pipe(mergeMap((op: any) =>
+                XbeeHelper.executeLocalCommand('CH')
+                    .pipe(mergeMap((ch: any) =>
+                        XbeeHelper.executeLocalCommand('AO', 1)
+                            .pipe(mergeMap((ao: any) => this.scanUnitaire(coordinator)
                             ))
                     ))
             ));
     }
 
-    public scanUnitaire(dest16: string | ArrayBuffer | SharedArrayBuffer, address: string | ArrayBuffer | SharedArrayBuffer): Observable<any> {
-        return this.requestRtg(0, dest16, address)
+    public buildCoordinatorTransceiver(MY: any, SH: any, SL: any): Transceiver {
+        const data = { id: "", remote64: XbeeHelper.toHexString(XbeeHelper.concatBuffer(SH.commandData.buffer, SL.commandData.buffer)), address16: XbeeHelper.toHexString(MY.commandData), type: 0, nodeIdentifier: undefined, remoteParent16: undefined, digiProfileID: undefined, digiManufacturerID: undefined };
+        return new Transceiver(data);
+    }
+
+    public scanUnitaire(transceiver: Transceiver): Observable<Transceiver> {
+        const trans = transceiver.infos;
+        return this.requestRtg(0, transceiver)
             .pipe(mergeMap((resultRtg: any) =>
-                this.requestLqi(0, dest16, address)
+                this.requestLqi(0, transceiver)
                     .pipe(mergeMap((resultLqi: any) =>
-                        of({ source: { destination16: dest16, destination64: address }, routing: resultRtg, lqi: resultLqi })
+                        of(transceiver)
                     ))
             ));
     }
 
-    public requestRtg(start: any, dest16: string | ArrayBuffer | SharedArrayBuffer, address: string | ArrayBuffer | SharedArrayBuffer, lstRtg?: any): Observable<any> {
-        let recResult = lstRtg;
-        if (!recResult) {
-            recResult = [];
+    public requestRtg(start: any, transceiver: Transceiver): Observable<Transceiver> {
+        const trans = transceiver.infos;
+        if (!transceiver.routings) {
+            transceiver.routings = [];
         }
-        const dest64 = address;//XbeeHelper.concatBuffer(sh, sl);
         const type = xbee_api.constants.FRAME_TYPE.ZIGBEE_EXPLICIT_RX;
         const frame = {
             type: 0x11, // xbee_api.constants.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST
-            destination64: dest64, // "0013A20040C04982" default is broadcast address
+            destination64: trans.address64, // "0013A20040C04982" default is broadcast address
             destination16: "fffe", // default is "fffe" (unknown/broadcast)
             sourceEndpoint: 0x00,
             destinationEndpoint: 0x00,
@@ -178,25 +192,24 @@ export class TransceiverService extends DeviceService {
 
         return this.xbee.explicitAdressing(frame, type).pipe(mergeMap((resultRtg: any) => {
             const object = XbeeHelper.routingTable(resultRtg.data);
-            recResult.push(object);
+            transceiver.routings.push(object);
             if (object.routingtableentries > Number(object.routingtablelistcount) + Number(object.startindex)) {
-                return this.requestRtg(XbeeHelper.decimalToHexString(Number(object.routingtablelistcount) + Number(object.startindex)), dest16, address, recResult);
+                return this.requestRtg(XbeeHelper.decimalToHexString(Number(object.routingtablelistcount) + Number(object.startindex)), transceiver);
             }
 
-            return of(recResult);
+            return of(transceiver);
         }));
     }
 
-    public requestLqi(start: any, dest16: string | ArrayBuffer | SharedArrayBuffer, address: string | ArrayBuffer | SharedArrayBuffer, lstlqi?: any): Observable<any> {
-        let recResult = lstlqi;
-        if (!recResult) {
-            recResult = [];
+    public requestLqi(start: any, transceiver: Transceiver): Observable<Transceiver> {
+        const trans = transceiver.infos;
+        if (!transceiver.links) {
+            transceiver.links = [];
         }
-        const dest64 = address;
         const type = xbee_api.constants.FRAME_TYPE.ZIGBEE_EXPLICIT_RX;
         const frame = {
             type: 0x11, // xbee_api.constants.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST
-            destination64: dest64, // "0013A20040C04982" default is broadcast address
+            destination64: trans.address64, // "0013A20040C04982" default is broadcast address
             destination16: "fffe", // default is "fffe" (unknown/broadcast)
             sourceEndpoint: 0x00,
             destinationEndpoint: 0x00,
@@ -209,46 +222,29 @@ export class TransceiverService extends DeviceService {
 
         return this.xbee.explicitAdressing(frame, type).pipe(mergeMap((resultlqi: any) => {
             const object = XbeeHelper.lqiTable(resultlqi.data);
-            recResult.push(object);
+            transceiver.links.push(object);
             if (object.neighbortableentries > Number(object.neighborlqilistcount) + Number(object.startindex)) {
-                return this.requestLqi(XbeeHelper.decimalToHexString(Number(object.neighborlqilistcount) + Number(object.startindex)), dest16, address, recResult);
+                return this.requestLqi(XbeeHelper.decimalToHexString(Number(object.neighborlqilistcount) + Number(object.startindex)), transceiver);
             }
 
-            return of(recResult);
+            return of(transceiver);
         }));
     }
 
-    public applyFullDigital(adrress: string, isInput: boolean, isHigh: boolean): Observable<boolean> {
-        const param = isInput ? [3] : isHigh ? [5] : [4];
-        const configuration = [
-            { cmd: 'D1', params: param },
-            { cmd: 'D2', params: param },
-            { cmd: 'D3', params: param },
-            { cmd: 'D4', params: param },
-            { cmd: 'P0', params: param },
-            { cmd: 'P1', params: param }
-        ];
-        return this.applyConfiguration(adrress, configuration, true);
+    public applyFullAnalog(transceiver: Transceiver): Observable<boolean> {
+        const config = new IOCfg(TYPE_IOCFG.FULL_ANALOG_INPUT);
+        return this.applyConfiguration(transceiver, config);
     }
+    
+    // TODO gettimeout of SP and default .
+    public applyConfiguration(transceiver: Transceiver, configuration: IOCfg): Observable<any> {
+        const isSleepy: boolean = transceiver.infos.type === TRANSCIEVER_TYPE.ENDDEVICE && transceiver.sleepCfg.SM === 5;
 
-    public applyFullAnalog(adrress: string): Observable<boolean> {
-        const configuration = [
-            { cmd: 'D1', params: [2] },
-            { cmd: 'D2', params: [2] },
-            { cmd: 'D3', params: [2] },
-            { cmd: 'D4', params: [0] },
-            { cmd: 'P0', params: [0] },
-            { cmd: 'P1', params: [0] }
-        ];
-        return this.applyConfiguration(adrress, configuration, true);
-    }
-
-    public applyConfiguration(adrress: string, configuration: Array<any>, isSleepy: boolean): Observable<any> {
         if (!isSleepy) {
-            return this.setConfig(adrress, configuration)
+            return this.setConfig(transceiver.id, configuration)
                 .pipe(mergeMap((result: boolean) => {
                     if (result) {
-                        return XbeeHelper.executeRemoteCommand(60000, 'WR', adrress, undefined, 0x02).pipe(map((ao: any) => true));
+                        return XbeeHelper.executeRemoteCommand(60000, 'WR', transceiver.id, undefined, 0x02).pipe(map((ao: any) => true));
                     }
                     return of(false);
                 }))
@@ -260,13 +256,13 @@ export class TransceiverService extends DeviceService {
                 }));
         }
 
-        return this.disableSleep(adrress)
+        return this.disableSleep(transceiver.id)
             .pipe(mergeMap((disableResult: any) =>
-                this.setConfig(adrress, configuration)
-                    .pipe(mergeMap((result: boolean) => this.enableSleep(adrress)))
+                this.setConfig(transceiver.id, configuration)
+                    .pipe(mergeMap((result: boolean) => this.enableSleep(transceiver.id)))
                     .pipe(mergeMap((result: boolean) => {
                         if (result) {
-                            return XbeeHelper.executeRemoteCommand(60000, 'WR', adrress, undefined, 0x02).pipe(map((ao: any) => true));
+                            return XbeeHelper.executeRemoteCommand(60000, 'WR', transceiver.id, undefined, 0x02).pipe(map((ao: any) => true));
                         }
                         return of(false);
                     }))
@@ -294,66 +290,48 @@ export class TransceiverService extends DeviceService {
             .pipe(mergeMap((result: any) => nodeDiscoveryRepliesStream));
     }
 
-    public setConfig(adrress: string, configuration: Array<any>): Observable<any> {
+    public setConfig(adrress: string, configuration: IOCfg): Observable<any> {
         let cmdObs: Observable<boolean> = of(true);
-        configuration.forEach((el, index) => {
-            cmdObs = cmdObs.pipe(mergeMap((result: any) => XbeeHelper.executeRemoteCommand(1000, el.cmd, adrress, el.params).pipe(map((ao: any) => true))));
-        });
+
+        for (const cmd of Object.keys(configuration)) {
+            const params = configuration[cmd];
+            cmdObs = cmdObs.pipe(mergeMap((result: any) => XbeeHelper.executeRemoteCommand(1000, cmd, adrress, params).pipe(map((ao: any) => true))));
+        }
         return cmdObs;
     }
 
-    public setMaxSleepCycle(devices: Array<any>): Observable<any> {
-        const cmdObs: Array<Observable<any>> = [];
-        const coordinator = devices.filter(device => device.type === 0)[0];
-        const routers = devices.filter(device => device.type === 1);
-        const endDevices = devices.filter(device => device.type === 2);
+    public setMaxSleepCycle(): Observable<any> {
+        let cmdObs: Observable<boolean> = of(true);
+        const coordinator = this.transceivers.filter(transceiver => transceiver.infos.type === 0)[0];
+        const routers = this.transceivers.filter(transceiver => transceiver.infos.type === 1);
+        const endDevices = this.transceivers.filter(transceiver => transceiver.infos.type === 2);
         // the max SP of endDevice all routers an coordinator must have greater value
-        const maxSPValue = Math.max.apply(Math, endDevices.map((device: any) => {
-            const configObj: Array<any> = JSON.parse(device.config);
-            const spAttribute = configObj.find((cfg: any) => cfg.cmd === 'SP');
-            return spAttribute.param;
-        }));
+        const maxSPValue = Math.max.apply(Math, endDevices.map((endDevice: Transceiver) => XbeeHelper.byteArrayToNumber(endDevice.sleepCfg.SP)));
 
-        const configCoordinatorObj: Array<any> = JSON.parse(coordinator.config);
-        const spCoordinatorAttribute = configCoordinatorObj.find((cfg: any) => cfg.cmd === 'SP');
-        if (spCoordinatorAttribute < maxSPValue) {
-            // update SP of coordinator
-            cmdObs.push(XbeeHelper.executeRemoteCommand(60000, 'SP', coordinator.adrress, [maxSPValue])
-                .pipe(mergeMap((res: any) => of({ res: true, device: coordinator }))));
+        if (XbeeHelper.byteArrayToNumber(coordinator.sleepCfg.SP) < maxSPValue) {
+            cmdObs = cmdObs.pipe(mergeMap((result: any) => XbeeHelper.executeRemoteCommand(60000, 'SP', coordinator.id, [maxSPValue]).pipe(map((ao: any) => true))));
         }
 
         routers.forEach(router => {
-            const configRouterObj: Array<any> = JSON.parse(router.config);
-            const spRouterAttribute = configRouterObj.find((cfg: any) => cfg.cmd === 'SP');
-            if (spRouterAttribute < maxSPValue) {
+            if (XbeeHelper.byteArrayToNumber(router.sleepCfg.SP) < maxSPValue) {
                 // update SP of router
-                cmdObs.push(XbeeHelper.executeRemoteCommand(60000, 'SP', router.adrress, [maxSPValue])
-                    .pipe(mergeMap((res: any) => of({ res: true, device: router }))));
+                cmdObs = cmdObs.pipe(mergeMap((result: any) => XbeeHelper.executeRemoteCommand(60000, 'SP', router.id, [maxSPValue]).pipe(map((ao: any) => true))));
             }
         });
 
-        return forkJoin(cmdObs)
-            .pipe(mergeMap((results: Array<any>) => {
-                const writeCmdObs: Array<Observable<any>> = [];
-                for (const result of results) {
-                    if (!result.res) {
-                        return of(false);
-                    }
-                    writeCmdObs.push(XbeeHelper.executeRemoteCommand(60000, 'WR', result.device.address, undefined, 0x02)
-                        .pipe(mergeMap((res: any) => of({ res: true, device: result.device }))));
-                }
-                return forkJoin(writeCmdObs);
-            }))
-            .pipe(mergeMap((results: Array<any>) => {
+        return cmdObs
+            .pipe(mergeMap((result: boolean) => {
+                let writeCmdObs: Observable<boolean> = of(true);
+                writeCmdObs = writeCmdObs.pipe(mergeMap((result: boolean) => XbeeHelper.executeRemoteCommand(60000, 'WR', coordinator.id, undefined, 0x02).pipe(map((ao: any) => true))));
 
-                for (const result of results) {
-                    if (result.res) {
-                        console.log('save config to data base');
-                    } else {
-                        console.log('fail to write execute');
-                    }
-                }
-                // make fork join to save
+                routers.forEach(router => {
+                    writeCmdObs = writeCmdObs.pipe(mergeMap((result: boolean) => XbeeHelper.executeRemoteCommand(60000, 'WR', router.id, undefined, 0x02).pipe(map((ao: any) => true))));
+                });
+
+                return writeCmdObs;
+            }))
+            .pipe(mergeMap((result: boolean) => {
+                console.log('save sleep config to data base');
                 return of(true);
             }));
     }

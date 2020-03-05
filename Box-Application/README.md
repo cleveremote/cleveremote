@@ -396,23 +396,23 @@ NODE INDITIFICATOR
 1 router
 2 end device 
 
-SP response
+SP response local
 "{"type":136,"id":1,"command":"SP","commandStatus":0,"commandData":{"type":"Buffer","data":[2,88]}}"
-SN response
+
+SN response local
 "{"type":136,"id":2,"command":"SN","commandStatus":0,"commandData":{"type":"Buffer","data":[0,1]}}"
 
-REMOTE sp
+REMOTE sp 
 "{"type":151,"id":1,"remote64":"0013a20040b971f3","remote16":"99bb","command":"SP","commandStatus":0,"commandData":{"type":"Buffer","data":[2,88]}}"
 
 REMOTE st
 "{"type":151,"id":2,"remote64":"0013a20040b971f3","remote16":"99bb","command":"ST","commandStatus":0,"commandData":{"type":"Buffer","data":[19,136]}}"
 
-rEMOTE sm
+REMOTE sm
 "{"type":151,"id":3,"remote64":"0013a20040b971f3","remote16":"99bb","command":"SM","commandStatus":0,"commandData":{"type":"Buffer","data":[5]}}"
 
 REMOTE SN
 "{"type":151,"id":4,"remote64":"0013a20040b971f3","remote16":"99bb","command":"SN","commandStatus":0,"commandData":{"type":"Buffer","data":[0,1]}}"
-
 
 //discoverNodes result
 "[{"remote16":"99bb","remote64":"0013a20040b971f3","nodeIdentifier":" ","remoteParent16":"0000","deviceType":2,"sourceEvent":0,"digiProfileID":"c105","digiManufacturerID":"101e"}]"

@@ -21,7 +21,7 @@ export default class Logger extends Controller {
         const trans = new TransceiverService();
         // trans.joiningDeviceListener();
         //trans.getSleepAttributes('0013a20040b971f3').subscribe();
-        trans.scanAll().subscribe();
+        trans.scanAll({} as any).subscribe();
         this.sendSuccess(res, "frame.commandData");
         // trans.applyFullDigital('0013a20040b971f3', false, true)
         // .subscribe((res1)=>{
