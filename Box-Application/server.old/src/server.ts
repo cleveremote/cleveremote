@@ -3,6 +3,7 @@ import { Observable, of as observableOf, from as observableFrom, EMPTY, of } fro
 import { tap, flatMap, map } from 'rxjs/operators';
 
 import { ormConnection } from './entities';
+import { Router } from './router';
 // import { RedisClient, createClient } from 'redis';
 // import * as connectRedis from 'connect-redis';
 
@@ -21,22 +22,20 @@ import { Tools } from './services/tools-service';
 import { DispatchService } from './services/dispatch.service';
 import { XbeeHelper } from './services/xbee/xbee.helper';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-
 export class Server {
 
-    public app: INestApplication;
+    public app: express.Application;
 
-    constructor(app: INestApplication) {
-        this.app = app;
+    constructor() {
+        this.app = express();
     }
 
-    public init(): Observable<INestApplication> {
+    public init(): Observable<express.Application> {
 
 
         const cbeeHelper = new XbeeHelper();
-        // cbeeHelper.testFunction();
-
+       // cbeeHelper.testFunction();
+        
         process.on('uncaughtException', (err) => {
             console.log('whoops! there was an error', err.stack);
         });
@@ -48,7 +47,7 @@ export class Server {
                             flatMap(() => this.initXbee().pipe(
                                 flatMap(() => this.initPassport().pipe(
                                     flatMap(() => this.initDbMongoose().pipe(
-                                        map(() => this.app))
+                                        flatMap(() => this.initRoutes()), map(() => this.app))
                                     ))
                                 ))
                             ))
@@ -141,12 +140,25 @@ export class Server {
                 //     this.loginfo('Redis error: ', err);
                 // });
 
-                //this.app.set('port', process.env.PORT);
+                this.app.set('port', process.env.PORT);
                 Tools.logSuccess('  => OK');
             }));
     }
 
+    public initRoutes(): Observable<void> {
+        Tools.loginfo('* start init routes...');
 
+        return observableFrom(Router.getRouter()).pipe(
+            map((router: express.Router) => {
+                Tools.logSuccess('  => OK.');
+                this.app.use('', router);
+                this.app.use('/api/', router);
+            }, (err: any) => {
+                Tools.logError(`  => KO! ${err}`);
+
+                return err;
+            }));
+    }
 
     public initPassport(): Observable<void> {
         Tools.loginfo('* start init passport...');
