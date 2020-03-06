@@ -38,12 +38,14 @@ export class XbeeHelper {
             );
     }
 
-    public static executeLocalCommand(cmd: string, params?: number, options?: number): Observable<any> {
+    public static executeLocalCommand(cmd: string, params?: Array<number> | string): Observable<any> {
         const localCommandObj = { command: cmd } as any;
         if (params) {
-            localCommandObj.commandParameter = [params];
+            localCommandObj.commandParameter = params;
         }
-        return XbeeService.xbee.localCommand(localCommandObj).pipe(map((response: any) => response));
+        return XbeeService.xbee.localCommand(localCommandObj).pipe(map((response: any) => {
+            return response;
+        }));
     }
 
     public static routingTable(buffer): { [s: string]: number | string } {
@@ -180,7 +182,7 @@ export class XbeeHelper {
     }
 
     public static addressBufferToString(buffer: Buffer): string {
-        let address = '0x';
+        let address = '';
         for (let i = 0; i < buffer.length; i++) {
             const value = buffer.readUInt8(buffer.length - i - 1);
             if (value <= 15) {
@@ -233,13 +235,22 @@ export class XbeeHelper {
         ).join('');
     }
 
+
+
     public static byteArrayToNumber(byteArray): number {
-        var value = 0;
-        for (var i = byteArray.length - 1; i >= 0; i--) {
-            value = (value * 256) + byteArray[i];
+        var value = parseInt(XbeeHelper.toHexString(byteArray), 16);
+        return value;
+    }
+
+    public static numberToBytes(value:number): Array<number> {
+        const hex =  ('00000000000'+(value).toString(16)).substr(-4)
+        
+        const bytes = [];
+        for (let c = 0; c < hex.length; c += 2) {
+            bytes.push(parseInt(hex.substr(c, 2), 16));
         }
 
-        return value;
+        return bytes;
     }
 
 }

@@ -1,6 +1,5 @@
 import { Device, TRANSCIEVER_TYPE } from "./device.class";
 import { SleepCfg } from "./sleepcfg.class";
-import { Tools } from "../../services/tools-service";
 
 export class Transceiver {
    public id: string;
@@ -21,7 +20,7 @@ export class Transceiver {
       }
       this.infos.address64 = data.remote64 || data.sender64;
       this.infos.address16 = data.remote16 || data.sender16;
-      this.infos.type = Number(data.deviceType);
+      this.infos.type =  data.deviceType ;
       this.infos.nodeIdentifier = data.nodeIdentifier;
       this.infos.remoteParent16 = data.remoteParent16;
       this.infos.digiProfileID = data.digiProfileID;
