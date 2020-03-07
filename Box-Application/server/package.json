@@ -43,6 +43,7 @@
     "express": "^4.16.1",
     "express-fileupload": "^1.1.4",
     "express-session": "^1.15.6",
+    "fastify-multipart": "^1.0.5",
     "hex-to-binary": "^1.0.1",
     "jsonwebtoken": "^8.2.2",
     "kafka-node": "^5.0.0",
