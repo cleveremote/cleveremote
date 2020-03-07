@@ -16,7 +16,9 @@
             //"localRoot": "${workspaceRoot}/server/public",
             "outFiles": [
                 "${workspaceRoot}/server/dist/**/*.js"
-            ]
+            ],
+
+            "cwd": "${workspaceFolder}/server"
         }
     ]
 }

@@ -1,4 +1,4 @@
-import { XbeeService } from "../xbee.service";
+import { XbeeService } from "../../services/xbee.service";
 
 export class DeviceService {
     public xbee = XbeeService.xbee;
