@@ -27,7 +27,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   public onLoginSubmit() {
-    this.authService.login(this.loginData.email, this.loginData.password);
+    // this.authService.login(this.loginData.email, this.loginData.password);
+    this.apiRequestsService.gethello().subscribe();
+    
   }
 
   public loginGoogle() {

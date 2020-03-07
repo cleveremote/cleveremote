@@ -2,11 +2,11 @@ import { DeviceService } from "./device.service";
 import * as xbee_api from "xbee-api";
 import { filter, pluck, catchError, ignoreElements, flatMap, takeUntil, merge, map, mergeMap, concatMap, scan, reduce, delay, take, tap } from "rxjs/operators";
 import { empty, timer, Observable, of, forkJoin } from "rxjs";
-import { XbeeHelper } from "../xbee/xbee.helper";
-import { XbeeService } from "../xbee.service";
-import { Transceiver } from "../../classes/xbee/transceiver.class";
-import { TRANSCIEVER_TYPE } from "../../classes/xbee/device.class";
-import { IOCfg, TYPE_IOCFG } from "../../classes/xbee/iocfg.class";
+import { XbeeHelper } from "../../services/xbee/xbee.helper";
+import { XbeeService } from "../../services/xbee.service";
+import { Transceiver } from "../classes/transceiver.class";
+import { TRANSCIEVER_TYPE } from "../classes/device.class";
+import { IOCfg, TYPE_IOCFG } from "../classes/iocfg.class";
 
 export class TransceiverService extends DeviceService {
 

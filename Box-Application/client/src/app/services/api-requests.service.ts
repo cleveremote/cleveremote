@@ -39,6 +39,10 @@ export class ApiRequestsService {
     return this.http.get<void>(this.actionUrl + this.logsEndpoint + deviceId);
   }
 
+  gethello(): Observable<any> {
+    return this.http.get<void>(this.actionUrl + 'getHello');
+  }
+
   getNewToken(): Observable<any> {
     return this.http.get<void>(this.actionUrl + this.tokenEndpoint);
   }
