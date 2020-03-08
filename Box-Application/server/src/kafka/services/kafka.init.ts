@@ -2,19 +2,20 @@ import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay,
 import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject } from 'rxjs';
 // tslint:disable-next-line:max-line-length
 import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream, KafkaClientOptions } from 'kafka-node';
-import { DispatchService } from '../dispatch.service';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../../entities/custom.repositories/device.ext";
-import { Device } from '../../entities/gen.entities/device';
-import { Tools } from '../tools-service';
+import { Device } from '../entities/device';
+import { Tools } from '../../services/tools-service';
 import { ITopic } from '../../entities/interfaces/entities.interface';
 import { AccountExt } from '../../entities/custom.repositories/account.ext';
 import { CustomPartitionnerService } from './customPartitionner.service';
-import { genericRetryStrategy } from '../tools/generic-retry-strategy';
+import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
+
+import { InjectRepository } from '@nestjs/typeorm';
 
 export class KafkaInit {
-    public static flagIsFirstConnection = false;
+    public flagIsFirstConnection = false;
     public consumers: Array<ConsumerGroupStream> = [];
     public producer: ProducerStream;
     public offset: Offset;
@@ -23,6 +24,11 @@ export class KafkaInit {
     public reconnectInterval: any;
     public client: KafkaClient = undefined;
     public clientProducer: KafkaClient = undefined;
+
+    constructor( public deviceExt: DeviceExt) {
+        
+    }
+
 
     public InitClients(): boolean {
         const timeToRetryConnection = Number(process.env.KAFKA_TIME_TO_RETRY_CONNECT); // 12 seconds
@@ -75,7 +81,7 @@ export class KafkaInit {
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
-        const deviceRepository = getCustomRepository(DeviceExt);
+        const deviceRepository = this.deviceExt;
 
         return deviceRepository.getDevice().pipe(
             map((currentDevice: Device) => {

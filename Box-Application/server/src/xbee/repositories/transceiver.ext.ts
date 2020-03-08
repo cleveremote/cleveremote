@@ -1,6 +1,6 @@
 import { EntityRepository, Repository } from "typeorm";
-import { Transceiver } from "../gen.entities/transceiver";
-import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { Transceiver } from "../entities/transceiver";
+import { ISynchronize, ISynchronizeParams } from "../../entities/interfaces/entities.interface";
 
 @EntityRepository(Transceiver)
 export class TransceiverExt extends Repository<Transceiver> implements ISynchronize {

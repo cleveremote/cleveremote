@@ -2,7 +2,7 @@
 import { Observable, of as observableOf, from as observableFrom, EMPTY, of } from 'rxjs';
 import { tap, flatMap, map } from 'rxjs/operators';
 
-import { ormConnection } from './entities';
+// import { ormConnection } from './entities';
 // import { RedisClient, createClient } from 'redis';
 // import * as connectRedis from 'connect-redis';
 
@@ -15,11 +15,10 @@ import * as logger from 'morgan';
 import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
-import { KafkaService } from './services/kafka/kafka.service';
+import { KafkaService } from './kafka/services/kafka.service';
 import { XbeeService } from './services/xbee.service';
 import { Tools } from './services/tools-service';
-import { DispatchService } from './services/dispatch.service';
-import { XbeeHelper } from './services/xbee/xbee.helper';
+import { XbeeHelper } from './xbee/helpers/xbee.helper';
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 
@@ -42,48 +41,44 @@ export class Server {
         });
         return Tools.getSerialNumber().pipe(
             flatMap(() => this.initDependencies().pipe(
-                flatMap(() => this.initDb().pipe(
-                    flatMap(() => this.initKafka().pipe(
-                        flatMap(() => this.initDispatch().pipe(
-                            flatMap(() => this.initXbee().pipe(
-                                flatMap(() => this.initPassport().pipe(
-                                    flatMap(() => this.initDbMongoose().pipe(
-                                        map(() => this.app))
-                                    ))
-                                ))
+                //flatMap(() => this.initDb().pipe(
+                    //flatMap(() => this.initDispatch().pipe(
+                        flatMap(() => this.initPassport().pipe(
+                            flatMap(() => this.initDbMongoose().pipe(
+                                map(() => this.app))
                             ))
-                        ))
-                    ))
+                        //))
+                   // ))
                 ))
             ));
     }
 
-    public initDispatch(): Observable<void> {
-        Tools.loginfo('* start init dispatch...');
-        const dispatchService = new DispatchService();
+    // public initDispatch(): Observable<void> {
+    //     Tools.loginfo('* start init dispatch...');
+    //     const dispatchService = new DispatchService();
 
-        return dispatchService.init();
-    }
+    //     return dispatchService.init();
+    // }
 
-    public initDb(): Observable<void> {
-        Tools.loginfo('* start init db...');
+    // public initDb(): Observable<void> {
+    //     Tools.loginfo('* start init db...');
 
-        return observableFrom(ormConnection).pipe(
-            map(() => {
-                Tools.logSuccess('  => OK.');
-            }, (err: any) => {
-                Tools.logError(`  => KO! ${err}`);
+    //     return observableFrom(ormConnection).pipe(
+    //         map(() => {
+    //             Tools.logSuccess('  => OK.');
+    //         }, (err: any) => {
+    //             Tools.logError(`  => KO! ${err}`);
 
-                return err;
-            }));
-    }
+    //             return err;
+    //         }));
+    // }
 
-    public initKafka(): Observable<boolean> {
-        Tools.loginfo('* start init kafka...');
-        const kafkaInstance = new KafkaService();
+    // public initKafka(): Observable<boolean> {
+    //     Tools.loginfo('* start init kafka...');
+    //     const kafkaInstance = new KafkaService();
 
-        return kafkaInstance.init();
-    }
+    //     return kafkaInstance.init();
+    // }
 
     public initXbee(): Observable<void> {
         Tools.loginfo('* start init xbee...');

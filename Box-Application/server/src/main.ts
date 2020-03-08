@@ -8,6 +8,8 @@ import { Server } from './server';
 import { WebSocketService } from './services/websocket.service';
 import { Tools } from './services/tools-service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import "reflect-metadata";
+
 Tools.titleApplication();
 dotenv.config({ path: ".env" });
 

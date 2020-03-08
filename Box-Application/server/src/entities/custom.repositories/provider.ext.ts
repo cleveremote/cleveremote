@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from "typeorm";
-import { Device } from "../gen.entities/device";
+import { Device } from "../../kafka/entities/device";
 import { Provider } from "../gen.entities/provider";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 

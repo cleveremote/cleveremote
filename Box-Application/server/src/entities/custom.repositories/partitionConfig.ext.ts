@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from "typeorm";
-import { PartitionConfig } from "../gen.entities/partition_config";
+import { PartitionConfig } from "../../kafka/entities/partition_config";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 
 @EntityRepository(PartitionConfig)

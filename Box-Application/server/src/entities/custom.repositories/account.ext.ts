@@ -4,9 +4,9 @@ import { Observable, from, of } from "rxjs";
 import { Account } from "../gen.entities/account";
 import { map, mergeMap } from "rxjs/operators";
 import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
-import { Device } from "../gen.entities/device";
+import { Device } from "../../kafka/entities/device";
 import { UserExt } from "./user.ext";
-import { PartitionConfig } from "../gen.entities/partition_config";
+import { PartitionConfig } from "../../kafka/entities/partition_config";
 import { FORMERR } from "dns";
 
 @EntityRepository(Account)

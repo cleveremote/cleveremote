@@ -4,49 +4,15 @@ import { map, tap, mergeMap, catchError, ignoreElements, filter, pluck, takeUnti
 import { of as observableOf, from as observableFrom, Observable, of, observable, from, empty, timer } from 'rxjs';
 // import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
-import { XbeeService } from '../xbee.service';
+import { XbeeService } from '../../services/xbee.service';
 import * as  hexToBinary from 'hex-to-binary';
 import endianness from 'endianness';
 import * as xbeeRx from 'xbee-rx';
-import { genericRetryStrategy } from '../tools/generic-retry-strategy';
+import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
 
 export class XbeeHelper {
     public static position = 0;
-    public static executeRemoteCommand(timeout: number, cmd: string, address: string | ArrayBuffer, params?: Array<number> | string, option?: number): Observable<any> {
-        const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeout, options: option } as any;
-        if (params) {
-            localCommandObj.commandParameter = params;
-        }
-        console.log('Commande log', cmd);
-
-        return of(true)
-            .pipe(mergeMap((res: boolean) => XbeeService.xbee.remoteCommand(localCommandObj)
-                .pipe(map((response: any) => {
-                    if (response.commandStatus === 0) {
-                        console.log('success', response);
-                        return response;
-                    }
-                    console.log('error response', response);
-                    throw { response };
-                }))
-            ),
-                catchError((e: any) => {
-                    console.log('error catch');
-                    throw { e };
-                }),
-                retryWhen(genericRetryStrategy({ durationBeforeRetry: 1, maxRetryAttempts: 100 }))
-            );
-    }
-
-    public static executeLocalCommand(cmd: string, params?: Array<number> | string): Observable<any> {
-        const localCommandObj = { command: cmd } as any;
-        if (params) {
-            localCommandObj.commandParameter = params;
-        }
-        return XbeeService.xbee.localCommand(localCommandObj).pipe(map((response: any) => {
-            return response;
-        }));
-    }
+    
 
     public static routingTable(buffer): { [s: string]: number | string } {
         const position = 0;

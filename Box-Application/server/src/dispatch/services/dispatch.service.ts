@@ -1,32 +1,34 @@
 import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
 import { Observable, from, of } from "rxjs";
 import { getCustomRepository, getRepository } from "typeorm";
-import { AccountExt } from "../entities/custom.repositories/account.ext";
-import { IAccount, IDevice, IPartitionConfig, IUser } from "../entities/interfaces/entities.interface";
-import { Account } from "../entities/gen.entities/account";
+import { AccountExt } from "../../entities/custom.repositories/account.ext";
+import { IAccount, IDevice, IPartitionConfig, IUser } from "../../entities/interfaces/entities.interface";
+import { Account } from "../../entities/gen.entities/account";
 import { map, mergeMap } from "rxjs/operators";
-import { Device } from "../entities/gen.entities/device";
-import { PartitionConfig } from "../entities/gen.entities/partition_config";
-import { User } from "../entities/gen.entities/users";
-import { UserExt } from "../entities/custom.repositories/user.ext";
-import { KafkaService } from "./kafka/kafka.service";
-import { MapperService } from "./mapper.service";
-import { LoggerService } from "./logger.service";
-import { Tools } from "./tools-service";
-import { genericRetryStrategy } from "./tools/generic-retry-strategy";
+import { Device } from "../../kafka/entities/device";
+import { PartitionConfig } from "../../kafka/entities/partition_config";
+import { User } from "../../entities/gen.entities/users";
+import { UserExt } from "../../entities/custom.repositories/user.ext";
+import { KafkaService } from "../../kafka/services/kafka.service";
+import { MapperService } from "../../services/mapper.service";
+import { LoggerService } from "../../services/logger.service";
+import { Tools } from "../../services/tools-service";
+import { genericRetryStrategy } from "../../services/tools/generic-retry-strategy";
+import { Injectable, Inject, forwardRef } from "@nestjs/common";
 
+@Injectable()
 export class DispatchService {
     private mapperService: MapperService;
     private loggerService: LoggerService;
 
-    constructor() {
+    constructor(@Inject(forwardRef(() => KafkaService)) private kafkaService: KafkaService) {
         this.mapperService = new MapperService();
         this.loggerService = new LoggerService();
     }
 
     public init(): Observable<void> {
 
-        KafkaService.instance.consumers.forEach(consumer => {
+        this.kafkaService.consumers.forEach(consumer => {
             consumer.on('data', (message: Message) => {
                 this.routeMessage(consumer, message);
             });
@@ -35,7 +37,7 @@ export class DispatchService {
             });
         });
 
-        if (KafkaService.flagIsFirstConnection) {
+        if (this.kafkaService.flagIsFirstConnection) {
             const payloads = [
                 { topic: 'aggregator_init_connexion', messages: JSON.stringify({ serialNumber: Tools.serialNumber }), key: Tools.serialNumber }
             ];
@@ -73,7 +75,7 @@ export class DispatchService {
                             { topic: 'box_action_response', messages: JSON.stringify(message), key: 'server_1' }
                         ];
 
-                        KafkaService.instance.sendMessage(payloads, true).subscribe(
+                        this.kafkaService.sendMessage(payloads, true).subscribe(
                             () => { },
                             (e) => {
                                 Tools.logError('error on send message => ' + JSON.stringify(e));
@@ -91,8 +93,6 @@ export class DispatchService {
             }
 
         });
-
-
     }
 
     public proccessSyncConnexion(value: string | Buffer): Observable<boolean> {

@@ -1,6 +1,6 @@
 import { EntityRepository, Repository } from "typeorm";
 import { Observable, from } from "rxjs";
-import { Device } from "../gen.entities/device";
+import { Device } from "../../kafka/entities/device";
 import { map } from "rxjs/operators";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 
