@@ -5,31 +5,50 @@ import { of as observableOf, from as observableFrom, Observable, of, observable,
 import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
 import { DeviceService } from './device.service';
+import { TransceiverExt } from '../repositories/transceiver.ext';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ModuleExt } from '../repositories/module.ext';
+import { ModuleDto } from '../dto/module.dto';
 
-export class ModuleService extends DeviceService {
+export class ModuleService {
 
-    public add(module: any): any {
-        return {};
+    constructor(
+        @InjectRepository(TransceiverExt) private transceiverRepository: TransceiverExt,
+        @InjectRepository(ModuleExt) private moduleRepository: ModuleExt) { }
+
+    public get(id: string): Observable<any> {
+        return this.moduleRepository.getModule(id);
     }
 
-    public update(module: any): any {
-        return {};
+    public add(moduleDto: ModuleDto): Observable<any> {
+        return this.moduleRepository.addModule(moduleDto);
     }
 
-    public delete(id: number): any {
-        return {};
+    public update(id, moduleDto: ModuleDto): Observable<any> {
+        return this.moduleRepository.updateModule(id, moduleDto);
     }
 
-    public switchDigital(port: string, value: boolean, address: string): Observable<any> {
-        return this.xbee.remoteCommand({
-            command: port,
-            commandParameter: [value ? 5 : 4],
-            destination64: address// '0013a20040b971f3'
-        }).pipe(map((response: any) => response));
+    public delete(id: string): Observable<any> {
+        return this.moduleRepository.deleteModule(id);
     }
 
-    public configureModule(configuration: any): any {
-        // configuration module port Digital/out/in/spi/ad...
-        return {};
+    public getAll(): Observable<any> {
+        return this.moduleRepository.getAll();
     }
+
+
+
+
+    // public switchDigital(port: string, value: boolean, address: string): Observable<any> {
+    //     return this.xbee.remoteCommand({
+    //         command: port,
+    //         commandParameter: [value ? 5 : 4],
+    //         destination64: address// '0013a20040b971f3'
+    //     }).pipe(map((response: any) => response));
+    // }
+
+    // public configureModule(configuration: any): any {
+    //     // configuration module port Digital/out/in/spi/ad...
+    //     return {};
+    // }
 }

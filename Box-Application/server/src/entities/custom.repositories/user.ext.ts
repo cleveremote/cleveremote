@@ -1,13 +1,13 @@
 import { EntityRepository, Repository } from "typeorm";
-import { User } from "../gen.entities/users";
+import { UserEntity } from "../gen.entities/user.entity";
 import * as bcrypt from 'bcrypt-nodejs';
 import { Observable, from } from "rxjs";
 import { map } from "rxjs/operators";
-import { Account } from "../gen.entities/account";
+import { AccountEntity } from "../gen.entities/account.entity";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 
-@EntityRepository(User)
-export class UserExt extends Repository<User> implements ISynchronize {
+@EntityRepository(UserEntity)
+export class UserExt extends Repository<UserEntity> implements ISynchronize {
 
     public synchronize(data: ISynchronizeParams): any {
         throw new Error("Method not implemented.");
@@ -22,7 +22,7 @@ export class UserExt extends Repository<User> implements ISynchronize {
     }
 
     public authenticate(req: any, mail: any, password: any, done: any): void {
-        this.findOne({ where: { email: mail }, relations: ['account'] }).then((user: User) => {
+        this.findOne({ where: { email: mail }, relations: ['account'] }).then((user: UserEntity) => {
 
             if (!user) {
                 console.log('no user found');
@@ -41,7 +41,7 @@ export class UserExt extends Repository<User> implements ISynchronize {
     }
 
     public getUser(userId: string, done: any): void {
-        this.findOne({ where: { user_id: userId }, relations: ['account'] }).then((user: User) => {
+        this.findOne({ where: { user_id: userId }, relations: ['account'] }).then((user: UserEntity) => {
 
             if (!user) {
                 console.log('no user found');
@@ -55,7 +55,7 @@ export class UserExt extends Repository<User> implements ISynchronize {
 
     public getUserByEmail(email?: string): Observable<boolean> {
         return from(this.findOne({ where: { email: "nadime.yahyaoui@gmail.com" }, relations: ['account', 'account.devices', 'account.devices.config'] })).pipe(
-            map((acc: User) => {
+            map((acc: UserEntity) => {
 
                 if (!acc) {
                     console.log('no account found');
@@ -73,9 +73,9 @@ export class UserExt extends Repository<User> implements ISynchronize {
             }));
     }
 
-    public getAccountByEmail(email?: string): Observable<Account> {
+    public getAccountByEmail(email?: string): Observable<AccountEntity> {
         return from(this.findOne({ where: { email: `${email}` }, relations: ['account'] })).pipe(
-            map((user: User) => {
+            map((user: UserEntity) => {
 
                 if (!user) {
                     console.log('no account found');

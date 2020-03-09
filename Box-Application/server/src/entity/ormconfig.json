@@ -1,0 +1,14 @@
+[
+  {
+    "name": "default",
+    "type": "postgres",
+    "host": "82.125.211.136",
+    "port": 5432,
+    "username": "test",
+    "password": "1234",
+    "database": "boxTest",
+    "schema": "public",
+    "synchronize": false,
+    "entities": ["entities/*.js"]
+  }
+]

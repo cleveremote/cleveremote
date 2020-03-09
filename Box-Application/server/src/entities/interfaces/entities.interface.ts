@@ -15,9 +15,9 @@ export interface IPartitionTopic {
 }
 
 export interface IPartitionConfig {
-    config_id: string;
-    start_range: number;
-    end_range: number;
+    configId: string;
+    startRange: number;
+    endRange: number;
 }
 
 export interface ITopic {
@@ -27,18 +27,18 @@ export interface ITopic {
 }
 
 export interface IUser {
-    user_id: string;
-    first_name: string;
-    last_name: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    number_phone: string;
+    phone: string;
     password: string;
     account?: IAccount;
     providers?: Array<IProvider>;
 }
 
 export interface IAccount {
-    account_id: string;
+    accountId: string;
     name: string;
     description?: string;
     users: Array<IUser>;
@@ -46,7 +46,7 @@ export interface IAccount {
 }
 
 export interface IDevice {
-    device_id: string;
+    deviceId: string;
     name: string;
     description?: string;
     account: IAccount;
@@ -54,25 +54,18 @@ export interface IDevice {
 }
 
 export interface IProvider {
-    provider_id: string;
+    providerId: string;
     user?: IUser;
     provider: string;
-    provider_uid: string;
-}
-
-export interface ITransceiverConfig {
-    config_id: string;
-    configuration: Object; // CREATE An object for configuration
-    status: string;
+    providerUid: string;
 }
 
 export interface ITransceiver {
-    transceiver_id: string;
+    transceiverId: string;
     name: string;
     description: string | null;
     address: string;
     type: string;
-    config?: ITransceiverConfig | null;
-    coordinator?: ITransceiver | null;
+    configuration: string;
     device: IDevice | null;
 }

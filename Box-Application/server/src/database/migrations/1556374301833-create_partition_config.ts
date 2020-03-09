@@ -4,11 +4,11 @@ export class createPartitionConfig1556374301833 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<any> {
         await queryRunner.query(`CREATE TABLE partition_config(
-            config_id VARCHAR (255) PRIMARY KEY,
-            start_range integer NOT NULL,
-            end_range integer NOT NULL,
-            device_id VARCHAR (255) NOT NULL,
-            FOREIGN KEY (device_id) REFERENCES Device(device_id) ON DELETE CASCADE
+            configId VARCHAR (255) PRIMARY KEY,
+            startRange integer NOT NULL,
+            endRange integer NOT NULL,
+            deviceId VARCHAR (255) NOT NULL,
+            FOREIGN KEY (deviceId) REFERENCES Device(deviceId) ON DELETE CASCADE
            );`);
     }
 

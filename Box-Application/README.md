@@ -27,7 +27,7 @@ Type ORM
 ---------------
 npm run typeorm migration:run / typeorm migration:revert
 npm run typeorm migration:create -- -n migrationNameHere
-typeorm-model-generator -h localhost -d  cleverTest -u test -x 1234 -e postgres -o "./src/entity" -s public
+npx typeorm-model-generator -h localhost -d  boxTest -u test -x 1234 -e postgres -o "./src/entity" -s public
 
 free port on failure
 ---------------

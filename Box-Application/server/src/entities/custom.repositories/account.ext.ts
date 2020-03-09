@@ -1,24 +1,24 @@
 import { EntityRepository, Repository, getCustomRepository } from "typeorm";
-import { User } from "../gen.entities/users";
+import { UserEntity } from "../gen.entities/user.entity";
 import { Observable, from, of } from "rxjs";
-import { Account } from "../gen.entities/account";
+import { AccountEntity } from "../gen.entities/account.entity";
 import { map, mergeMap } from "rxjs/operators";
 import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
-import { Device } from "../../kafka/entities/device";
+import { DeviceEntity } from "../../kafka/entities/device.entity";
 import { UserExt } from "./user.ext";
-import { PartitionConfig } from "../../kafka/entities/partition_config";
+import { PartitionConfig } from "../../kafka/entities/partitionconfig.entity";
 import { FORMERR } from "dns";
 
-@EntityRepository(Account)
-export class AccountExt extends Repository<Account> implements ISynchronize {
+@EntityRepository(AccountEntity)
+export class AccountExt extends Repository<AccountEntity> implements ISynchronize {
 
     public synchronize(data: ISynchronizeParams): any {
         this.updateAccount(data.data).subscribe();
     }
 
-    public updateAccount(data: any): Observable<Account> {
+    public updateAccount(data: any): Observable<AccountEntity> {
         return from(this.save(data)).pipe(
-            map((acc: Account) => {
+            map((acc: AccountEntity) => {
 
                 if (!acc) {
                     console.log('no account found');
@@ -32,7 +32,7 @@ export class AccountExt extends Repository<Account> implements ISynchronize {
 
     public isBoxInitialized(): Observable<boolean> {
         return from(this.find({ relations: ['devices', 'users', 'devices.partition_configs'] })).pipe(
-            map((acc: Array<Account>) => {
+            map((acc: Array<AccountEntity>) => {
 
                 if (!acc) {
                     console.log('no account found');
@@ -52,8 +52,8 @@ export class AccountExt extends Repository<Account> implements ISynchronize {
 
     public createAccount(message?: any): Observable<boolean> {
         const accountData: IAccount = { account_id: 'server_3', name: 'name12', description: 'description' } as any;
-        const accountToSave = new Account();
-        accountToSave.account_id = accountData.account_id;
+        const accountToSave = new AccountEntity();
+        accountToSave.accountId = accountData.accountId;
         accountToSave.name = accountData.name;
         accountToSave.description = accountData.description;
 
@@ -65,61 +65,61 @@ export class AccountExt extends Repository<Account> implements ISynchronize {
             last_name: 'last_name',
             first_name: 'first_name'
         } as any;
-        const userToSave = new User();
-        userToSave.user_id = userData.user_id;
+        const userToSave = new UserEntity();
+        userToSave.userId = userData.userId;
         userToSave.email = userData.email;
-        userToSave.number_phone = userData.number_phone;
-        userToSave.first_name = userData.first_name;
-        userToSave.last_name = userData.last_name;
+        userToSave.phone = userData.phone;
+        userToSave.firstName = userData.firstName;
+        userToSave.lastName = userData.lastName;
         userToSave.password = userData.password;
 
         accountToSave.users = [userToSave];
 
         return from(this.save(accountToSave)).pipe(
-            mergeMap((accountSaved: Account) => of(true)));
+            mergeMap((accountSaved: AccountEntity) => of(true)));
     }
 
     public createAndLinkDevice(message?: any): Observable<boolean> {
         const userRepository = getCustomRepository(UserExt);
 
         return userRepository.getAccountByEmail("email1").pipe(
-            mergeMap((currentAccount: Account) => {
+            mergeMap((currentAccount: AccountEntity) => {
                 const deviceData: IDevice = { device_id: 'server_3', name: 'name121', description: 'description' } as any;
-                const deviceToSave = new Device();
+                const deviceToSave = new DeviceEntity();
                 deviceToSave.account = currentAccount;
                 deviceToSave.description = deviceData.description;
-                deviceToSave.device_id = deviceData.device_id;
+                deviceToSave.deviceId = deviceData.deviceId;
                 deviceToSave.name = deviceData.name;
 
                 const partitionData: IPartitionConfig = { config_id: 'server_3', start_range: 2, end_range: 3 } as any;
                 const partitionToSave = new PartitionConfig();
-                partitionToSave.config_id = partitionData.config_id;
-                partitionToSave.start_range = partitionData.start_range;
-                partitionToSave.end_range = partitionData.end_range;
+                partitionToSave.configId = partitionData.configId;
+                partitionToSave.startRange = partitionData.startRange;
+                partitionToSave.endRange = partitionData.endRange;
 
-                deviceToSave.partition_configs = [partitionToSave];
+                deviceToSave.partitionConfigs = [partitionToSave];
 
                 const userData: IUser = {
-                    user_id: 'server_3',
+                    userId: 'server_3',
                     email: 'email1',
                     password: '$2a$08$GvDZDoL..cHoc8n8HFUp6en6PiH5I2cqYvj4xDsbomC25WPc/6Iwa1',
-                    number_phone: '0682737505',
-                    last_name: 'last_name',
-                    first_name: 'first_name'
+                    phone: '0682737505',
+                    lastName: 'last_name',
+                    firstName: 'first_name'
                 } as any;
-                const userToSave = new User();
-                userToSave.user_id = userData.user_id;
+                const userToSave = new UserEntity();
+                userToSave.userId = userData.userId;
                 userToSave.email = userData.email;
-                userToSave.number_phone = userData.number_phone;
-                userToSave.first_name = userData.first_name;
-                userToSave.last_name = userData.last_name;
+                userToSave.phone = userData.phone;
+                userToSave.firstName = userData.firstName;
+                userToSave.lastName = userData.lastName;
                 userToSave.password = userData.password;
 
                 currentAccount.users = [userToSave];
                 currentAccount.devices = [deviceToSave];
 
                 return from(this.save(currentAccount)).pipe(
-                    mergeMap((accountSaved: Account) => of(true)));
+                    mergeMap((accountSaved: AccountEntity) => of(true)));
             })
         );
     }

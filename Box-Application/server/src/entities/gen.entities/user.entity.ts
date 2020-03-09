@@ -1,41 +1,41 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {Account} from "./account";
-import {Provider} from "./provider";
+import {AccountEntity} from "./account.entity";
+import {ProviderEntity} from "./provider.entity";
 
 
 @Entity("users",{schema:"public" } )
 @Index("users_email_key",["email",],{unique:true})
-@Index("users_first_name_key",["first_name",],{unique:true})
-@Index("users_last_name_key",["last_name",],{unique:true})
-@Index("users_number_phone_key",["number_phone",],{unique:true})
+@Index("users_first_name_key",["firstName",],{unique:true})
+@Index("users_last_name_key",["lastName",],{unique:true})
+@Index("users_number_phone_key",["phone",],{unique:true})
 @Index("users_password_key",["password",],{unique:true})
-export class User {
+export class UserEntity {
 
     @Column("character varying",{ 
         nullable:false,
         primary:true,
         length:255,
-        name:"user_id"
+        name:"userId"
         })
-    user_id:string;
+    userId:string;
         
 
     @Column("character varying",{ 
         nullable:false,
         unique: true,
         length:50,
-        name:"first_name"
+        name:"firstName"
         })
-    first_name:string;
+    firstName:string;
         
 
     @Column("character varying",{ 
         nullable:false,
         unique: true,
         length:50,
-        name:"last_name"
+        name:"lastName"
         })
-    last_name:string;
+    lastName:string;
         
 
     @Column("character varying",{ 
@@ -51,9 +51,9 @@ export class User {
         nullable:false,
         unique: true,
         length:50,
-        name:"number_phone"
+        name:"phone"
         })
-    number_phone:string;
+    phone:string;
         
 
     @Column("character varying",{ 
@@ -66,11 +66,11 @@ export class User {
         
 
    
-    @ManyToOne(type=>Account, account=>account.users,{  nullable:false,onDelete: 'CASCADE' })
-    @JoinColumn({ name:'account_id'})
-    account:Account | null;
+    @ManyToOne(type=>AccountEntity, account=>account.users,{  nullable:false,onDelete: 'CASCADE' })
+    @JoinColumn({ name:'accountId'})
+    account:AccountEntity | null;
    
-    @OneToMany(type=>Provider, provider=>provider.user,{ onDelete: 'CASCADE' })
-    providers:Provider[];
+    @OneToMany(type=>ProviderEntity, provider=>provider.user,{ onDelete: 'CASCADE' })
+    providers:Array<ProviderEntity>;
     
 }

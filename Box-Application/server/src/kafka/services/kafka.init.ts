@@ -3,7 +3,7 @@ import { Observable, of, bindCallback, throwError, pipe } from 'rxjs';
 import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProducerStream, KafkaClientOptions } from 'kafka-node';
 import { v1 } from 'uuid';
 import { DeviceExt } from "../../entities/custom.repositories/device.ext";
-import { Device } from '../entities/device';
+import { DeviceEntity } from '../entities/device.entity';
 import { Tools } from '../../services/tools-service';
 import { ITopic } from '../../entities/interfaces/entities.interface';
 import { CustomPartitionnerService } from './customPartitionner.service';
@@ -79,16 +79,16 @@ export class KafkaInit {
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
         return this.deviceExt.getDevice().pipe(
-            map((currentDevice: Device) => {
+            map((currentDevice: DeviceEntity) => {
                 topicsString.split(';').forEach((topic: string) => {
                     const topicString = topic.split('.');
                     if (topicString[1] && topicString[1] === 'range') {
-                        const cfg = currentDevice.partition_configs[0];
+                        const cfg = currentDevice.partitionConfigs[0];
                         this.subscribeTopics.push({
                             name: topicString[0],
                             partitionTopic: {
-                                current: cfg.start_range,
-                                rangePartitions: [cfg.start_range, cfg.end_range]
+                                current: cfg.startRange,
+                                rangePartitions: [cfg.startRange, cfg.endRange]
                             }
                         });
                     }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TransceiverService } from './xbee/services/transceiver.service';
+import { XbeeService } from './xbee/services/xbee.service';
 
 @Injectable()
 export class AppService {

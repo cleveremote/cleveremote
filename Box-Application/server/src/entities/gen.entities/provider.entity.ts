@@ -1,24 +1,24 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {User} from "./users";
+import {UserEntity} from "./user.entity";
 
 
 @Entity("provider",{schema:"public" } )
-@Index("provider_provider_uid_key",["provider_uid",],{unique:true})
-export class Provider {
+@Index("provider_provider_uid_key",["providerUid",],{unique:true})
+export class ProviderEntity {
 
     @Column("character varying",{ 
         nullable:false,
         primary:true,
         length:255,
-        name:"provider_id"
+        name:"providerId"
         })
-    provider_id:string;
+    providerId:string;
         
 
    
-    @ManyToOne(type=>User, users=>users.providers,{  nullable:false,onDelete: 'CASCADE', })
-    @JoinColumn({ name:'user_id'})
-    user:User | null;
+    @ManyToOne(type=>UserEntity, users=>users.providers,{  nullable:false,onDelete: 'CASCADE', })
+    @JoinColumn({ name:'userId'})
+    user:UserEntity | null;
 
 
     @Column("character varying",{ 
@@ -33,8 +33,8 @@ export class Provider {
         nullable:false,
         unique: true,
         length:255,
-        name:"provider_uid"
+        name:"providerUid"
         })
-    provider_uid:string;
+    providerUid:string;
         
 }

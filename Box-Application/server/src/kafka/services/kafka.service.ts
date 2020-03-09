@@ -5,11 +5,7 @@ import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPar
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../../entities/custom.repositories/device.ext";
-import { Device } from '../entities/device';
 import { Tools } from '../../services/tools-service';
-import { ITopic } from '../../entities/interfaces/entities.interface';
-import { AccountExt } from '../../entities/custom.repositories/account.ext';
-import { CustomPartitionnerService } from './customPartitionner.service';
 import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
 import { KafkaInit } from './kafka.init';
 import { Injectable } from '@nestjs/common';

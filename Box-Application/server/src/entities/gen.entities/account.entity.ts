@@ -1,19 +1,18 @@
 import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {Device} from "../../kafka/entities/device";
-import {User} from "./users";
-
+import {DeviceEntity} from "../../kafka/entities/device.entity";
+import {UserEntity} from "./user.entity";
 
 @Entity("account",{schema:"public" } )
 @Index("account_name_key",["name",],{unique:true})
-export class Account {
+export class AccountEntity {
 
     @Column("character varying",{ 
         nullable:false,
         primary:true,
         length:255,
-        name:"account_id"
+        name:"accountId"
         })
-    account_id:string;
+    accountId:string;
         
 
     @Column("character varying",{ 
@@ -39,10 +38,10 @@ export class Account {
     // activated:boolean;
 
    
-    @OneToMany(type=>Device, device=>device.account,{ onDelete: 'CASCADE', cascade: true  })
-    devices:Device[];
+    @OneToMany(type=>DeviceEntity, device=>device.account,{ onDelete: 'CASCADE', cascade: true  })
+    devices:Array<DeviceEntity>;
    
-    @OneToMany(type=>User, users=>users.account,{ onDelete: 'CASCADE', cascade: true })
-    users:User[];
+    @OneToMany(type=>UserEntity, users=>users.account,{ onDelete: 'CASCADE', cascade: true })
+    users:Array<UserEntity>;
     
 }
