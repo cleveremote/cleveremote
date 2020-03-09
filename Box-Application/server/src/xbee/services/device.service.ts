@@ -5,14 +5,16 @@ import { of as observableOf, from as observableFrom, Observable, of, observable,
 import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
 import { genericRetryStrategy } from "../../services/tools/generic-retry-strategy";
-
+import { Tools } from "../../services/tools-service";
+import * as cliProgress from 'cli-progress';
+import { multibar } from "../../common/progress.bar";
+const _colors = require('colors');
 export class DeviceService {
     public xbee;
 
+    public progressBar;
 
-    constructor() {
-        this.init().subscribe();
-    }
+
 
     public executeRemoteCommand(timeout: number, cmd: string, address: string | ArrayBuffer, params?: Array<number> | string, option?: number): Observable<any> {
         const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeout, options: option } as any;
@@ -55,6 +57,13 @@ export class DeviceService {
     }
 
     public init(): Observable<boolean> {
+        Tools.loginfoProgress('* Start micro-service : XBEE...');
+        this.progressBar = multibar.create(1, 0);
+        let cloneOption = {} as any;
+        cloneOption = Object.assign(cloneOption, multibar.options);
+        cloneOption.format = _colors.green('XBEE progress      ')+'|' + _colors.green('{bar}') + '| {percentage}%'+'\n';
+        this.progressBar.options = cloneOption;
+
         const exists = portName => SerialPort.list().then(ports => ports.some(port => port.comName === portName));
         const xbeeObs = new Observable<any>(observer => {
             let xbee: any;
@@ -80,21 +89,25 @@ export class DeviceService {
                 return xbeeObs.pipe(
                     map((xbee: any) => {
                         this.xbee = xbee;
-                        console.log('* init Xbee OK.');
-
+                        this.progressBar.increment();
                         return true;
                     }, (err: any) => {
-                        console.error(`! init Xbee KO ${err}`);
-
+                        Tools.logError(`  => Xbee initilization failed ${err}`);
                         return false;
                     }));
             }
-            console.warn(`  - Xbee port not found!`);
-
+            Tools.logWarn(`  => Xbee port not found!`);
             return of(false);
-            // }));
-        })).pipe(
-            map(() => true));
+        }))
+        .pipe(catchError((response) => {
+            let cloneOption = {} as any;
+            cloneOption = Object.assign(cloneOption, multibar.options);
+            cloneOption.format = _colors.red('XBEE progress      ')+'|' + _colors.red('{bar}') + '| {percentage}%'+'\n';
+            this.progressBar.options = cloneOption;
+            multibar.stop();
+            Tools.logError(response);
+            return of(false);
+        }));;
     }
 
 

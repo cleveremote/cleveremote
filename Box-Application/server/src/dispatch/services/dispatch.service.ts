@@ -1,23 +1,24 @@
 import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
 import { Observable, from, of } from "rxjs";
-import { getCustomRepository, getRepository } from "typeorm";
-import { AccountExt } from "../../entities/custom.repositories/account.ext";
 import { IAccount, IDevice, IPartitionConfig, IUser } from "../../entities/interfaces/entities.interface";
 import { Account } from "../../entities/gen.entities/account";
-import { map, mergeMap } from "rxjs/operators";
+import { mergeMap } from "rxjs/operators";
 import { Device } from "../../kafka/entities/device";
 import { PartitionConfig } from "../../kafka/entities/partition_config";
 import { User } from "../../entities/gen.entities/users";
-import { UserExt } from "../../entities/custom.repositories/user.ext";
 import { KafkaService } from "../../kafka/services/kafka.service";
 import { MapperService } from "../../services/mapper.service";
 import { LoggerService } from "../../services/logger.service";
 import { Tools } from "../../services/tools-service";
-import { genericRetryStrategy } from "../../services/tools/generic-retry-strategy";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
+import { getRepository } from "typeorm";
+import { multibar } from "../../common/progress.bar";
+const _colors = require('colors');
+let readline = require('readline');
 
 @Injectable()
 export class DispatchService {
+    public progressBar;
     private mapperService: MapperService;
     private loggerService: LoggerService;
 
@@ -27,6 +28,13 @@ export class DispatchService {
     }
 
     public init(): Observable<void> {
+        Tools.loginfoProgress('* Start micro-service : Dispatch...');
+
+        this.progressBar = multibar.create(1, 0);
+        let cloneOption = {} as any;
+        cloneOption = Object.assign(cloneOption, multibar.options);
+        cloneOption.format = _colors.green('Dispatch progress  ')+'|' + _colors.green('{bar}') + '| {percentage}% \n';
+        this.progressBar.options = cloneOption;
 
         this.kafkaService.consumers.forEach(consumer => {
             consumer.on('data', (message: Message) => {
@@ -46,9 +54,7 @@ export class DispatchService {
             //     Tools.logError('error', err);
             // });
         }
-
-        Tools.logSuccess('  => OK.');
-
+        this.progressBar.increment();
         return of(undefined);
 
     }

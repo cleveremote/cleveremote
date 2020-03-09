@@ -1,18 +1,15 @@
-import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat, retryWhen, catchError } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject } from 'rxjs';
-// tslint:disable-next-line:max-line-length
-import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream, KafkaClientOptions } from 'kafka-node';
+import { map, flatMap, catchError, mergeMap } from 'rxjs/operators';
+import { Observable, of, bindCallback, throwError, pipe } from 'rxjs';
+import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProducerStream, KafkaClientOptions } from 'kafka-node';
 import { v1 } from 'uuid';
-import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../../entities/custom.repositories/device.ext";
 import { Device } from '../entities/device';
 import { Tools } from '../../services/tools-service';
 import { ITopic } from '../../entities/interfaces/entities.interface';
-import { AccountExt } from '../../entities/custom.repositories/account.ext';
 import { CustomPartitionnerService } from './customPartitionner.service';
-import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
-
-import { InjectRepository } from '@nestjs/typeorm';
+import * as cliProgress from 'cli-progress';
+import { multibar } from '../../common/progress.bar';
+const _colors = require('colors');
 
 export class KafkaInit {
     public flagIsFirstConnection = false;
@@ -24,66 +21,64 @@ export class KafkaInit {
     public reconnectInterval: any;
     public client: KafkaClient = undefined;
     public clientProducer: KafkaClient = undefined;
+    public progressBar;
 
-    constructor( public deviceExt: DeviceExt) {
-        
+    constructor(public deviceExt: DeviceExt) {
     }
 
 
-    public InitClients(): boolean {
+    public InitClients(): Observable<boolean> {
         const timeToRetryConnection = Number(process.env.KAFKA_TIME_TO_RETRY_CONNECT); // 12 seconds
         this.reconnectInterval = undefined;
-        this.initializeCLients();
+        return this.initializeCLients().pipe(map((result: boolean) => {
+            this.producer.on('error', (err: any) => {
+                console.info("error reconnect is called in producer error event");
+                this.producer.close();
+                this.client.close();
+                this.clientProducer.close(); // Comment out for client on close
+                if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
+                    this.reconnectInterval =
+                        setTimeout(() => {
+                            console.info("reconnect is called in producer error event");
+                            this.InitClients();
+                        }, timeToRetryConnection);
+                }
+            });
 
-        this.producer.on('error', (err: any) => {
-            console.info("error reconnect is called in producer error event");
-            this.producer.close();
-            this.client.close();
-            this.clientProducer.close(); // Comment out for client on close
-            if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
-                this.reconnectInterval =
-                    setTimeout(() => {
-                        console.info("reconnect is called in producer error event");
-                        this.InitClients();
-                    }, timeToRetryConnection);
-            }
-        });
+            this.client.on('error', (err: any) => {
+                console.info("error reconnect is called in client error event");
+                this.producer.close();
+                this.client.close();
+                this.clientProducer.close();
+                if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
+                    this.reconnectInterval =
+                        setTimeout(() => {
+                            console.info("reconnect is called in client error event");
+                            this.InitClients();
+                        }, timeToRetryConnection);
+                }
+            });
 
-        this.client.on('error', (err: any) => {
-            console.info("error reconnect is called in client error event");
-            this.producer.close();
-            this.client.close();
-            this.clientProducer.close();
-            if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
-                this.reconnectInterval =
-                    setTimeout(() => {
-                        console.info("reconnect is called in client error event");
-                        this.InitClients();
-                    }, timeToRetryConnection);
-            }
-        });
-
-        this.clientProducer.on('error', (err: any) => {
-            console.info("error reconnect is called in clientProducer error event");
-            this.producer.close();
-            this.client.close();
-            this.clientProducer.close();
-            if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
-                this.reconnectInterval =
-                    setTimeout(() => {
-                        console.info("reconnect is called in clientProducer error event");
-                        this.InitClients();
-                    }, timeToRetryConnection);
-            }
-        });
-
-        return true;
+            this.clientProducer.on('error', (err: any) => {
+                console.info("error reconnect is called in clientProducer error event");
+                this.producer.close();
+                this.client.close();
+                this.clientProducer.close();
+                if (!this.reconnectInterval) { // Multiple Error Events may fire, only set one connection retry.
+                    this.reconnectInterval =
+                        setTimeout(() => {
+                            console.info("reconnect is called in clientProducer error event");
+                            this.InitClients();
+                        }, timeToRetryConnection);
+                }
+            });
+            this.progressBar.increment();
+            return true;
+        }));
     }
 
     public setSubscriptionTopics(topicsString: string): Observable<boolean> {
-        const deviceRepository = this.deviceExt;
-
-        return deviceRepository.getDevice().pipe(
+        return this.deviceExt.getDevice().pipe(
             map((currentDevice: Device) => {
                 topicsString.split(';').forEach((topic: string) => {
                     const topicString = topic.split('.');
@@ -98,9 +93,7 @@ export class KafkaInit {
                         });
                     }
                 });
-                Tools.loginfo('   - init Subscription topics');
-                Tools.logSuccess('     => OK');
-
+                this.progressBar.increment();
                 return true;
             }));
     }
@@ -116,9 +109,7 @@ export class KafkaInit {
                 });
             }
         });
-        Tools.loginfo('   - init Publication topics');
-        Tools.logSuccess('     => OK');
-
+        this.progressBar.increment();
         return of(true);
     }
 
@@ -186,45 +177,8 @@ export class KafkaInit {
         });
     }
 
-    public initializeProducer(): Observable<boolean> {
-        const loadMetadataForTopicsObs = bindCallback(this.producer.on.bind(this.clientProducer, 'ready'));
-        const result = loadMetadataForTopicsObs();
-        if ((this.producer as any).ready) {
-            setInterval(() => {
-                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
-                const payloads = [
-                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
-                ];
-
-                // this.sendMessage(payloads).subscribe();
-            }, 5000);
-            Tools.loginfo('   - init Producer');
-            Tools.logSuccess('     => OK');
-
-            return of(true);
-        }
-
-        return result.pipe(map((results: any) => {
-            if (this.reconnectInterval) {
-                clearTimeout(this.reconnectInterval);
-                this.reconnectInterval = undefined;
-            }
-            setInterval(() => {
-                const dataExample = { entity: 'Account', type: 'UPDATE', data: { account_id: 'server_3', name: 'name12', description: 'description1234' } };
-                const payloads = [
-                    { topic: 'aggregator_dbsync', messages: JSON.stringify(dataExample), key: 'server_1' }
-                ];
-
-                // this.sendMessage(payloads).subscribe();
-            }, 5000);
-            Tools.loginfo('   - init Producer');
-            Tools.logSuccess('     => OK');
-
-            return true;
-        }));
-    }
-
     public initializeConsumer(): Observable<boolean> {
+        // Tools.loginfo('    -Init consumers ...');
         const topics = this.subscribeTopics.map((topic: ITopic) => topic.name);
         const loadMetadataForTopicsObs = bindCallback(this.client.loadMetadataForTopics.bind(this.client, topics));
         const result = loadMetadataForTopicsObs();
@@ -232,20 +186,16 @@ export class KafkaInit {
         return result.pipe(map((results: any) => {
             if (results && results[1] && results[1][1]) {
                 this.createConsumers(results[1][1]);
-                Tools.loginfo('   - init Consumer');
-                Tools.logSuccess('     => OK');
-
+                this.progressBar.increment();
                 return true;
             }
-
-            Tools.loginfo('   - init Consumer');
-            Tools.logSuccess('     => KO');
-
+            throwError('      => initialization failed!');
             return true;
         }));
     }
 
-    public initializeCLients(): void {
+    public initializeCLients(): Observable<boolean> {
+        //Tools.loginfo('    -Init producers ...');
         const config: KafkaClientOptions = {
             connectRetryOptions: { retries: Number(process.env.RETRIES), factor: Number(process.env.FACTOR), minTimeout: Number(process.env.MINTIMEOUT), maxTimeout: Number(process.env.MAXTIMEOUT), randomize: !!+process.env.RANDOMIZE },
             idleConnection: Number(process.env.IDLECONNECTION),
@@ -264,33 +214,46 @@ export class KafkaInit {
                 clearTimeout(this.reconnectInterval);
                 this.reconnectInterval = undefined;
             }
-            Tools.loginfo('   - init Producer');
-            Tools.logSuccess('     => OK');
         }
 
         const loadMetadataForTopicsObs = bindCallback(this.producer.on.bind(this.clientProducer, 'ready'));
-        loadMetadataForTopicsObs().pipe(map((results: any) => {
-            Tools.loginfo('   - init Producer');
-            Tools.logSuccess('     => OK');
+        return loadMetadataForTopicsObs().pipe(map((results: any) => {
             if (this.reconnectInterval) {
                 clearTimeout(this.reconnectInterval);
                 this.reconnectInterval = undefined;
             }
-            Tools.loginfo('   - init Producer');
-            Tools.logSuccess('     => OK');
-
+            this.progressBar.increment();
             return true;
-        })).subscribe();
+        }));
+    }
+
+    public checkFirstConnexion(): Observable<boolean> {
+        this.progressBar.increment();
+        this.progressBar.stop();
+        return of(true);
     }
 
     public init(): Observable<boolean> {
-        return of(true).pipe(
-            flatMap(() => of(this.InitClients()).pipe(
-                flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION).pipe(
-                    flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION).pipe(
-                        flatMap(() => this.initializeConsumer()))
-                    ))
-                ))
-            ));
+        Tools.loginfo('* Start micro-service KAFKA');
+        this.progressBar = multibar.create(6, 0);
+        let cloneOption = {} as any;
+        cloneOption = Object.assign(cloneOption, multibar.options);
+        cloneOption.format = _colors.green('KAFKA progress     ') + '|' + _colors.green('{bar}') + '| {percentage}%' + '\n';
+        this.progressBar.options = cloneOption;
+
+        return this.InitClients()
+            .pipe(flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION)), catchError(val => val))
+            .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)), catchError(val => val))
+            .pipe(flatMap(() => this.initializeConsumer()), catchError(val => val))
+            .pipe(flatMap((x: any) => this.checkFirstConnexion().pipe(map((result: boolean) => result))))
+            .pipe(catchError((response) => {
+                let cloneOption = {} as any;
+                cloneOption = Object.assign(cloneOption, multibar.options);
+                cloneOption.format = _colors.red('KAFKA progress     ') + '|' + _colors.red('{bar}') + '| {percentage}%' + '\n';
+                this.progressBar.options = cloneOption;
+                multibar.stop();
+                Tools.logError(response);
+                return of(false);
+            }));
     }
 }

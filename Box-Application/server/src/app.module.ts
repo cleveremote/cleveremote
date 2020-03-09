@@ -6,11 +6,12 @@ import { XbeeModule } from './xbee/xbee.module';
 import { KafkaModule } from './kafka/kafka.module';
 import { DispatchModule } from './dispatch/dispatch.module';
 import { typeOrmConfig } from './common/typeorm.config';
+import { LaunchModule } from './launch/launch.module';
 
 
 
 @Module({
-  imports: [TypeOrmModule.forRoot(typeOrmConfig), XbeeModule, KafkaModule],
+  imports: [TypeOrmModule.forRoot(typeOrmConfig), XbeeModule, KafkaModule, LaunchModule],
   controllers: [AppController],
   providers: [AppService]
 })

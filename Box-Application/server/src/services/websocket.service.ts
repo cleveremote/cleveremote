@@ -63,11 +63,10 @@ export class WebSocketService {
         return JSON.stringify(new Message(content, isBroadcast, sender));
     }
     public initDependencies(): Observable<void> {
-        Tools.loginfo('* start init websocket...');
+        // Tools.loginfo('* start init websocket...');
 
         return observableOf(true).pipe(
             map(() => {
-                Tools.logSuccess('  => OK.');
                 const wss = WebSocketService.wss;
                 WebSocketService.wss.on('connection', (ws: WebSocket) => {
                     const extWs = ws as ExtWebSocket;

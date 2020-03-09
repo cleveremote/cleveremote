@@ -15,21 +15,21 @@ import { KafkaInit } from './kafka.init';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import * as cliProgress from 'cli-progress';
+
+const _colors = require('colors');
+
 
 @Injectable()
 export class KafkaService extends KafkaInit {
 
+    // public async onApplicationBootstrap(): Promise<void> {
+
+    //     this.init().toPromise();
+    // }
+
     constructor(@InjectRepository(DeviceExt) deviceExt: DeviceExt) {
         super(deviceExt);
-
-        console.log('je suis l');
-        this.init().subscribe();
-
-    }
-
-    public checkFirstConnexion(): Observable<boolean> {
-
-        return of(true);
     }
 
     public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false): Observable<any> {
@@ -88,7 +88,7 @@ export class KafkaService extends KafkaInit {
     }
 
     public init(): Observable<boolean> {
-        return super.init().pipe(flatMap((x: any) => this.checkFirstConnexion().pipe(map((result: boolean) => result))));
+        return super.init();
     }
 
 }

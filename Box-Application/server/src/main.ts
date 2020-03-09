@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { from } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 
@@ -12,6 +11,8 @@ import "reflect-metadata";
 
 Tools.titleApplication();
 dotenv.config({ path: ".env" });
+
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const adapter = new FastifyAdapter();

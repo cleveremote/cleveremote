@@ -59,20 +59,27 @@ export class Tools {
         }
     }
 
-    public static loginfo(message: string): void {
+    public static loginfoProgress(message: string) {
+        process.stdout.write('\x1b[36m' + message + '\x1b[0m');
+    }
+
+
+    public static loginfo(message: string) {
         console.log('\x1b[36m', message, '\x1b[0m');
     }
 
-    public static logError(message: string, err?: any): void {
+    public static logError(message: string, err?: any): boolean {
         console.log('\x1b[31m', message, '\x1b[0m');
+        return false;
     }
 
     public static logWarn(message: string): void {
         console.log('\x1b[33m', message, '\x1b[0m');
     }
 
-    public static logSuccess(message: string): void {
+    public static logSuccess(message: string): boolean {
         console.log('\x1b[32m', message, '\x1b[0m');
+        return true;
     }
 
     public static getSerialNumber(): Observable<void> {
