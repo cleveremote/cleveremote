@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post } from '@nestjs/common';
+import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post, Header } from '@nestjs/common';
 import { of, Observable } from 'rxjs';
 import { TransceiverService } from '../services/transceiver.service';
 import { TransceiverDto } from '../dto/transceiver.dto';
@@ -35,8 +35,8 @@ export class TransceiverController {
         return this.transceiverService.update(id, transceiverDto);
     }
 
-    @UsePipes(new ValidationPipe())
-    @Post(':id/')
+    @Post('test')
+    @Header('content-type', 'application/json')
     public add(@Body() transceiverDto: TransceiverDto): Observable<any> {
         return this.transceiverService.add(transceiverDto);
     }

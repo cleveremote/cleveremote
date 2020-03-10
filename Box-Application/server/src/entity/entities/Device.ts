@@ -11,15 +11,11 @@ import { PartitionConfig } from "./PartitionConfig";
 import { Scheme } from "./Scheme";
 import { Transceiver } from "./Transceiver";
 
-@Index("device_pkey", ["deviceId"], { unique: true })
-@Index("device_name_key", ["name"], { unique: true })
-@Entity("device", { schema: "public" })
+@Index("Device_pkey", ["deviceId"], { unique: true })
+@Index("Device_name_key", ["name"], { unique: true })
+@Entity("Device", { schema: "public" })
 export class Device {
-  @Column("character varying", {
-    primary: true,
-    name: "device_id",
-    length: 255
-  })
+  @Column("character varying", { primary: true, name: "deviceId", length: 255 })
   deviceId: string;
 
   @Column("character varying", { name: "name", unique: true, length: 50 })
@@ -33,14 +29,14 @@ export class Device {
     account => account.devices,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "account_id", referencedColumnName: "accountId" }])
+  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
   account: Account;
 
   @ManyToOne(
     () => Account,
     account => account.devices2
   )
-  @JoinColumn([{ name: "account_id", referencedColumnName: "accountId" }])
+  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
   account2: Account;
 
   @OneToMany(

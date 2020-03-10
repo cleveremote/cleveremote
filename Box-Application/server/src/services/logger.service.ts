@@ -6,7 +6,7 @@ import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeP
 import { AccountEntity } from "../entities/gen.entities/account.entity";
 import { map, mergeMap } from "rxjs/operators";
 import { DeviceEntity } from "../kafka/entities/device.entity";
-import { PartitionConfig } from "../kafka/entities/partitionconfig.entity";
+import { PartitionConfigEntity } from "../kafka/entities/partitionconfig.entity";
 import { UserEntity } from "../entities/gen.entities/user.entity";
 import { UserExt } from "../entities/custom.repositories/user.ext";
 import { DeviceExt } from "../entities/custom.repositories/device.ext";

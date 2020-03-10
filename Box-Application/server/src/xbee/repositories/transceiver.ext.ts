@@ -3,6 +3,7 @@ import { TransceiverEntity } from "../entities/transceiver.entity";
 import { ISynchronize, ISynchronizeParams } from "../../entities/interfaces/entities.interface";
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
+import { TransceiverDto } from "../dto/transceiver.dto";
 
 @EntityRepository(TransceiverEntity)
 export class TransceiverExt extends Repository<TransceiverEntity> implements ISynchronize {
@@ -25,7 +26,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             }));
     }
 
-    public addTransceiver(data: any): Observable<TransceiverEntity> {
+    public addTransceiver(data: TransceiverDto): Observable<TransceiverEntity> {
         return from(this.save(data)).pipe(
             map((transceiver: TransceiverEntity) => {
 

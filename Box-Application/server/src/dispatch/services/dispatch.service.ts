@@ -3,7 +3,7 @@ import { Observable, from, of } from "rxjs";
 import { IAccount, IDevice, IPartitionConfig, IUser } from "../../entities/interfaces/entities.interface";
 import { AccountEntity } from "../../entities/gen.entities/account.entity";
 import { mergeMap } from "rxjs/operators";
-import { PartitionConfig } from "../../kafka/entities/partitionconfig.entity";
+import { PartitionConfigEntity } from "../../kafka/entities/partitionconfig.entity";
 import { UserEntity } from "../../entities/gen.entities/user.entity";
 import { KafkaService } from "../../kafka/services/kafka.service";
 import { MapperService } from "../../services/mapper.service";
@@ -117,7 +117,7 @@ export class DispatchService {
         deviceToSave.name = deviceData.name;
 
         const partitionData: IPartitionConfig = data.partitionConfig;//{ config_id: 'server_3', start_range: 2, end_range: 3 } as any;
-        const partitionToSave = new PartitionConfig();
+        const partitionToSave = new PartitionConfigEntity();
         partitionToSave.configId = partitionData.configId;
         partitionToSave.startRange = partitionData.startRange;
         partitionToSave.endRange = partitionData.endRange;

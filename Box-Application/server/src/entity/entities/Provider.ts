@@ -1,13 +1,13 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
-import { Users } from "./Users";
+import { User } from "./User";
 
-@Index("provider_pkey", ["providerId"], { unique: true })
-@Index("provider_provider_uid_key", ["providerUid"], { unique: true })
-@Entity("provider", { schema: "public" })
+@Index("Provider_pkey", ["providerId"], { unique: true })
+@Index("Provider_providerUid_key", ["providerUid"], { unique: true })
+@Entity("Provider", { schema: "public" })
 export class Provider {
   @Column("character varying", {
     primary: true,
-    name: "provider_id",
+    name: "providerId",
     length: 255
   })
   providerId: string;
@@ -16,24 +16,24 @@ export class Provider {
   provider: string;
 
   @Column("character varying", {
-    name: "provider_uid",
+    name: "providerUid",
     unique: true,
     length: 255
   })
   providerUid: string;
 
   @ManyToOne(
-    () => Users,
-    users => users.providers,
+    () => User,
+    user => user.providers,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "user_id", referencedColumnName: "userId" }])
-  user: Users;
+  @JoinColumn([{ name: "userId", referencedColumnName: "userId" }])
+  user: User;
 
   @ManyToOne(
-    () => Users,
-    users => users.providers2
+    () => User,
+    user => user.providers2
   )
-  @JoinColumn([{ name: "user_id", referencedColumnName: "userId" }])
-  user2: Users;
+  @JoinColumn([{ name: "userId", referencedColumnName: "userId" }])
+  user2: User;
 }

@@ -8,15 +8,14 @@ import {
 } from "typeorm";
 import { Module } from "./Module";
 import { Device } from "./Device";
-import { TransceiverConfig } from "./TransceiverConfig";
 
-@Index("transceiver_name_key", ["name"], { unique: true })
-@Index("transceiver_pkey", ["transceiverId"], { unique: true })
-@Entity("transceiver", { schema: "public" })
+@Index("Transceiver_name_key", ["name"], { unique: true })
+@Index("Transceiver_pkey", ["transceiverId"], { unique: true })
+@Entity("Transceiver", { schema: "public" })
 export class Transceiver {
   @Column("character varying", {
     primary: true,
-    name: "transceiver_id",
+    name: "transceiverId",
     length: 255
   })
   transceiverId: string;
@@ -33,6 +32,9 @@ export class Transceiver {
   @Column("character varying", { name: "type", length: 255 })
   type: string;
 
+  @Column("json", { name: "configuration" })
+  configuration: object;
+
   @OneToMany(
     () => Module,
     module => module.transceiver
@@ -46,38 +48,10 @@ export class Transceiver {
   modules2: Module[];
 
   @ManyToOne(
-    () => Transceiver,
-    transceiver => transceiver.transceivers,
-    { onDelete: "CASCADE" }
-  )
-  @JoinColumn([
-    { name: "coordinator_id", referencedColumnName: "transceiverId" }
-  ])
-  coordinator: Transceiver;
-
-  @OneToMany(
-    () => Transceiver,
-    transceiver => transceiver.coordinator
-  )
-  transceivers: Transceiver[];
-
-  @ManyToOne(
     () => Device,
     device => device.transceivers,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "device_id", referencedColumnName: "deviceId" }])
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
   device: Device;
-
-  @OneToMany(
-    () => TransceiverConfig,
-    transceiverConfig => transceiverConfig.transceiver
-  )
-  transceiverConfigs: TransceiverConfig[];
-
-  @OneToMany(
-    () => TransceiverConfig,
-    transceiverConfig => transceiverConfig.transceiver2
-  )
-  transceiverConfigs2: TransceiverConfig[];
 }

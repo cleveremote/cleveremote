@@ -116,21 +116,22 @@ export class Server {
 
         return observableOf(true).pipe(
             map(() => {
-                this.app.use(express.static('public'));
-                this.app.use(express.static('files'));
-                this.app.use(logger('dev'));
-                this.app.use(cookieParser());
-                this.app.use(bodyParser.urlencoded({ extended: true }));
-                this.app.use(bodyParser.json());
-                this.app.use(session({
-                    secret: String(process.env.JWT_SECRET),
-                    resave: true,
-                    saveUninitialized: true,
-                    // store: new redisStore({ host: '192.168.1.30', port: 6379, client: redisClient, ttl: 86400 }),
-                    cookie: {
-                        secure: false
-                    }
-                }));
+                // this.app.use(bodyParser.urlencoded({extended: true}));
+                // this.app.use(express.static('public'));
+                // this.app.use(express.static('files'));
+                // this.app.use(logger('dev'));
+                // this.app.use(cookieParser());
+                // this.app.use(bodyParser.urlencoded({ extended: true }));
+                // this.app.use(bodyParser.json());
+                // this.app.use(session({
+                //     secret: String(process.env.JWT_SECRET),
+                //     resave: true,
+                //     saveUninitialized: true,
+                //     // store: new redisStore({ host: '192.168.1.30', port: 6379, client: redisClient, ttl: 86400 }),
+                //     cookie: {
+                //         secure: false
+                //     }
+                // }));
 
                 // redisClient.on('error', (err: any) => {
                 //     this.loginfo('Redis error: ', err);

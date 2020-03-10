@@ -38,7 +38,7 @@ export class ModuleController {
     }
 
     @UsePipes(new ValidationPipe())
-    @Post(':id/')
+    @Post()
     public add(@Body() moduleDto: ModuleDto): Observable<any> {
         return this.moduleService.add(moduleDto);
     }

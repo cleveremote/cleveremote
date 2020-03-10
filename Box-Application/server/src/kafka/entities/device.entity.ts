@@ -7,13 +7,13 @@ import {
   OneToMany
 } from "typeorm";
 import { AccountEntity } from "../../entities/gen.entities/account.entity";
-import { PartitionConfig } from "./partitionconfig.entity";
+import { PartitionConfigEntity } from "./partitionconfig.entity";
 import { SchemeEntity } from "../../xbee/entities/scheme.entity";
 import { TransceiverEntity } from "../../xbee/entities/transceiver.entity";
 
 @Index("device_pkey", ["deviceId"], { unique: true })
 @Index("device_name_key", ["name"], { unique: true })
-@Entity("device", { schema: "public" })
+@Entity("Device", { schema: "public" })
 export class DeviceEntity {
   @Column("character varying", {
     primary: true,
@@ -27,6 +27,9 @@ export class DeviceEntity {
 
   @Column("text", { name: "description", nullable: true })
   public description: string | null;
+
+  @Column("character varying", { name: "accountId", unique: true, length: 255 })
+  public accountId: string;
 
   @ManyToOne(
     () => AccountEntity,
@@ -42,10 +45,10 @@ export class DeviceEntity {
   )
 
   @OneToMany(
-    () => PartitionConfig,
+    () => PartitionConfigEntity,
     partitionConfig => partitionConfig.device
   )
-  public partitionConfigs: Array<PartitionConfig>;
+  public partitionConfigs: Array<PartitionConfigEntity>;
 
   @OneToMany(
     () => SchemeEntity,

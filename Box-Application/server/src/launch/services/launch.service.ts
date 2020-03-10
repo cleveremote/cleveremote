@@ -22,7 +22,7 @@ export class LaunchService {
             .pipe(delay(100))
             .pipe(mergeMap((resKafka: boolean) => resKafka ? this.xbeeService.init() : of(false)))
             .pipe(delay(100))
-            .pipe(mergeMap((resXbee: boolean) => resXbee ? this.dispatchService.init() : of(false)))
+            .pipe(mergeMap((resXbee: boolean) => true ? this.dispatchService.init() : of(false)))
             .pipe(tap(() => multibar.stop()))
             .toPromise();
     }

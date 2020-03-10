@@ -1,8 +1,8 @@
 import { BaseEntity, Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { DeviceEntity } from "./device.entity";
 
-@Entity("partitionConfig", { schema: "public" })
-export class PartitionConfig {
+@Entity("PartitionConfig", { schema: "public" })
+export class PartitionConfigEntity {
 
     @Column("character varying", {
         nullable: false,
@@ -23,6 +23,10 @@ export class PartitionConfig {
         name: "endRange"
     })
     public endRange: number;
+
+    @Column("character varying", { name: "deviceId", unique: true, length: 255 })
+    public deviceId: string;
+
 
     @ManyToOne(type => DeviceEntity, device => device.partitionConfigs, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'deviceId' })

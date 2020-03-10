@@ -1,14 +1,14 @@
 import { Column, Entity, Index, OneToMany } from "typeorm";
 import { Device } from "./Device";
-import { Users } from "./Users";
+import { User } from "./User";
 
-@Index("account_pkey", ["accountId"], { unique: true })
-@Index("account_name_key", ["name"], { unique: true })
-@Entity("account", { schema: "public" })
+@Index("Account_pkey", ["accountId"], { unique: true })
+@Index("Account_name_key", ["name"], { unique: true })
+@Entity("Account", { schema: "public" })
 export class Account {
   @Column("character varying", {
     primary: true,
-    name: "account_id",
+    name: "accountId",
     length: 255
   })
   accountId: string;
@@ -18,6 +18,9 @@ export class Account {
 
   @Column("text", { name: "description", nullable: true })
   description: string | null;
+
+  @Column("boolean", { name: "activated", nullable: true })
+  activated: boolean | null;
 
   @OneToMany(
     () => Device,
@@ -32,14 +35,14 @@ export class Account {
   devices2: Device[];
 
   @OneToMany(
-    () => Users,
-    users => users.account
+    () => User,
+    user => user.account
   )
-  users: Users[];
+  users: User[];
 
   @OneToMany(
-    () => Users,
-    users => users.account2
+    () => User,
+    user => user.account2
   )
-  users2: Users[];
+  users2: User[];
 }

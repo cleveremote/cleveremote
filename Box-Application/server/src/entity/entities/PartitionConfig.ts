@@ -1,20 +1,16 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
 import { Device } from "./Device";
 
-@Index("partition_config_pkey", ["configId"], { unique: true })
-@Entity("partition_config", { schema: "public" })
+@Index("PartitionConfig_pkey", ["configId"], { unique: true })
+@Entity("PartitionConfig", { schema: "public" })
 export class PartitionConfig {
-  @Column("character varying", {
-    primary: true,
-    name: "config_id",
-    length: 255
-  })
+  @Column("character varying", { primary: true, name: "configId", length: 255 })
   configId: string;
 
-  @Column("integer", { name: "start_range" })
+  @Column("integer", { name: "startRange" })
   startRange: number;
 
-  @Column("integer", { name: "end_range" })
+  @Column("integer", { name: "endRange" })
   endRange: number;
 
   @ManyToOne(
@@ -22,6 +18,6 @@ export class PartitionConfig {
     device => device.partitionConfigs,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "device_id", referencedColumnName: "deviceId" }])
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
   device: Device;
 }

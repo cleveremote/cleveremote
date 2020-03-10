@@ -12,5 +12,5 @@ export class TransceiverDto {
     @IsNotEmpty()
     public deviceId: string;
     @IsNotEmpty()
-    public configuration: string;
+    public configuration: object;
 }

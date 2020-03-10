@@ -2,8 +2,9 @@ import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne
 import {DeviceEntity} from "../../kafka/entities/device.entity";
 import {UserEntity} from "./user.entity";
 
-@Entity("account",{schema:"public" } )
-@Index("account_name_key",["name",],{unique:true})
+@Entity("Account",{schema:"public" } )
+@Index("account_pkey", ["accountId"], { unique: true })
+@Index("account_name_key", ["name"], { unique: true })
 export class AccountEntity {
 
     @Column("character varying",{ 

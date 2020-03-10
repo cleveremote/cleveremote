@@ -6,7 +6,7 @@ import { map, mergeMap } from "rxjs/operators";
 import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 import { DeviceEntity } from "../../kafka/entities/device.entity";
 import { UserExt } from "./user.ext";
-import { PartitionConfig } from "../../kafka/entities/partitionconfig.entity";
+import { PartitionConfigEntity } from "../../kafka/entities/partitionconfig.entity";
 import { FORMERR } from "dns";
 
 @EntityRepository(AccountEntity)
@@ -92,7 +92,7 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
                 deviceToSave.name = deviceData.name;
 
                 const partitionData: IPartitionConfig = { config_id: 'server_3', start_range: 2, end_range: 3 } as any;
-                const partitionToSave = new PartitionConfig();
+                const partitionToSave = new PartitionConfigEntity();
                 partitionToSave.configId = partitionData.configId;
                 partitionToSave.startRange = partitionData.startRange;
                 partitionToSave.endRange = partitionData.endRange;

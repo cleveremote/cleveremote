@@ -1,8 +1,9 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { SchemeEntity } from "./scheme.entity";
+import { ModuleEntity } from "./module.entity";
 
 @Index("sector_pkey", ["sectorId"], { unique: true })
-@Entity("sector", { schema: "public" })
+@Entity("Sector", { schema: "public" })
 export class SectorEntity {
   @Column("character varying", {
     primary: true,
@@ -10,6 +11,12 @@ export class SectorEntity {
     length: 255
   })
   public sectorId: string;
+
+  @OneToMany(
+    () => ModuleEntity,
+    module => module.sector
+  )
+  public modules: Array<ModuleEntity>;
 
   @Column("character varying", { name: "name", length: 255 })
   public name: string;

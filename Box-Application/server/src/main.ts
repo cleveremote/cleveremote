@@ -13,6 +13,8 @@ Tools.titleApplication();
 dotenv.config({ path: ".env" });
 
 import { AppModule } from './app.module';
+import bodyParser = require('body-parser');
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const adapter = new FastifyAdapter();
@@ -24,6 +26,8 @@ async function bootstrap() {
       return server.init();
     }))
     .pipe(mergeMap((app: any) => {
+      app.use(bodyParser.urlencoded({extended: true}));
+      app.useGlobalPipes(new ValidationPipe());
       return from(app.listen(process.env.PORT ? Number(process.env.PORT) || 3000 : 3000, process.env.NEST_HOST || '127.0.0.1'))
     }))
     .pipe(mergeMap((serverInstance: any) => {

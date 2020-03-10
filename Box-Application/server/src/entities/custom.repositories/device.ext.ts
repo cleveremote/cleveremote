@@ -12,21 +12,21 @@ export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize 
     }
 
     public getDevices(): Observable<Array<DeviceEntity>> {
-        return from(this.find({ relations: ['partition_configs'] })).pipe(map((devices: Array<DeviceEntity>) => devices
+        return from(this.find({ relations: ['partitionConfigs'] })).pipe(map((devices: Array<DeviceEntity>) => devices
         ));
     }
 
     public getDeviceInfosBySerial(serialNumber: string): Observable<DeviceEntity> {
         return from(this.findOne({
             where: { device_id: serialNumber },
-            relations: ['partition_configs', 'account', 'account.users']
+            relations: ['partitionConfigs', 'account', 'account.users']
         })).pipe(
             map((firstDevice: DeviceEntity) => firstDevice)
         );
     }
 
     public getDevice(): Observable<DeviceEntity> {
-        return from(this.findOne({ relations: ['partition_configs'] })).pipe(map((firstDevice: DeviceEntity) => firstDevice
+        return from(this.findOne({ relations: ['partitionConfigs'] })).pipe(map((firstDevice: DeviceEntity) => firstDevice
         ));
     }
 }

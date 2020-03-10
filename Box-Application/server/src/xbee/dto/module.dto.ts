@@ -9,4 +9,6 @@ export class ModuleDto {
     public name: string;
     @IsNotEmpty()
     public transceiverId: string;
+    @IsNotEmpty()
+    public sectorId: string;
 }
