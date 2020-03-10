@@ -6,7 +6,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     username: process.env.TYPEORM_USERNAME,
     password: process.env.TYPEORM_PASSWORD,
     database: process.env.TYPEORM_DATABASE,
-    migrations: process.env.TYPEORM_MIGRATIONS.split(','),
+    migrations: [process.env.TYPEORM_MIGRATIONS],
     entities: process.env.TYPEORM_ENTITIES.split(','),
     autoLoadEntities: true
 };
