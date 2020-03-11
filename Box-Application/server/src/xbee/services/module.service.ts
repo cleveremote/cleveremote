@@ -9,6 +9,7 @@ import { TransceiverExt } from '../repositories/transceiver.ext';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ModuleExt } from '../repositories/module.ext';
 import { ModuleDto } from '../dto/module.dto';
+import { ModuleQueryDto } from '../dto/module.query.dto';
 
 export class ModuleService {
 
@@ -32,8 +33,8 @@ export class ModuleService {
         return this.moduleRepository.deleteModule(id);
     }
 
-    public getAll(): Observable<any> {
-        return this.moduleRepository.getAll();
+    public getAll(moduleQueryDto: ModuleQueryDto): Observable<any> {
+        return this.moduleRepository.getAll(moduleQueryDto);
     }
 
 

@@ -17,12 +17,12 @@ export class LaunchService {
 
     public async onApplicationBootstrap(): Promise<void> {
         of(true)
-            .pipe(delay(100))
+            .pipe(delay(1000))
             .pipe(mergeMap(() => this.kafkaService.init()))
             .pipe(delay(100))
             .pipe(mergeMap((resKafka: boolean) => resKafka ? this.xbeeService.init() : of(false)))
             .pipe(delay(100))
-            .pipe(mergeMap((resXbee: boolean) => true ? this.dispatchService.init() : of(false)))
+            .pipe(mergeMap((resXbee: boolean) => resXbee ? this.dispatchService.init() : of(false)))
             .pipe(tap(() => multibar.stop()))
             .toPromise();
     }

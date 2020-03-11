@@ -2,19 +2,15 @@ import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntP
 import { of, Observable } from 'rxjs';
 import { ModuleService } from '../services/module.service';
 import { ModuleDto } from '../dto/module.dto';
+import { ModuleQueryDto } from '../dto/module.query.dto';
 
 @Controller('module')
 export class ModuleController {
     constructor(private readonly moduleService: ModuleService) { }
 
-    @Get('allquery')
-    public getAllQuery(): Observable<boolean> {
-        return of(true);
-    }
-
     @Get('all')
-    public getAll(): Observable<boolean> {
-        return this.moduleService.getAll();
+    public getAll(@Query(ValidationPipe) moduleQueryDto: ModuleQueryDto): Observable<boolean> {
+        return this.moduleService.getAll(moduleQueryDto);
     }
 
     @Get(':id')
@@ -24,15 +20,15 @@ export class ModuleController {
         return this.moduleService.get(id);
     }
 
-    @Delete(':id')
+    @Delete('/:moduleId')
     // @SetMetadata('roles', ['readwrite'])
     @UsePipes(ValidationPipe)
-    public deleteModule(@Param('id') id: string): Observable<boolean> {
-        return this.moduleService.delete(id);
+    public deleteModule(@Param('moduleId') moduleId: string): Observable<boolean> {
+        return this.moduleService.delete(moduleId);
     }
 
     @UsePipes(ValidationPipe)
-    @Put(':id')
+    @Put()
     public update(@Param('id') id, @Body() moduleDto: ModuleDto): Observable<any> {
         return this.moduleService.update(id, moduleDto);
     }

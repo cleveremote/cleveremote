@@ -1,9 +1,10 @@
-import { EntityRepository, Repository, DeleteResult } from "typeorm";
+import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { TransceiverEntity } from "../entities/transceiver.entity";
 import { ISynchronize, ISynchronizeParams } from "../../entities/interfaces/entities.interface";
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { TransceiverDto } from "../dto/transceiver.dto";
+import { TransceiverQueryDto } from "../dto/transceiver.query.dto copy";
 
 @EntityRepository(TransceiverEntity)
 export class TransceiverExt extends Repository<TransceiverEntity> implements ISynchronize {
@@ -12,7 +13,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
         throw new Error("Method not implemented.");
     }
 
-    public updateTransceiver(id: string, data: any): Observable<TransceiverEntity> {
+    public updateTransceiver(data: any): Observable<TransceiverEntity> {
         return from(this.save(data)).pipe(
             map((transceiver: TransceiverEntity) => {
 
@@ -40,8 +41,8 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             }));
     }
 
-    public deleteTransceiver(id: string): Observable<boolean> {
-        return from(this.delete(id)).pipe(
+    public deleteTransceiver(transceiverId: string): Observable<boolean> {
+        return from(this.delete({ transceiverId: transceiverId })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -54,8 +55,14 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             }));
     }
 
-    public getAll(): Observable<Array<TransceiverEntity>> {
-        return from(this.find({ relations: ['transceiver'] })).pipe(
+    public getAll(transceiverQueryDto: TransceiverQueryDto): Observable<Array<TransceiverEntity>> {
+        const filter = {};
+
+        for (let [key, value] of Object.entries(transceiverQueryDto)) {
+            filter[key] = value;
+        }
+
+        return from(this.find({ where: filter, relations: ['modules'] })).pipe(
             map((transceivers: Array<TransceiverEntity>) => {
 
                 if (transceivers.length === 0) {
@@ -68,8 +75,8 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             }));
     }
 
-    public getTransceiver(id?: string): Observable<TransceiverEntity> {
-        return from(this.findOne({ where: { id: id }, relations: ['module'] })).pipe(
+    public getTransceiver(transceiverId: string): Observable<TransceiverEntity> {
+        return from(this.findOne({ where: { transceiverId: transceiverId }, relations: ['modules'] })).pipe(
             map((transceiver: TransceiverEntity) => {
 
                 if (!transceiver) {

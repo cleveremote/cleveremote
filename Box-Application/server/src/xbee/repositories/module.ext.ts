@@ -1,8 +1,10 @@
-import { EntityRepository, Repository, DeleteResult } from "typeorm";
+import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { ISynchronize, ISynchronizeParams } from "../../entities/interfaces/entities.interface";
 import { ModuleEntity } from "../entities/module.entity";
 import { Observable, from } from "rxjs";
 import { map } from "rxjs/operators";
+import { ModuleQueryDto } from "../dto/module.query.dto";
+import { plainToClass } from "class-transformer";
 
 @EntityRepository(ModuleEntity)
 export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize {
@@ -39,8 +41,8 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize 
             }));
     }
 
-    public deleteModule(id: string): Observable<boolean> {
-        return from(this.delete(id)).pipe(
+    public deleteModule(moduleId1: string): Observable<boolean> {
+        return from(this.delete({ moduleId: moduleId1 })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -53,8 +55,16 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize 
             }));
     }
 
-    public getAll(): Observable<Array<ModuleEntity>> {
-        return from(this.find({ relations: ['transceiver'] })).pipe(
+    public getAll(moduleQueryDto: ModuleQueryDto): Observable<Array<ModuleEntity>> {
+
+        const options: FindManyOptions<ModuleEntity> = { where: plainToClass(ModuleEntity, moduleQueryDto) };
+        const filter = {};
+
+        for (let [key, value] of Object.entries(moduleQueryDto)) {
+            filter[key] = value;
+        }
+
+        return from(this.find({ where: filter, relations: ['transceiver'] })).pipe(
             map((modules: Array<ModuleEntity>) => {
 
                 if (!modules) {
@@ -74,7 +84,7 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize 
     }
 
     public getModule(id?: string): Observable<ModuleEntity> {
-        return from(this.findOne({ where: { id: id }, relations: ['transceiver'] })).pipe(
+        return from(this.findOne({ where: { moduleId: id }, relations: ['transceiver'] })).pipe(
             map((module: ModuleEntity) => {
 
                 if (!module) {

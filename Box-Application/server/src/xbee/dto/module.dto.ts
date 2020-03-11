@@ -12,3 +12,4 @@ export class ModuleDto {
     @IsNotEmpty()
     public sectorId: string;
 }
+
