@@ -7,9 +7,6 @@ import { DeviceEntity } from '../../manager/entities/device.entity';
 import { Tools } from '../../common/tools-service';
 import { ITopic } from '../../manager/interfaces/entities.interface';
 import { CustomPartitionnerService } from './customPartitionner.service';
-import * as cliProgress from 'cli-progress';
-import { multibar } from '../../common/progress.bar';
-const _colors = require('colors');
 
 export class KafkaBase {
     public flagIsFirstConnection = false;
@@ -22,9 +19,6 @@ export class KafkaBase {
     public client: KafkaClient = undefined;
     public clientProducer: KafkaClient = undefined;
     public progressBar;
-
-    constructor(public deviceExt: DeviceExt) {
-    }
 
     public InitClients(): Observable<boolean> {
         const timeToRetryConnection = Number(process.env.KAFKA_TIME_TO_RETRY_CONNECT); // 12 seconds
@@ -77,8 +71,8 @@ export class KafkaBase {
     }
 
     public setSubscriptionTopics(cfg: any, topicsString: string): Observable<boolean> {
-        // return this.deviceExt.getDevice().pipe(
-        //   map((currentDevice: DeviceEntity) => {
+        //return this.deviceExt.getDevice().pipe(
+        //  map((currentDevice: DeviceEntity) => {
         topicsString.split(';').forEach((topic: string) => {
             const topicString = topic.split('.');
             if (topicString[1] && topicString[1] === 'range') {
@@ -226,9 +220,4 @@ export class KafkaBase {
         }));
     }
 
-    public checkFirstConnexion(): Observable<boolean> {
-        this.progressBar.increment();
-        this.progressBar.stop();
-        return of(true);
-    }
 }

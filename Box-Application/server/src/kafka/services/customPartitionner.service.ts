@@ -1,7 +1,7 @@
 const VERSION = 0;
 import { _ } from 'lodash';
 import * as assert from 'assert';
-import { ITopic } from '../../entities/interfaces/entities.interface';
+import { ITopic } from '../../manager/interfaces/entities.interface';
 
 export class CustomPartitionnerService {
 

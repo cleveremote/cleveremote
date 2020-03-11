@@ -6,7 +6,7 @@ import { tap, flatMap, map } from 'rxjs/operators';
 // import { RedisClient, createClient } from 'redis';
 // import * as connectRedis from 'connect-redis';
 
-import { PassportService } from './services/passport.service';
+import { PassportService } from './manager/services/passport.service';
 import * as bodyParser from 'body-parser';
 import * as compression from 'compression';
 import * as express from 'express';
@@ -16,8 +16,7 @@ import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
 import { KafkaService } from './kafka/services/kafka.service';
-import { XbeeService } from './services/xbee.service';
-import { Tools } from './services/tools-service';
+import { Tools } from './common/tools-service';
 import { XbeeHelper } from './xbee/helpers/xbee.helper';
 
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -31,65 +30,21 @@ export class Server {
     }
 
     public init(): Observable<INestApplication> {
-
-
-        const cbeeHelper = new XbeeHelper();
-        // cbeeHelper.testFunction();
-
         process.on('uncaughtException', (err) => {
             console.log('whoops! there was an error', err.stack);
         });
         return Tools.getSerialNumber().pipe(
             flatMap(() => this.initDependencies().pipe(
-                //flatMap(() => this.initDb().pipe(
-                    //flatMap(() => this.initDispatch().pipe(
-                        flatMap(() => this.initPassport().pipe(
-                            flatMap(() => this.initDbMongoose().pipe(
-                                map(() => this.app))
-                            ))
-                        //))
-                   // ))
+                flatMap(() => this.initPassport().pipe(
+                    flatMap(() => this.initDbMongoose().pipe(
+                        map(() => this.app))
+                    ))
                 ))
             ));
     }
 
-    // public initDispatch(): Observable<void> {
-    //     Tools.loginfo('* start init dispatch...');
-    //     const dispatchService = new DispatchService();
-
-    //     return dispatchService.init();
-    // }
-
-    // public initDb(): Observable<void> {
-    //     Tools.loginfo('* start init db...');
-
-    //     return observableFrom(ormConnection).pipe(
-    //         map(() => {
-    //             Tools.logSuccess('  => OK.');
-    //         }, (err: any) => {
-    //             Tools.logError(`  => KO! ${err}`);
-
-    //             return err;
-    //         }));
-    // }
-
-    // public initKafka(): Observable<boolean> {
-    //     Tools.loginfo('* start init kafka...');
-    //     const kafkaInstance = new KafkaService();
-
-    //     return kafkaInstance.init();
-    // }
-
-    public initXbee(): Observable<void> {
-        Tools.loginfo('* start init xbee...');
-        const xbee = new XbeeService();
-
-        return xbee.init();
-    }
-
     public initDbMongoose(): Observable<void> {
         Tools.loginfo('* start init mongoDB...');
-        // tslint:disable-next-line:max-line-length
         const db = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
 
         return observableOf(
@@ -116,6 +71,8 @@ export class Server {
 
         return observableOf(true).pipe(
             map(() => {
+                this.app.use(bodyParser.urlencoded({ extended: true }));
+                this.app.useGlobalPipes(new ValidationPipe());
                 // this.app.use(bodyParser.urlencoded({extended: true}));
                 // this.app.use(express.static('public'));
                 // this.app.use(express.static('files'));
@@ -136,8 +93,6 @@ export class Server {
                 // redisClient.on('error', (err: any) => {
                 //     this.loginfo('Redis error: ', err);
                 // });
-
-                //this.app.set('port', process.env.PORT);
                 Tools.logSuccess('  => OK');
             }));
     }

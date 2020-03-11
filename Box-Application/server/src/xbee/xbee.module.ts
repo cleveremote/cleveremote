@@ -1,18 +1,15 @@
 import { Module } from '@nestjs/common';
-import { XbeeController } from './controllers/xbee.controller';
-import { ModuleController } from './controllers/module.controller';
-import { ModuleService } from './services/module.service';
-import { TransceiverService } from './services/transceiver.service';
-import { TransceiverController } from './controllers/transceiver.controller';
+import { ModuleController } from '../manager/controllers/module.controller';
+import { ModuleService } from '../manager/services/module.service';
+import { TransceiverService } from '../manager/services/transceiver.service';
+import { TransceiverController } from '../manager/controllers/transceiver.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModuleExt } from './repositories/module.ext';
-import { TransceiverExt } from './repositories/transceiver.ext';
+import { ModuleExt } from '../manager/repositories/module.ext';
+import { TransceiverExt } from '../manager/repositories/transceiver.ext';
 import { XbeeService } from './services/xbee.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt])],
-  controllers: [XbeeController, ModuleController, TransceiverController],
-  providers: [XbeeService, ModuleService, TransceiverService],
-  exports: [XbeeService, ModuleService, TransceiverService]
+  providers: [XbeeService],
+  exports: [XbeeService]
 })
 export class XbeeModule { }

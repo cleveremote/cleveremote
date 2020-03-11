@@ -4,8 +4,8 @@ import { mergeMap } from 'rxjs/operators';
 
 import * as dotenv from "dotenv";
 import { Server } from './server';
-import { WebSocketService } from './services/websocket.service';
-import { Tools } from './services/tools-service';
+import { WebSocketService } from './manager/services/websocket.service';
+import { Tools } from './common/tools-service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import "reflect-metadata";
 
@@ -13,8 +13,6 @@ Tools.titleApplication();
 dotenv.config({ path: ".env" });
 
 import { AppModule } from './app.module';
-import bodyParser = require('body-parser');
-import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const adapter = new FastifyAdapter();
@@ -25,11 +23,8 @@ async function bootstrap() {
       const server: Server = new Server(app);
       return server.init();
     }))
-    .pipe(mergeMap((app: any) => {
-      app.use(bodyParser.urlencoded({extended: true}));
-      app.useGlobalPipes(new ValidationPipe());
-      return from(app.listen(process.env.PORT ? Number(process.env.PORT) || 3000 : 3000, process.env.NEST_HOST || '127.0.0.1'))
-    }))
+    .pipe(mergeMap((app: any) =>
+      from(app.listen(process.env.PORT ? Number(process.env.PORT) || 3000 : 3000, process.env.NEST_HOST || '127.0.0.1'))))
     .pipe(mergeMap((serverInstance: any) => {
         console.log(`* server OK on port ${process.env.PORT}`);
         Tools.titleStarted(true);
@@ -38,6 +33,5 @@ async function bootstrap() {
         return wss.init();
       })).subscribe();
 }
-
 
 bootstrap();

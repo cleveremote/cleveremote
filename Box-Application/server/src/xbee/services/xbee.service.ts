@@ -1,6 +1,6 @@
-import { DeviceService } from "./device.service";
+import { DeviceService } from "../../manager/services/device.service";
 import * as xbee_api from "xbee-api";
-import { filter, pluck, catchError, ignoreElements, flatMap, takeUntil, merge, map, mergeMap, concatMap, scan, reduce, delay, take, tap } from "rxjs/operators";
+import { filter, pluck, catchError, ignoreElements, flatMap, takeUntil, merge, map, mergeMap, concatMap, scan, reduce, delay, take, tap, retryWhen } from "rxjs/operators";
 import { empty, timer, Observable, of, forkJoin } from "rxjs";
 import { XbeeHelper } from "../helpers/xbee.helper";
 import { Transceiver } from "../classes/transceiver.class";
@@ -8,10 +8,117 @@ import { TRANSCIEVER_TYPE } from "../classes/device.class";
 import { IOCfg, TYPE_IOCFG } from "../classes/iocfg.class";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
 
+import { Tools } from "../../common/tools-service";
+import { multibar } from "../../common/progress.bar";
+import { genericRetryStrategy } from "../../common/generic-retry-strategy";
+const _colors = require('colors');
+import * as xbeeRx from 'xbee-rx'; // no types ... :(
+import * as SerialPort from 'serialport';
+
 @Injectable()
 export class XbeeService extends DeviceService {
-
+    public progressBar;
+    public xbee;
     public transceivers: Array<Transceiver> = [];
+
+
+
+
+
+
+    public executeRemoteCommand(timeout: number, cmd: string, address: string | ArrayBuffer, params?: Array<number> | string, option?: number): Observable<any> {
+        const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeout, options: option } as any;
+        if (params) {
+            localCommandObj.commandParameter = params;
+        }
+        console.log('Commande log', cmd);
+
+        return of(true)
+            .pipe(mergeMap((res: boolean) => this.xbee.remoteCommand(localCommandObj)
+                .pipe(map((response: any) => {
+                    if (response.commandStatus === 0) {
+                        console.log('success', response);
+                        return response;
+                    }
+                    console.log('error response', response);
+                    throw { response };
+                }))
+            ),
+                catchError((e: any) => {
+                    console.log('error catch');
+                    throw { e };
+                }),
+                retryWhen(genericRetryStrategy({ durationBeforeRetry: 1, maxRetryAttempts: 100 }))
+            );
+    }
+
+    public executeLocalCommand(cmd: string, params?: Array<number> | string): Observable<any> {
+        const localCommandObj = { command: cmd } as any;
+        if (params) {
+            localCommandObj.commandParameter = params;
+        }
+        return this.xbee.localCommand(localCommandObj).pipe(map((response: any) => response));
+    }
+
+    public configuretransceiver(configuration: any): any {
+        // configuration module port Digital/out/in/spi/ad...
+
+        return {};
+    }
+
+    public init(): Observable<boolean> {
+        Tools.loginfoProgress('* Start micro-service : XBEE...');
+        this.progressBar = multibar.create(1, 0);
+        let cloneOption = {} as any;
+        cloneOption = Object.assign(cloneOption, multibar.options);
+        cloneOption.format = _colors.green('XBEE progress      ') + '|' + _colors.green('{bar}') + '| {percentage}%' + '\n';
+        this.progressBar.options = cloneOption;
+
+        const exists = portName => SerialPort.list().then(ports => ports.some(port => port.comName === portName));
+        const xbeeObs = new Observable<any>(observer => {
+            let xbee: any;
+            try {
+                xbee = xbeeRx({
+                    // serialport: '/dev/ttyUSB0',
+                    serialport: 'COM6',
+                    serialPortOptions: {
+                        baudRate: 9600
+                    },
+                    module: "ZigBee"
+                });
+            } catch (err) {
+                observer.error(err);
+            }
+
+            observer.next(xbee);
+        });
+
+        //  return of(exists('/dev/ttyUSB0')).pipe(map((isOk: any) => {
+        return of(exists('COM6')).pipe(mergeMap((isOk: boolean) => {
+            if (isOk) {
+                return xbeeObs.pipe(
+                    map((xbee: any) => {
+                        this.xbee = xbee;
+                        this.progressBar.increment();
+                        return true;
+                    }, (err: any) => {
+                        Tools.logError(`  => Xbee initilization failed ${err}`);
+                        return false;
+                    }));
+            }
+            Tools.logWarn(`  => Xbee port not found!`);
+            return of(false);
+        }))
+            .pipe(catchError((response) => {
+                let cloneOption = {} as any;
+                cloneOption = Object.assign(cloneOption, multibar.options);
+                cloneOption.format = _colors.red('XBEE progress      ') + '|' + _colors.red('{bar}') + '| {percentage}%' + '\n';
+                this.progressBar.options = cloneOption;
+                multibar.stop();
+                Tools.logError(response);
+                return of(false);
+            }));;
+    }
 
     public initTransceivers(): Observable<boolean> {
         return this.requestXbeeNodes()
@@ -38,9 +145,9 @@ export class XbeeService extends DeviceService {
     public requestXbeeNodes(): Observable<boolean> {
         const coordinatorInformationObs = this.executeLocalCommand('SH')
             .pipe(mergeMap((sh: any) =>
-            this.executeLocalCommand('SL')
+                this.executeLocalCommand('SL')
                     .pipe(mergeMap((sl: any) =>
-                    this.executeLocalCommand('MY')
+                        this.executeLocalCommand('MY')
                             .pipe(map((my: any) => {
                                 const coordinator = this.buildCoordinatorTransceiver(my, sh, sl);
                                 return this.setTransceiver(coordinator);
@@ -81,7 +188,7 @@ export class XbeeService extends DeviceService {
         if (transceiver.infos.type === TRANSCIEVER_TYPE.COORDINATOR) {
             return this.executeLocalCommand('SP')
                 .pipe(mergeMap((sp: any) =>
-                this.executeLocalCommand('SN')
+                    this.executeLocalCommand('SN')
                         .pipe(map((sn: any) =>
                             (transceiver).setsleepCfg({ SP: sp, ST: undefined, SM: undefined, SN: sn })
                         ))
@@ -90,11 +197,11 @@ export class XbeeService extends DeviceService {
 
         return this.executeRemoteCommand(60000, 'SP', transceiver.id)
             .pipe(mergeMap((sp: any) =>
-            this.executeRemoteCommand(60000, 'ST', transceiver.id)
+                this.executeRemoteCommand(60000, 'ST', transceiver.id)
                     .pipe(mergeMap((st: any) =>
-                    this.executeRemoteCommand(60000, 'SM', transceiver.id)
+                        this.executeRemoteCommand(60000, 'SM', transceiver.id)
                             .pipe(mergeMap((sm: any) =>
-                            this.executeRemoteCommand(60000, 'SN', transceiver.id)
+                                this.executeRemoteCommand(60000, 'SN', transceiver.id)
                                     .pipe(map((sn: any) =>
                                         transceiver.setsleepCfg({ SP: sp, ST: st, SM: sm, SN: sn })
                                     ))
@@ -157,9 +264,9 @@ export class XbeeService extends DeviceService {
     public coordinatorInitScan(coordinator: Transceiver): Observable<any> {
         return this.executeLocalCommand('OP')
             .pipe(mergeMap((op: any) =>
-            this.executeLocalCommand('CH')
+                this.executeLocalCommand('CH')
                     .pipe(mergeMap((ch: any) =>
-                    this.executeLocalCommand('AO', [1])
+                        this.executeLocalCommand('AO', [1])
                             .pipe(mergeMap((ao: any) => this.scanUnitaire(coordinator)
                             ))
                     ))

@@ -1,18 +1,6 @@
-import * as WebSocket from 'ws';
-import * as http from "http";
-import { map, tap, mergeMap, catchError, ignoreElements, filter, pluck, takeUntil, flatMap, merge, retryWhen } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, from, empty, timer } from 'rxjs';
-// import * as xbeeRx from 'xbee-rx'; // no types ... :(
-import * as SerialPort from 'serialport';
-import { XbeeService } from '../../services/xbee.service';
-import * as  hexToBinary from 'hex-to-binary';
-import endianness from 'endianness';
-import * as xbeeRx from 'xbee-rx';
-import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
-
 export class XbeeHelper {
     public static position = 0;
-    
+
 
     public static routingTable(buffer): { [s: string]: number | string } {
         const position = 0;
@@ -208,9 +196,9 @@ export class XbeeHelper {
         return value;
     }
 
-    public static numberToBytes(value:number): Array<number> {
-        const hex =  ('00000000000'+(value).toString(16)).substr(-4)
-        
+    public static numberToBytes(value: number): Array<number> {
+        const hex = ('00000000000' + (value).toString(16)).substr(-4)
+
         const bytes = [];
         for (let c = 0; c < hex.length; c += 2) {
             bytes.push(parseInt(hex.substr(c, 2), 16));

@@ -1,18 +1,18 @@
 import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
 import { Observable, from, of } from "rxjs";
-import { IAccount, IDevice, IPartitionConfig, IUser } from "../../entities/interfaces/entities.interface";
-import { AccountEntity } from "../../entities/gen.entities/account.entity";
+import { IAccount, IDevice, IPartitionConfig, IUser } from "../../manager/interfaces/entities.interface";
+import { AccountEntity } from "../../manager/entities/account.entity";
 import { mergeMap } from "rxjs/operators";
-import { PartitionConfigEntity } from "../../kafka/entities/partitionconfig.entity";
-import { UserEntity } from "../../entities/gen.entities/user.entity";
+import { PartitionConfigEntity } from "../../manager/entities/partitionconfig.entity";
+import { UserEntity } from "../../manager/entities/user.entity";
 import { KafkaService } from "../../kafka/services/kafka.service";
-import { MapperService } from "../../services/mapper.service";
-import { LoggerService } from "../../services/logger.service";
-import { Tools } from "../../services/tools-service";
+import { MapperService } from "../../manager/services/mapper.service";
+import { LoggerService } from "../../manager/services/logger.service";
+import { Tools } from "../../common/tools-service";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
 import { getRepository } from "typeorm";
 import { multibar } from "../../common/progress.bar";
-import { DeviceEntity } from "../../kafka/entities/device.entity";
+import { DeviceEntity } from "../../manager/entities/device.entity";
 const _colors = require('colors');
 let readline = require('readline');
 

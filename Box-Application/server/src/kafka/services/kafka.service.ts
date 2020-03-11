@@ -4,29 +4,15 @@ import { of as observableOf, from as observableFrom, Observable, of, observable,
 import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
 import { v1 } from 'uuid';
 import { getCustomRepository } from "typeorm";
-import { DeviceExt } from "../../entities/custom.repositories/device.ext";
-import { Tools } from '../../services/tools-service';
-import { genericRetryStrategy } from '../../services/tools/generic-retry-strategy';
-import { KafkaInit } from './kafka.init';
+import { DeviceExt } from "../../manager/repositories/device.ext";
+import { Tools } from '../../common/tools-service';
+import { genericRetryStrategy } from '../../common/generic-retry-strategy';
+import { KafkaBase } from './kafka.base';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import * as cliProgress from 'cli-progress';
-
-const _colors = require('colors');
-
-
 @Injectable()
-export class KafkaService extends KafkaInit {
-
-    // public async onApplicationBootstrap(): Promise<void> {
-
-    //     this.init().toPromise();
-    // }
-
-    constructor(@InjectRepository(DeviceExt) deviceExt: DeviceExt) {
-        super(deviceExt);
-    }
+export class KafkaService extends KafkaBase {
 
     public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false): Observable<any> {
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
@@ -83,8 +69,17 @@ export class KafkaService extends KafkaInit {
         );
     }
 
-    public init(): Observable<boolean> {
-        return super.init();
+    public init(cfg: any): Observable<any> {
+        Tools.loginfo('* Start micro-service KAFKA');
+        this.progressBar = Tools.startProgress('KAFKA');
+        return this.InitClients()
+            .pipe(flatMap(() => this.setSubscriptionTopics(cfg, process.env.KAFKA_TOPICS_SUBSCRIPTION)), catchError(val => val))
+            .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)), catchError(val => val))
+            .pipe(flatMap(() => this.initializeConsumer()), catchError(val => val))
+            .pipe(catchError((response: any) => {
+                Tools.stopProgress('KAFKA', this.progressBar, response);
+                return of(false);
+            }));
     }
 
 }
