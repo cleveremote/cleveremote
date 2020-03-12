@@ -187,7 +187,7 @@ export class KafkaInit {
                 requireAcks: 1, partitionerType: 4, customPartitioner: (partitions: any, key: any) => {
                     const keyData = key.split('.');
 
-                    if (keyData === 'init-connexion') {
+                    if (keyData[0] === 'init-connexion') {
                         return 0;
                     }
 

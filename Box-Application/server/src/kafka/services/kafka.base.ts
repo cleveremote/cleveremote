@@ -70,11 +70,11 @@ export class KafkaBase {
         }));
     }
 
-    public setSubscriptionTopics(cfg: any, topicsString: string): Observable<boolean> {
+    public setSubscriptionTopics(topicsString: string, cfg?: any): Observable<boolean> {
+
         topicsString.split(';').forEach((topic: string) => {
             const topicString = topic.split('.');
-            if (topicString[1] && topicString[1] === 'range') {
-                //const cfg = currentDevice.partitionConfigs[0];
+            if (topicString[1] && topicString[1] === 'range' && cfg) {
                 this.subscribeTopics.push({
                     name: topicString[0],
                     partitionTopic: {
@@ -82,10 +82,22 @@ export class KafkaBase {
                         rangePartitions: [cfg.startRange, cfg.endRange]
                     }
                 });
+            } else if (topicString[1] && topicString[1] === 'full') {
+                const isBoxTopic = topicString[0].split('_');
+                let realBoxTopicName = '';
+                isBoxTopic.forEach((element, index) => {
+                    realBoxTopicName = index === 0 && element === 'box' ? realBoxTopicName + Tools.serialNumber : `${realBoxTopicName}_${element}`;
+                });
+                if (realBoxTopicName) {
+                    this.subscribeTopics.push({ name: realBoxTopicName });
+                }
+
             }
         });
         this.progressBar.increment();
         return of(true);
+
+        //INIT consumer on INIT producer on aggregator_init_connexion listner on `${data.serialNumber}-init-connexion`;
     }
 
     public setPublicationTopics(topicsString: string): Observable<boolean> {
@@ -147,8 +159,25 @@ export class KafkaBase {
         this.subscribeTopics.forEach((topic: ITopic) => {
             const topicObject = clusterMetaData.metadata[topic.name];
             if (topicObject) {
-                for (let index = topic.partitionTopic.rangePartitions[0]; index <= topic.partitionTopic.rangePartitions[1]; index++) {
-                    const consumer = new ConsumerGroupStream(this.setCfgOptions(index.toString(), topic), [topic.name]);
+                if (topic.partitionTopic) {
+                    for (let index = topic.partitionTopic.rangePartitions[0]; index <= topic.partitionTopic.rangePartitions[1]; index++) {
+                        const consumer = new ConsumerGroupStream(this.setCfgOptions(index.toString(), topic), [topic.name]);
+                        consumer.on('error', (err: any) => {
+                            Tools.logError(`error on consumerGroupStream`, err);
+                            // handle a broker not available error
+                            if (err && err.name === "BrokerNotAvailableError") {
+                                Tools.loginfo("attempting reconnect");
+                                consumer.client.refreshMetadata([topic.name], (err: any) => {
+                                    // handle errors here
+                                });
+                            } else {
+                                Tools.logError(err.stack);
+                            }
+                        });
+                        this.consumers.push(consumer);
+                    }
+                } else {
+                    const consumer = new ConsumerGroupStream(this.setCfgOptions('full', topic, false), [topic.name]);
                     consumer.on('error', (err: any) => {
                         Tools.logError(`error on consumerGroupStream`, err);
                         // handle a broker not available error
@@ -163,6 +192,7 @@ export class KafkaBase {
                     });
                     this.consumers.push(consumer);
                 }
+
             }
         });
     }
@@ -186,7 +216,6 @@ export class KafkaBase {
     }
 
     public initializeCLients(): Observable<boolean> {
-        //Tools.loginfo('    -Init producers ...');
         const config: KafkaClientOptions = {
             connectRetryOptions: { retries: Number(process.env.RETRIES), factor: Number(process.env.FACTOR), minTimeout: Number(process.env.MINTIMEOUT), maxTimeout: Number(process.env.MAXTIMEOUT), randomize: !!+process.env.RANDOMIZE },
             idleConnection: Number(process.env.IDLECONNECTION),

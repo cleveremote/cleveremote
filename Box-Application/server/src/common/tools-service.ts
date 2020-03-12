@@ -1,4 +1,4 @@
-import { Observable, from } from "rxjs";
+import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { multibar } from '../common/progress.bar';
 const _colors = require('colors');
@@ -84,7 +84,7 @@ export class Tools {
         return true;
     }
 
-    public static getSerialNumber(): Observable<void> {
+    public static getSerialNumber(): Observable<string> {
         Tools.loginfo(`* get box serial number`);
         const util = require('util');
         return from(util.promisify(require('child_process').exec)('cat /proc/cpuinfo | grep ^Serial | cut -d":" -f2')).pipe(
@@ -93,9 +93,10 @@ export class Tools {
                 if (stdout) {
                     Tools.serialNumber = stdout.replace(/(\r\n|\n|\r|\s)/gm, "");
                     Tools.logSuccess(`  => OK. :${Tools.serialNumber}`);
-                } else {
-                    Tools.logSuccess(`  => KO. :${stderr}`);
+                    return Tools.serialNumber;
                 }
+                Tools.logSuccess(`  => KO. :${stderr}`);
+                return undefined;
             })
         );
     }

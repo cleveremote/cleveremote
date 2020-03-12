@@ -5,7 +5,6 @@ import { Injectable, Inject, forwardRef } from "@nestjs/common";
 import { XbeeService } from "../../xbee/services/xbee.service";
 import { DispatchService } from "../../dispatch/services/dispatch.service";
 import { ManagerService } from "../../manager/services/manager.service";
-import { multibar } from "../../common/progress.bar";
 import { Tools } from "../../common/tools-service";
 
 @Injectable()
@@ -19,10 +18,10 @@ export class LaunchService {
     }
 
     public async onApplicationBootstrap(): Promise<void> {
-
-        this.initFirstConnexion()
+        Tools.getSerialNumber()
             .pipe(delay(1000))
-            .pipe(mergeMap((config: any) => this.kafkaService.init(config)))
+            .pipe(mergeMap((config: any) => this.kafkaService.initCommonKafka()))
+            .pipe(mergeMap((serialNumber: any) => this.initFirstConnexion()))
             .pipe(delay(100))
             .pipe(mergeMap((resKafka: boolean) => resKafka ? this.xbeeService.init() : of(false)))
             .pipe(delay(100))
@@ -33,13 +32,28 @@ export class LaunchService {
 
     public initFirstConnexion(): Observable<any> {
         return this.managerService.getPartitionconfig()
-            .pipe(map((cfg: any) => {
-                if (cfg) {
-                    console.log('not first cnx');
-                    return cfg;
+            .pipe(mergeMap((config: any) => {
+                if (config) {
+                    return this.kafkaService.initKafka(config);
                 }
-                console.log('traitement necessaire pour linitialization du boitier');
-                return of(undefined);
+                return this.kafkaService.initKafka()
+                    .pipe(mergeMap((result: any) => {
+                        console.log('send message and start listen');
+                        // const dataExample =  { serialNumber: '123456789'};
+                        // const payloads = [
+                        //     { topic: 'aggregator_init_connexion', messages: JSON.stringify(dataExample), key: 'init-connexion' }
+                        // ];
+
+                        // this.kafkaService.sendMessage(payloads, true).subscribe(
+                        //     () => { },
+                        //     (e) => {
+                        //         Tools.logError('error on send message => ' + JSON.stringify(e));
+                        //     });
+                        return this.kafkaService.startListenerForSyncConnexion().pipe(mergeMap((message: any) =>
+                            this.dispatchService.proccessSyncConnexion(String(message.value))));
+                    }
+                    ))
+                    .pipe(mergeMap((res: boolean) => this.kafkaService.init(config)));
             }));
     }
 

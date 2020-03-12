@@ -4,7 +4,7 @@ import { getCustomRepository, getRepository } from "typeorm";
 import { AccountExt } from "../entities/custom.repositories/account.ext";
 import { IAccount, IDevice, IPartitionConfig, IUser } from "../entities/interfaces/entities.interface";
 import { Account } from "../entities/gen.entities/account";
-import { map, mergeMap } from "rxjs/operators";
+import { map, mergeMap, retryWhen, catchError } from "rxjs/operators";
 import { Device } from "../entities/gen.entities/device";
 import { PartitionConfig } from "../entities/gen.entities/partition_config";
 import { User } from "../entities/gen.entities/users";
@@ -16,6 +16,7 @@ import { MapperService } from "./mapper.service";
 import { LoggerService } from "./logger.service";
 import { Tools } from "./tools-service";
 import { WebSocketService } from "./websocket.service";
+import { genericRetryStrategy } from "./tools/generic-retry-strategy";
 
 export class DispatchService {
     private mapperService: MapperService;
@@ -56,7 +57,7 @@ export class DispatchService {
     public routeMessage(message: Message): void {
         switch (message.topic) {
             case "aggregator_init_connexion":
-                this.proccessSyncConnexion(message.value);
+                this.proccessSyncConnexion(message.value).subscribe();
                 break;
             case "aggregator_dbsync":
                 // this.mapperService.dataBaseSynchronize(String(message.value));
@@ -76,25 +77,50 @@ export class DispatchService {
         }
     }
 
-    public proccessSyncConnexion(value: string | Buffer): Observable<void> {
+    public proccessSyncConnexion(value: string | Buffer): Observable<any> {
         const data = JSON.parse(String(value));
         const deviceRepository = getCustomRepository(DeviceExt);
 
-        return deviceRepository.getDeviceInfosBySerial(data.serialNumber).pipe(
-            map((deviceData: Device) => {
-                const t = deviceData;
+        return of(true).pipe( //deviceRepository.getDeviceInfosBySerial(data.serialNumber)
+            mergeMap((deviceData: boolean) => {
+                //const t = deviceData;
                 const payloads = [
                     {
-                        topic: `${data.serialNumber}-init-connexion`,
-                        messages: JSON.stringify(deviceData),
+                        topic: `${data.serialNumber}_init_connexion`,
+                        messages: JSON.stringify({ deviceData: 'toto' }),
                         key: `init-connexion.${data.serialNumber}`
                     }
                 ];
 
-                // KafkaService.instance.producer.send(payloads, (err: any, result: any) => {
-                //     console.log(data);
-                //     this.sendActivationMail();
-                // });
+                return KafkaService.instance.sendMessage(payloads, true).pipe(mergeMap((checkResponse: any) =>
+
+                    of(false).pipe(
+                        map(val => {
+
+                            const responseArray = KafkaService.instance.arrayOfResponse;
+                            if (responseArray.length > 0) {
+
+                                for (let index = 0; index < responseArray.length; index++) {
+                                    const element = responseArray[index];
+                                    const result = JSON.parse(element.value);
+                                    if (result.offset === checkResponse.oin) {
+                                        responseArray.splice(index, 1);
+
+                                        return { status: 'OK', message: "process success!" };
+                                    }
+                                }
+                            }
+                            throw { status: 'KO', message: "process timeOut!" };
+                        }),
+                        retryWhen(genericRetryStrategy({
+                            durationBeforeRetry: 200,
+                            maxRetryAttempts: 40
+                        })), catchError((error: any) => {
+                            console.log(JSON.stringify(error));
+
+                            return error;
+                        }))
+                ));
             })
         );
     }
