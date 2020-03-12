@@ -3,10 +3,12 @@ import { of, Observable } from 'rxjs';
 import { TransceiverService } from '../services/transceiver.service';
 import { TransceiverDto } from '../dto/transceiver.dto';
 import { TransceiverQueryDto } from '../dto/transceiver.query.dto copy';
+import { XbeeService } from '../../xbee/services/xbee.service';
 
 @Controller('transceiver')
 export class TransceiverController {
-    constructor(private readonly transceiverService: TransceiverService) { }
+    constructor(
+        private readonly transceiverService: TransceiverService) { }
 
     @Get('all')
     public getAll(@Query(ValidationPipe) transceiverQueryDto: TransceiverQueryDto): Observable<boolean> {
@@ -37,5 +39,10 @@ export class TransceiverController {
     @Post()
     public add(@Body() transceiverDto: TransceiverDto): Observable<any> {
         return this.transceiverService.add(transceiverDto);
+    }
+
+    @Get('scan')
+    public getScan(): Observable<any> {
+        return this.transceiverService.scanAll();
     }
 }

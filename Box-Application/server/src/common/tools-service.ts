@@ -100,8 +100,8 @@ export class Tools {
         );
     }
 
-    public static startProgress(service: string): any {
-        const progressBar = multibar.create(6, 0);
+    public static startProgress(service: string, start: number, end: number): any {
+        const progressBar = multibar.create(end, start);
         let cloneOption = {} as any;
         cloneOption = Object.assign(cloneOption, multibar.options);
         cloneOption.format = _colors.green(service + ' progress     ') + '|' + _colors.green('{bar}') + '| {percentage}%' + '\n';

@@ -21,11 +21,6 @@ export class XbeeService extends DeviceService {
     public xbee;
     public transceivers: Array<Transceiver> = [];
 
-
-
-
-
-
     public executeRemoteCommand(timeout: number, cmd: string, address: string | ArrayBuffer, params?: Array<number> | string, option?: number): Observable<any> {
         const localCommandObj = { command: cmd, destination64: address, timeoutMs: timeout, options: option } as any;
         if (params) {
@@ -67,13 +62,8 @@ export class XbeeService extends DeviceService {
     }
 
     public init(): Observable<boolean> {
-        Tools.loginfoProgress('* Start micro-service : XBEE...');
-        this.progressBar = multibar.create(1, 0);
-        let cloneOption = {} as any;
-        cloneOption = Object.assign(cloneOption, multibar.options);
-        cloneOption.format = _colors.green('XBEE progress      ') + '|' + _colors.green('{bar}') + '| {percentage}%' + '\n';
-        this.progressBar.options = cloneOption;
-
+        Tools.loginfo('* Start micro-service : XBEE...');
+        this.progressBar = Tools.startProgress('XBEE    ', 0, 1);
         const exists = portName => SerialPort.list().then(ports => ports.some(port => port.comName === portName));
         const xbeeObs = new Observable<any>(observer => {
             let xbee: any;
@@ -100,6 +90,7 @@ export class XbeeService extends DeviceService {
                     map((xbee: any) => {
                         this.xbee = xbee;
                         this.progressBar.increment();
+                        Tools.stopProgress('XBEE    ', this.progressBar);
                         return true;
                     }, (err: any) => {
                         Tools.logError(`  => Xbee initilization failed ${err}`);
@@ -120,7 +111,7 @@ export class XbeeService extends DeviceService {
             }));;
     }
 
-    public initTransceivers(): Observable<boolean> {
+    public initTransceivers(): Observable<any> {
         return this.requestXbeeNodes()
             .pipe(mergeMap((result: boolean) => {
                 let cmdObs: Observable<any> = of(true);
@@ -135,7 +126,7 @@ export class XbeeService extends DeviceService {
                 this.startListenJoinTransceiver().subscribe();
                 /// test zone
                 //return this.setMaxSleepCycle();
-                return of(true);
+                return of(this.transceivers);
             }));
     }
 

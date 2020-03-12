@@ -1,8 +1,8 @@
 import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
-import { Observable, from, of } from "rxjs";
+import { Observable, from, of, fromEvent, forkJoin } from "rxjs";
 import { IAccount, IDevice, IPartitionConfig, IUser } from "../../manager/interfaces/entities.interface";
 import { AccountEntity } from "../../manager/entities/account.entity";
-import { mergeMap } from "rxjs/operators";
+import { mergeMap, filter, tap } from "rxjs/operators";
 import { PartitionConfigEntity } from "../../manager/entities/partitionconfig.entity";
 import { UserEntity } from "../../manager/entities/user.entity";
 import { KafkaService } from "../../kafka/services/kafka.service";
@@ -27,22 +27,13 @@ export class DispatchService {
         this.loggerService = new LoggerService();
     }
 
-    public init(): Observable<void> {
-        Tools.loginfoProgress('* Start micro-service : Dispatch...');
-
-        this.progressBar = multibar.create(1, 0);
-        let cloneOption = {} as any;
-        cloneOption = Object.assign(cloneOption, multibar.options);
-        cloneOption.format = _colors.green('Dispatch progress  ')+'|' + _colors.green('{bar}') + '| {percentage}% \n';
-        this.progressBar.options = cloneOption;
-
+    public init(): Observable<boolean> {
+        Tools.loginfo('* Start micro-service : Dispatch...');
+        this.progressBar = Tools.startProgress('Dispatch', 0, 1);
+       
+        const listnersLst: Array<Observable<boolean>> = [];
         this.kafkaService.consumers.forEach(consumer => {
-            consumer.on('data', (message: Message) => {
-                this.routeMessage(consumer, message);
-            });
-            consumer.on('error', (err: any) => {
-                Tools.logError('error', err);
-            });
+            listnersLst.push(this.startListenConsumer(consumer));
         });
 
         if (this.kafkaService.flagIsFirstConnection) {
@@ -55,9 +46,22 @@ export class DispatchService {
             // });
         }
         this.progressBar.increment();
-        return of(undefined);
+        Tools.stopProgress('Dispatch', this.progressBar);
+        return forkJoin(listnersLst).pipe(mergeMap((results: Array<boolean>) => of(true)));
 
     }
+
+    public startListenConsumer(consumer: any, flt?: string): Observable<boolean> {
+        return fromEvent(consumer, 'data').pipe(filter((message: any) => {
+            const objectToFilter = JSON.parse(message.value);
+            return flt ? objectToFilter.entity === flt : true;
+        }))
+            .pipe(mergeMap((result: any) => {
+                this.routeMessage(consumer, result);
+                return of(true);
+            }));
+    }
+
 
     public routeMessage(consumer: ConsumerGroupStream, message: Message): void {
         consumer.commit(message, true, (error, data) => {

@@ -14,9 +14,10 @@ import { SectorService } from './services/sector.service';
 import { SectorController } from './controllers/sector.controller';
 import { SchemeExt } from './repositories/scheme.ext';
 import { SectorExt } from './repositories/sector.ext';
+import { XbeeModule } from '../xbee/xbee.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt])],
+  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), XbeeModule],
   controllers: [ModuleController, TransceiverController, SchemeController, SectorController],
   providers: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService],
   exports: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService]

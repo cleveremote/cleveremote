@@ -8,7 +8,7 @@ export class SchemeDto {
     public name: string;
     @IsNotEmpty()
     public description: string;
-    @IsNotEmpty()
+    @IsOptional()
     public parentScheme: string;
     @IsNotEmpty()
     public deviceId: string;

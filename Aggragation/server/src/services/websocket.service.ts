@@ -146,12 +146,23 @@ export class WebSocketService {
     }
 
     public test(event: any): void {
-        const success = { source: 'OK', module: "string", value: "string", date: new Date() };
-        const fail = { source: 'FAIL', module: "string", value: "string", date: new Date() };
-        const dataExample = {
+        const message = JSON.parse(event.data) as Message;
+        let dataExample = {
             entity: 'Account', type: 'UPDATE',
             data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
         };
+        if (message.content === 'filter1') {
+            dataExample = {
+                entity: 'Account1', type: 'UPDATE',
+                data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+            };
+        }
+        const success = { source: 'OK', module: "string", value: "string", date: new Date() };
+        const fail = { source: 'FAIL', module: "string", value: "string", date: new Date() };
+        // const dataExample = {
+        //     entity: 'Account', type: 'UPDATE',
+        //     data: { account_id: 'server_3', name: 'name12', description: 'description1234' }
+        // };
         const payloads = [
             {
                 topic: 'box_action',

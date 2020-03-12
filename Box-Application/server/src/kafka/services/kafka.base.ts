@@ -71,8 +71,6 @@ export class KafkaBase {
     }
 
     public setSubscriptionTopics(cfg: any, topicsString: string): Observable<boolean> {
-        //return this.deviceExt.getDevice().pipe(
-        //  map((currentDevice: DeviceEntity) => {
         topicsString.split(';').forEach((topic: string) => {
             const topicString = topic.split('.');
             if (topicString[1] && topicString[1] === 'range') {
@@ -88,7 +86,6 @@ export class KafkaBase {
         });
         this.progressBar.increment();
         return of(true);
-        // }));
     }
 
     public setPublicationTopics(topicsString: string): Observable<boolean> {
@@ -180,6 +177,7 @@ export class KafkaBase {
             if (results && results[1] && results[1][1]) {
                 this.createConsumers(results[1][1]);
                 this.progressBar.increment();
+                Tools.stopProgress('KAFKA   ', this.progressBar);
                 return true;
             }
             throwError('      => initialization failed!');

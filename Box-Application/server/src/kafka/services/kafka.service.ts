@@ -71,13 +71,13 @@ export class KafkaService extends KafkaBase {
 
     public init(cfg: any): Observable<any> {
         Tools.loginfo('* Start micro-service KAFKA');
-        this.progressBar = Tools.startProgress('KAFKA');
+        this.progressBar = Tools.startProgress('KAFKA   ', 0, 5);
         return this.InitClients()
             .pipe(flatMap(() => this.setSubscriptionTopics(cfg, process.env.KAFKA_TOPICS_SUBSCRIPTION)), catchError(val => val))
             .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)), catchError(val => val))
             .pipe(flatMap(() => this.initializeConsumer()), catchError(val => val))
             .pipe(catchError((response: any) => {
-                Tools.stopProgress('KAFKA', this.progressBar, response);
+                Tools.stopProgress('KAFKA   ', this.progressBar, response);
                 return of(false);
             }));
     }

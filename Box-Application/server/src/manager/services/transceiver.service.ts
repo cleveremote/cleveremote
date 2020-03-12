@@ -10,12 +10,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ModuleExt } from '../repositories/module.ext';
 import { TransceiverDto } from '../dto/transceiver.dto';
 import { TransceiverQueryDto } from '../dto/transceiver.query.dto copy';
+import { XbeeService } from '../../xbee/services/xbee.service';
+import { forwardRef, Inject } from '@nestjs/common';
 
 export class TransceiverService {
 
     constructor(
-        @InjectRepository(TransceiverExt) private transceiverRepository: TransceiverExt,
-        @InjectRepository(ModuleExt) private moduleRepository: ModuleExt) { }
+        @InjectRepository(TransceiverExt) private readonly transceiverRepository: TransceiverExt,
+        @InjectRepository(ModuleExt) private readonly moduleRepository: ModuleExt,
+        @Inject(forwardRef(() => XbeeService)) private readonly xbeeService: XbeeService) { }
 
     public get(transceiverId: string): Observable<any> {
         return this.transceiverRepository.getTransceiver(transceiverId);
@@ -35,6 +38,10 @@ export class TransceiverService {
 
     public getAll(transceiverQueryDto: TransceiverQueryDto): Observable<any> {
         return this.transceiverRepository.getAll(transceiverQueryDto);
+    }
+
+    public scanAll(): Observable<any> {
+        return this.xbeeService.initTransceivers();
     }
 
     public generateModules(): Observable<any> {
