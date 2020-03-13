@@ -1,10 +1,10 @@
 import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
-import { Observable, from, of } from "rxjs";
+import { Observable, from, of, fromEvent, forkJoin } from "rxjs";
 import { getCustomRepository, getRepository } from "typeorm";
 import { AccountExt } from "../entities/custom.repositories/account.ext";
 import { IAccount, IDevice, IPartitionConfig, IUser } from "../entities/interfaces/entities.interface";
 import { Account } from "../entities/gen.entities/account";
-import { map, mergeMap, retryWhen, catchError, delay, tap } from "rxjs/operators";
+import { map, mergeMap, retryWhen, catchError, filter, tap } from "rxjs/operators";
 import { Device } from "../entities/gen.entities/device";
 import { PartitionConfig } from "../entities/gen.entities/partition_config";
 import { User } from "../entities/gen.entities/users";
@@ -28,19 +28,29 @@ export class DispatchService {
         this.loggerService = new LoggerService();
     }
 
-    public init(): Observable<void> {
+    public init(): Observable<any> {
+        const consumerObs = [];
         KafkaService.instance.consumers.forEach(consumer => {
-            consumer.on('data', (message: Message) => {
-                this.consumeDataProccess(consumer, message);
-            });
-            consumer.on('error', (err: any) => {
-                Tools.logError('error', err);
-            });
+
+
+            const obs = fromEvent(consumer, 'data')
+                .pipe(filter((message: Message) => message.topic !== 'box_action_response'))
+                .pipe(tap((message: Message) => this.consumeDataProccess(consumer, message)));
+
+            consumerObs.push(obs);
+
+
+
+            // consumer.on('data', (message: Message) => {
+            //     this.consumeDataProccess(consumer, message);
+            // });
+            // consumer.on('error', (err: any) => {
+            //     Tools.logError('error', err);
+            // });
         });
         Tools.logSuccess('  => OK.');
-
-        return of(undefined);
-
+        forkJoin(consumerObs).subscribe();
+        return of(true);
     }
 
     public consumeDataProccess(consumer: ConsumerGroupStream, message: Message): void {
@@ -81,26 +91,46 @@ export class DispatchService {
         const data = JSON.parse(String(value));
         const deviceRepository = getCustomRepository(DeviceExt);
 
-        return of(true)
-            .pipe(delay(1000))
-            .pipe( //deviceRepository.getDeviceInfosBySerial(data.serialNumber)
-                mergeMap((deviceData: boolean) => {
-                    //const t = deviceData;
-                    const payloads = [
-                        {
-                            topic: `${data.serialNumber}_init_connexion1`,
-                            messages: JSON.stringify({ deviceData: 'toto' }),
-                            key: `init-connexion.${data.serialNumber}`
-                        }
-                    ];
+        return of(true).pipe( //deviceRepository.getDeviceInfosBySerial(data.serialNumber)
+            mergeMap((deviceData: boolean) => {
+                //const t = deviceData;
+                const payloads = [
+                    {
+                        topic: `${data.serialNumber}_init_connexion`,
+                        messages: JSON.stringify({ deviceData: 'toto' }),
+                        key: `init-connexion.${data.serialNumber}`
+                    }
+                ];
 
-                    return KafkaService.instance.sendMessage(payloads, true, true)
-                        .pipe(tap((res: any) => {
-                            res ? console.log('message sent & received seccussefully') : console.log('failed');
-                        }));
+                return KafkaService.instance.sendMessage(payloads, true).pipe(mergeMap((checkResponse: any) =>
 
-                })
-            );
+                    of(false).pipe(
+                        map(val => {
+                            const responseArray = KafkaService.instance.arrayOfResponse;
+                            if (responseArray.length > 0) {
+
+                                for (let index = 0; index < responseArray.length; index++) {
+                                    const element = responseArray[index];
+                                    const result = JSON.parse(element.value);
+                                    if (result.offset === checkResponse.oin) {
+                                        responseArray.splice(index, 1);
+
+                                        return { status: 'OK', message: "process success!" };
+                                    }
+                                }
+                            }
+                            throw { status: 'KO', message: "process timeOut!" };
+                        }),
+                        retryWhen(genericRetryStrategy({
+                            durationBeforeRetry: 200,
+                            maxRetryAttempts: 40
+                        })), catchError((error: any) => {
+                            console.log(JSON.stringify(error));
+                            return of(false);
+                        })))
+                );
+            })
+        );
     }
 
     public sendActivationMail(): void {
