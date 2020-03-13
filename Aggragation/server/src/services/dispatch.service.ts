@@ -96,7 +96,6 @@ export class DispatchService {
 
                     of(false).pipe(
                         map(val => {
-
                             const responseArray = KafkaService.instance.arrayOfResponse;
                             if (responseArray.length > 0) {
 
@@ -117,10 +116,9 @@ export class DispatchService {
                             maxRetryAttempts: 40
                         })), catchError((error: any) => {
                             console.log(JSON.stringify(error));
-
-                            return error;
-                        }))
-                ));
+                            return of(false);
+                        })))
+                );
             })
         );
     }

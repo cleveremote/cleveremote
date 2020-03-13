@@ -85,35 +85,38 @@ export class Tools {
     }
 
     public static getSerialNumber(): Observable<string> {
-        Tools.loginfo(`* get box serial number`);
-        const util = require('util');
-        return from(util.promisify(require('child_process').exec)('cat /proc/cpuinfo | grep ^Serial | cut -d":" -f2')).pipe(
-            map((x: any) => {
-                const { stdout, stderr } = x;
-                if (stdout) {
-                    Tools.serialNumber = stdout.replace(/(\r\n|\n|\r|\s)/gm, "");
-                    Tools.logSuccess(`  => OK. :${Tools.serialNumber}`);
-                    return Tools.serialNumber;
-                }
-                Tools.logSuccess(`  => KO. :${stderr}`);
-                return undefined;
-            })
-        );
+        // Tools.loginfo(`* get box serial number`);
+        // const util = require('util');
+        // return from(util.promisify(require('child_process').exec)('cat /proc/cpuinfo | grep ^Serial | cut -d":" -f2')).pipe(
+        //     map((x: any) => {
+        //         const { stdout, stderr } = x;
+        //         if (stdout) {
+        //             Tools.serialNumber = stdout.replace(/(\r\n|\n|\r|\s)/gm, "");
+        //             Tools.logSuccess(`  => OK. :${Tools.serialNumber}`);
+        //             return Tools.serialNumber;
+        //         }
+        //         Tools.logSuccess(`  => KO. :${stderr}`);
+        //         return undefined;
+        //     })
+        // );
+        Tools.serialNumber = '123456789';
+        return of(Tools.serialNumber);
     }
 
     public static startProgress(service: string, start: number, end: number): any {
-        const progressBar = multibar.create(end, start);
+
+        const progressBar = multibar.create(end, start, {});
         let cloneOption = {} as any;
-        cloneOption = Object.assign(cloneOption, multibar.options);
+        cloneOption = Object.assign(cloneOption, (multibar as any).options);
         cloneOption.format = _colors.green(service + ' progress     ') + '|' + _colors.green('{bar}') + '| {percentage}%' + '\n';
-        progressBar.options = cloneOption;
+        (progressBar as any).options = cloneOption;
         return progressBar;
     }
 
     public static stopProgress(service?: string, progressBar?: any, error?: any): any {
         if (error) {
             let cloneOption = {} as any;
-            cloneOption = Object.assign(cloneOption, multibar.options);
+            cloneOption = Object.assign(cloneOption, (multibar as any).options);
             cloneOption.format = _colors.red(service + ' progress     ') + '|' + _colors.red('{bar}') + '| {percentage}%' + '\n';
             progressBar.options = cloneOption;
             multibar.stop();

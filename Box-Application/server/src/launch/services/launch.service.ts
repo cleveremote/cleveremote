@@ -18,6 +18,9 @@ export class LaunchService {
     }
 
     public async onApplicationBootstrap(): Promise<void> {
+
+       
+
         Tools.getSerialNumber()
             .pipe(delay(1000))
             .pipe(mergeMap((config: any) => this.kafkaService.initCommonKafka()))
@@ -31,7 +34,7 @@ export class LaunchService {
     }
 
     public initFirstConnexion(): Observable<any> {
-        return this.managerService.getPartitionconfig()
+        return of(true)//this.managerService.getPartitionconfig()
             .pipe(mergeMap((config: any) => {
                 if (config) {
                     return this.kafkaService.initKafka(config);
@@ -39,21 +42,16 @@ export class LaunchService {
                 return this.kafkaService.initKafka()
                     .pipe(mergeMap((result: any) => {
                         console.log('send message and start listen');
-                        // const dataExample =  { serialNumber: '123456789'};
-                        // const payloads = [
-                        //     { topic: 'aggregator_init_connexion', messages: JSON.stringify(dataExample), key: 'init-connexion' }
-                        // ];
+                        const dataExample = { serialNumber: '123456789' };
+                        const payloads = [
+                            { topic: 'aggregator_init_connexion', messages: JSON.stringify(dataExample), key: 'init-connexion' }
+                        ];
 
-                        // this.kafkaService.sendMessage(payloads, true).subscribe(
-                        //     () => { },
-                        //     (e) => {
-                        //         Tools.logError('error on send message => ' + JSON.stringify(e));
-                        //     });
-                        return this.kafkaService.startListenerForSyncConnexion().pipe(mergeMap((message: any) =>
-                            this.dispatchService.proccessSyncConnexion(String(message.value))));
-                    }
-                    ))
-                    .pipe(mergeMap((res: boolean) => this.kafkaService.init(config)));
+                        return this.kafkaService.sendMessage(payloads, true, true)
+                           
+                    }))
+                    .pipe(mergeMap((res: any) => this.dispatchService.proccessSyncConnexion(String(res))))
+                    .pipe(mergeMap((res: boolean) => of(true))); // this.kafkaService.initKafka(config)
             }));
     }
 

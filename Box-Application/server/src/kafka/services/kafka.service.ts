@@ -1,5 +1,5 @@
 import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat, retryWhen, catchError, filter } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject, fromEvent } from 'rxjs';
+import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject, fromEvent, timer, race, throwError } from 'rxjs';
 // tslint:disable-next-line:max-line-length
 import { Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
 import { v1 } from 'uuid';
@@ -14,16 +14,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class KafkaService extends KafkaBase {
 
-    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false): Observable<any> {
+    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ack = false): Observable<any> {
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
         if (checkResponse) {
-            return sendObs().pipe(mergeMap((data: any) => {
+            const obs = sendObs().pipe(mergeMap((data: any) => {
                 Tools.loginfo('   - message sent => ');
                 console.log(data);
 
                 return of(data);
             })).pipe(mergeMap((data: any) =>
                 this.checkReponseMessage(data)));
+            if (ack) {
+                return obs.pipe(mergeMap((res) => {
+                    return this.waitResponseAck('init_connexion', 5000);
+                }));
+            }
+
+            return obs;
         }
 
         return sendObs().pipe(mergeMap((data: any) => {
@@ -35,11 +42,31 @@ export class KafkaService extends KafkaBase {
 
     }
 
-    public startListenerForSyncConnexion(): Observable<any> {
-        const consumerFound = this.consumers.find((consumer: ConsumerGroupStream) => (this.consumers[0].consumerGroup as any).options.clientId === 'consumerfull');
-        if (consumerFound) {
-            return this.startListenConsumer(consumerFound).pipe(take(1));
+    public waitResponseAck(target: string, timeout: number): Observable<any> {
+        const consumersFound =
+            this.consumers.filter((consumer: ConsumerGroupStream) => {
+                const exits = (consumer.consumerGroup as any).topics.find((topic: string) =>
+                    topic.indexOf(target) !== -1);
+                return exits ? true : false;
+            });
+        if (consumersFound && consumersFound.length > 0) {
+            const timer$ = timer(timeout);
+            const obs = [];
+            consumersFound.forEach(consumer => {
+                obs.push(this.startListenConsumer(consumer)
+                    .pipe(mergeMap((res) => {
+                        consumer.commit(res, true, (error, data) => { });
+                        const payloads = [
+                            { topic: 'box_action_response', messages: JSON.stringify(res.value), key: 'server_1' }
+                        ];
+
+                        return this.sendMessage(payloads, true);
+                    }))
+                    .pipe(take(1))); //takeUntil(timer$)
+            });
+            return race(obs);
         }
+        return of(true);
     }
 
     public startListenConsumer(consumer: any, flt?: string): Observable<any> {
@@ -49,11 +76,14 @@ export class KafkaService extends KafkaBase {
         }));
     }
 
-
-    // .pipe(mergeMap((result: any) => {
-    //     this.routeMessage(consumer, result);
-    //     return of(true);
-    // }));
+    // public waitResponseAck(consumer: any, offset: number, flt?: string): Observable<any> {
+    //     const timer$ = timer(5000);
+    //     return fromEvent(consumer, 'data').pipe(filter((message: any) => {
+    //         const objectToFilter = JSON.parse(message.value);
+    //         return flt ? objectToFilter.topic === 'box_action_response' && objectToFilter.oin === offset : true;
+    //     }))
+    //         .pipe(takeUntil(timer$));
+    // }
 
     public checkReponseMessage(data: any): Observable<any> {
 
@@ -91,28 +121,9 @@ export class KafkaService extends KafkaBase {
 
     public initCommonKafka(): Observable<any> {
         Tools.loginfo('* Start micro-service KAFKA');
-        this.progressBar = Tools.startProgress('KAFKA   ', 0, 5);
+         this.progressBar = Tools.startProgress('KAFKA   ', 0, 5);
         return this.InitClients()
             .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)), catchError(val => val));
-    }
-
-    public init(cfg?: any): Observable<any> {
-        Tools.loginfo('* Start micro-service KAFKA');
-        let commonObs = this.InitClients()
-            .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)), catchError(val => val));
-        if (cfg) {
-            this.progressBar = Tools.startProgress('KAFKA   ', 0, 5);
-            return commonObs.pipe(mergeMap(() => this.initKafka()));
-        }
-        // it is new connexion 
-        return of(true)
-            .pipe(flatMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION, cfg)), catchError(val => val))
-            .pipe(flatMap(() => this.initializeConsumer()), catchError(val => val))
-            .pipe(catchError((response: any) => {
-                Tools.stopProgress('KAFKA   ', this.progressBar, response);
-                return of(false);
-            }));
-
     }
 
     public initKafka(cfg?: any): Observable<any> {
@@ -120,8 +131,8 @@ export class KafkaService extends KafkaBase {
             .pipe(mergeMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION, cfg)), catchError(val => val))
             .pipe(mergeMap(() => this.initializeConsumer()), catchError(val => val))
             .pipe(catchError((response: any) => {
-                Tools.stopProgress('KAFKA   ', this.progressBar, response);
-                return of(false);
+              Tools.stopProgress('KAFKA   ',  this.progressBar, response);
+                return of(true);
             }));
     }
 

@@ -90,7 +90,7 @@ export class XbeeService extends DeviceService {
                     map((xbee: any) => {
                         this.xbee = xbee;
                         this.progressBar.increment();
-                        Tools.stopProgress('XBEE    ', this.progressBar);
+                        Tools.stopProgress('XBEE    ',  this.progressBar);
                         return true;
                     }, (err: any) => {
                         Tools.logError(`  => Xbee initilization failed ${err}`);
@@ -102,7 +102,7 @@ export class XbeeService extends DeviceService {
         }))
             .pipe(catchError((response) => {
                 let cloneOption = {} as any;
-                cloneOption = Object.assign(cloneOption, multibar.options);
+                cloneOption = Object.assign(cloneOption, (multibar as any).options);
                 cloneOption.format = _colors.red('XBEE progress      ') + '|' + _colors.red('{bar}') + '| {percentage}%' + '\n';
                 this.progressBar.options = cloneOption;
                 multibar.stop();

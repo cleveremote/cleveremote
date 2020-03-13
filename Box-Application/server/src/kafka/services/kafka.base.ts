@@ -96,8 +96,6 @@ export class KafkaBase {
         });
         this.progressBar.increment();
         return of(true);
-
-        //INIT consumer on INIT producer on aggregator_init_connexion listner on `${data.serialNumber}-init-connexion`;
     }
 
     public setPublicationTopics(topicsString: string): Observable<boolean> {

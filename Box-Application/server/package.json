@@ -83,6 +83,7 @@
     "@nestjs/testing": "^6.10.14",
     "@types/bcrypt-nodejs": "0.0.30",
     "@types/body-parser": "^1.16.5",
+    "@types/cli-progress": "^3.4.2",
     "@types/compression": "0.0.36",
     "@types/connect-flash": "0.0.34",
     "@types/connect-redis": "^0.0.9",
