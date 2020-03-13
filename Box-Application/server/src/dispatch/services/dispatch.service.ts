@@ -29,35 +29,37 @@ export class DispatchService {
         Tools.loginfo('* Start micro-service : Dispatch...');
         this.progressBar = Tools.startProgress('Dispatch', 0, 1);
 
-        const listnersLst: Array<Observable<boolean>> = [];
-        this.kafkaService.consumers.forEach(consumer => {
-            listnersLst.push(this.startListenConsumer(consumer));
-        });
+        // const listnersLst: Array<Observable<boolean>> = [];
+        // this.kafkaService.consumers.forEach(consumer => {
+        //     listnersLst.push(this.startListenConsumer(consumer));
+        // });
 
-        if (this.kafkaService.flagIsFirstConnection) {
-            const payloads = [
-                { topic: 'aggregator_init_connexion', messages: JSON.stringify({ serialNumber: Tools.serialNumber }), key: Tools.serialNumber }
-            ];
+        // if (this.kafkaService.flagIsFirstConnection) {
+        //     const payloads = [
+        //         { topic: 'aggregator_init_connexion', messages: JSON.stringify({ serialNumber: Tools.serialNumber }), key: Tools.serialNumber }
+        //     ];
 
-            // KafkaService.instance.producer.send(payloads, (err, data) => {
-            //     Tools.logError('error', err);
-            // });
-        }
-        this.progressBar.increment();
-        Tools.stopProgress('Dispatch', this.progressBar);
-        return forkJoin(listnersLst).pipe(mergeMap((results: Array<boolean>) => of(true)));
+        //     // KafkaService.instance.producer.send(payloads, (err, data) => {
+        //     //     Tools.logError('error', err);
+        //     // });
+        // }
+        // this.progressBar.increment();
+        // Tools.stopProgress('Dispatch', this.progressBar);
+        // return forkJoin(listnersLst).pipe(mergeMap((results: Array<boolean>) => of(true)));
+        return of(true);
 
     }
 
     public startListenConsumer(consumer: any, flt?: string): Observable<boolean> {
-        return fromEvent(consumer, 'data').pipe(filter((message: any) => {
-            const objectToFilter = JSON.parse(message.value);
-            return flt ? objectToFilter.entity === flt : true;
-        }))
-            .pipe(mergeMap((result: any) => {
-                this.routeMessage(consumer, result);
-                return of(true);
-            }));
+        // return fromEvent(consumer, 'data').pipe(filter((message: any) => {
+        //     const objectToFilter = JSON.parse(message.value);
+        //     return flt ? objectToFilter.entity === flt : true;
+        // }))
+        //     .pipe(mergeMap((result: any) => {
+        //         this.routeMessage(consumer, result);
+        //         return of(true);
+        //     }));
+        return of(false);
     }
 
 
@@ -70,7 +72,7 @@ export class DispatchService {
                 );
 
                 switch (message.topic) {
-                    case `${Tools.serialNumber}_init_connexion`:
+                    case `${Tools.serialNumber}_init_connexion1`:
                         this.proccessSyncConnexion(String(message.value));
                         break;
                     case "box_action":

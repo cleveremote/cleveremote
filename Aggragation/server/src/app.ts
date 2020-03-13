@@ -16,7 +16,7 @@ server.init()
             console.log(`* server OK on port ${app.get("port")}`);
             Tools.titleStarted(true);
         });
-        serverInstance.timeout = Number(process.env.TIMEOUT_GLOBAL);
+        //serverInstance.timeout = Number(process.env.TIMEOUT_GLOBAL);
         const wss = new WebSocketService(serverInstance);
 
         return wss.init();

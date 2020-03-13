@@ -1,6 +1,6 @@
-import { map, tap, mergeMap, flatMap, retryWhen } from 'rxjs/operators';
-import { Observable, of, observable, bindCallback } from 'rxjs';
-import { Offset, KafkaClient, ConsumerGroupOptions, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
+import { map, tap, mergeMap, flatMap, retryWhen, take, catchError } from 'rxjs/operators';
+import { Observable, of, observable, bindCallback, timer, race, fromEvent } from 'rxjs';
+import { Message, Offset, KafkaClient, ConsumerGroupOptions, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
 import { getCustomRepository } from "typeorm";
 import { DeviceExt } from "../../entities/custom.repositories/device.ext";
 import { Device } from '../../entities/gen.entities/device';
@@ -13,16 +13,21 @@ import { KafkaInit } from './kafka.init';
 export class KafkaService extends KafkaInit {
     public static instance: KafkaService;
 
-    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false): Observable<any> {
+    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ack = false): Observable<any> {
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
         if (checkResponse) {
-            return sendObs().pipe(mergeMap((data: any) => {
+            const obs = sendObs().pipe(mergeMap((data: any) => {
                 Tools.loginfo('   - message sent => ');
                 console.log(data);
 
                 return of(data);
             })).pipe(mergeMap((data: any) =>
-                KafkaService.instance.checkReponseMessage(data)));
+                this.checkReponseMessage(data)));
+            if (ack) {
+                return obs.pipe(mergeMap((response: any) => this.waitResponseAck('box_action_response', 5000)));
+            }
+
+            return obs;
         }
 
         return sendObs().pipe(mergeMap((data: any) => {
@@ -32,6 +37,50 @@ export class KafkaService extends KafkaInit {
             return of(data);
         }));
 
+    }
+
+    public waitResponseAck(target: string, timeout: number): Observable<any> {
+        const consumersFound =
+            this.consumers.filter((consumer: ConsumerGroupStream) => {
+                const exits = (consumer.consumerGroup as any).topics.find((topic: string) =>
+                    topic.indexOf(target) !== -1);
+
+                return exits ? true : false;
+            });
+        if (consumersFound && consumersFound.length > 0) {
+            const timer$ = timer(timeout);
+            const obs = [];
+            consumersFound.forEach(consumer => {
+                obs.push(this.startListenConsumer(consumer)
+                    .pipe(mergeMap((message: Message) => this.commitMessage(consumer, message, true)))
+                    // .pipe(mergeMap((isCommited: boolean) => this.sendAck(isCommited, { ack: true })))
+                );
+            });
+
+            return race(obs);
+        }
+
+        return of(true);
+    }
+
+    public commitMessage(consumer: ConsumerGroupStream, message: Message, force = false): Observable<boolean> {
+        const commitBind = bindCallback(consumer.commit.bind(consumer, message, force));
+        return commitBind().pipe(map((result: Array<any>) => true));
+    }
+
+    public sendAck(isCommited: boolean, message: any): Observable<any> {
+        if (!isCommited) {
+            return of(false);
+        }
+        const payloads = [
+            { topic: 'box_action_response', messages: JSON.stringify(message), key: 'server_1' }
+        ];
+
+        return this.sendMessage(payloads, true);
+    }
+
+    public startListenConsumer(consumer: any, flt?: string): Observable<any> {
+        return fromEvent(consumer, 'data').pipe(take(1));
     }
 
     public checkReponseMessage(data: any): Observable<any> {
@@ -64,7 +113,12 @@ export class KafkaService extends KafkaInit {
                     })
                 );
             }),
-            retryWhen(genericRetryStrategy({ durationBeforeRetry: 200, maxRetryAttempts: 40 }))
+            retryWhen(genericRetryStrategy({ durationBeforeRetry: 1000, maxRetryAttempts: 40 })),
+            catchError((error: any) => {
+                console.log(JSON.stringify(error));
+
+                return error;
+            })
         );
     }
 

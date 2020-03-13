@@ -2,15 +2,15 @@ import { Observable, throwError, timer } from 'rxjs';
 import { mergeMap, finalize } from 'rxjs/operators';
 
 export const genericRetryStrategy = ({
-    maxRetryAttempts = 3,
+    maxRetryAttempts = 3000,
     durationBeforeRetry = 1000,
     excludedStatusCodes = []
 }: {
     maxRetryAttempts?: number,
     durationBeforeRetry?: number,
-    excludedStatusCodes?: number[]
-} = {}) => (attempts: Observable<any>) => {
-    return attempts.pipe(
+    excludedStatusCodes?: Array<number>
+} = {}) => (attempts: Observable<any>) =>
+    attempts.pipe(
         mergeMap((error, i) => {
             const retryAttempt = i + 1;
             // if maximum number of retries have been met
@@ -24,9 +24,9 @@ export const genericRetryStrategy = ({
             console.log(
                 `Attempt ${retryAttempt}: retrying in ${durationBeforeRetry}ms`
             );
+
             // retry after 1s, 2s, etc...
             return timer(durationBeforeRetry);
         }),
         finalize(() => console.log('We are done!'))
     );
-};
