@@ -1,6 +1,7 @@
+import { Observable } from "rxjs";
 
-export interface ISynchronize {
-    synchronize(data: ISynchronizeParams): any;
+export interface ISynchronize<T> {
+    synchronize(data: ISynchronizeParams): Observable<T>;
 }
 
 export interface ISynchronizeParams {

@@ -1,6 +1,6 @@
 import * as express from 'express';
 // tslint:disable-next-line: no-default-import
-import Controller from './controllers/_controller';
+import Controller from './manager/controllers/_controller';
 import * as fileSystem from 'fs';
 const app = express();
 

@@ -1,20 +1,29 @@
 import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 import { SchemeEntity } from "../entities/scheme.entity";
-import { Observable, from } from "rxjs";
+import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
-import { ModuleQueryDto } from "../dto/module.query.dto";
-import { plainToClass } from "class-transformer";
+import { plainToClass, classToClass } from "class-transformer";
 import { SchemeQueryDto } from "../dto/scheme.query.dto";
+import { SchemeDto } from "../dto/scheme.dto";
 
 @EntityRepository(SchemeEntity)
-export class SchemeExt extends Repository<SchemeEntity> implements ISynchronize {
+export class SchemeExt extends Repository<SchemeEntity> implements ISynchronize<SchemeEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        throw new Error("Method not implemented.");
+    public synchronize(params: ISynchronizeParams): Observable<SchemeEntity | boolean> {
+        switch (params.action) {
+            case 'ADD':
+                return this.addScheme(classToClass<SchemeDto>(params.data));
+            case 'UPDATE':
+                return this.updateScheme(classToClass<SchemeDto>(params.data));
+            case 'DELETE':
+                return this.deleteScheme(params.data.id);
+            default:
+                break;
+        }
     }
 
-    public updateScheme(data: any): Observable<SchemeEntity> {
+    public updateScheme(data: SchemeDto): Observable<SchemeEntity> {
         return from(this.save(data)).pipe(
             map((acc: SchemeEntity) => {
 
@@ -28,7 +37,7 @@ export class SchemeExt extends Repository<SchemeEntity> implements ISynchronize 
             }));
     }
 
-    public addScheme(data: any): Observable<SchemeEntity> {
+    public addScheme(data: SchemeDto): Observable<SchemeEntity> {
         return from(this.save(data)).pipe(
             map((acc: SchemeEntity) => {
 

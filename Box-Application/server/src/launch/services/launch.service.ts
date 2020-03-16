@@ -6,6 +6,7 @@ import { XbeeService } from "../../xbee/services/xbee.service";
 import { DispatchService } from "../../dispatch/services/dispatch.service";
 import { ManagerService } from "../../manager/services/manager.service";
 import { Tools } from "../../common/tools-service";
+import { IPartitionConfig } from "../../kafka/interfaces/partition.config.interface";
 
 @Injectable()
 export class LaunchService {
@@ -18,42 +19,29 @@ export class LaunchService {
     }
 
     public async onApplicationBootstrap(): Promise<void> {
-
-
-
-        Tools.getSerialNumber()
+        of(true)
             .pipe(delay(1000))
-            .pipe(mergeMap((config: any) => this.kafkaService.initCommonKafka()))
-            .pipe(mergeMap((serialNumber: any) => this.initFirstConnexion()))
-            .pipe(delay(100))
-            // .pipe(mergeMap((resKafka: boolean) => resKafka ? this.xbeeService.init() : of(false)))
-            // .pipe(delay(100))
+            .pipe(tap(() => Tools.loginfo('* Start required initialization process boot ...')))
+            .pipe(tap(() => Tools.debug = false))
+            .pipe(mergeMap(() => Tools.getSerialNumber()))
+            .pipe(mergeMap(() => this.kafkaService.initCommonKafka()))
+            .pipe(mergeMap(() => this.initFirstConnexion()))
+            .pipe(mergeMap((resKafka: boolean) => resKafka ? this.xbeeService.init() : of(false)))
             .pipe(mergeMap((resXbee: boolean) => resXbee ? this.dispatchService.init() : of(false)))
-            .pipe(tap(() => Tools.stopProgress()))
+            .pipe(tap(() => { Tools.debug = true; Tools.logSuccess('* Box ready for work!'); }))
             .toPromise();
     }
 
     public initFirstConnexion(): Observable<any> {
-        return of(false)//this.managerService.getPartitionconfig()
+        return this.managerService.getPartitionconfig()// this.managerService.getPartitionconfig()// of(false) for first cnx load
             .pipe(mergeMap((config: any) => {
                 if (config) {
                     return this.kafkaService.initKafka(config);
                 }
                 return this.kafkaService.initKafka()
-                    .pipe(mergeMap((res) => this.kafkaService.clearPreviousMessages('init_connexion1', 5000)))
-                    .pipe(mergeMap((result: any) => {
-                        //clear previous init messages .
-                        console.log('send message and start listen');
-                        const dataExample = { serialNumber: '123456789' };
-                        const payloads = [
-                            { topic: 'aggregator_init_connexion', messages: JSON.stringify(dataExample), key: 'init-connexion' }
-                        ];
-
-                        return this.kafkaService.sendMessage(payloads, true, true);
-
-                    }))
-                    .pipe(mergeMap((res: any) => this.dispatchService.proccessSyncConnexion(String(res))))
-                    .pipe(mergeMap((res: boolean) => of(true))); // this.kafkaService.initKafka(config)
+                    .pipe(mergeMap(res => this.kafkaService.clearPreviousMessages(`${Tools.serialNumber}_init_connexion`)))
+                    .pipe(mergeMap(() => this.dispatchService.initFirstConnexion()))
+                    .pipe(mergeMap((partitionConfig: IPartitionConfig) => this.kafkaService.initKafka(partitionConfig)));
             }));
     }
 

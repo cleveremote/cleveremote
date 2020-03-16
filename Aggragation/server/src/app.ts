@@ -1,10 +1,11 @@
+require('events').EventEmitter.prototype._maxListeners = 0;
 import { Request, Response, Application } from 'express';
 import { map, mergeMap } from 'rxjs/operators';
 import * as dotenv from "dotenv";
 import * as http from "http";
 import { Server } from './server';
-import { WebSocketService } from './services/websocket.service';
-import { Tools } from './services/tools-service';
+import { WebSocketService } from './manager/services/websocket.service';
+import { Tools } from './common/tools-service';
 Tools.titleApplication();
 dotenv.config({ path: ".env" });
 

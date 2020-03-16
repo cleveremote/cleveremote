@@ -29,15 +29,15 @@ export class SchemeComponent implements OnInit {
   }
 
   moduleExecution(jsonBody): void {
-    //this.apiRequestsService.postExecution({ test: "testdata", idModule: "1234" }).subscribe();
-    const message = new Message("this.sender", "filter1", true);
-    this.dataService.socket.next(message);
+    this.apiRequestsService.postExecution({ test: "testdata", idModule: "1234" }).subscribe();
+    // const message = new Message("this.sender", "filter1", true);
+    // this.dataService.socket.next(message);
   }
 
   moduleExecution1(jsonBody): void {
     //this.apiRequestsService.postExecution({ test: "testdata", idModule: "1234" }).subscribe();
-    const message = new Message("this.sender", "filter2", true);
-    this.dataService.socket.next(message);
+    // const message = new Message("this.sender", "filter2", true);
+    // this.dataService.socket.next(message);
   }
 
     ngOnDestroy() {

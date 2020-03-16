@@ -9,8 +9,8 @@ export const genericRetryStrategy = ({
     maxRetryAttempts?: number,
     durationBeforeRetry?: number,
     excludedStatusCodes?: number[]
-} = {}) => (attempts: Observable<any>) => {
-    return attempts.pipe(
+} = {}) => (attempts: Observable<any>) =>
+    attempts.pipe(
         mergeMap((error, i) => {
             const retryAttempt = i + 1;
             // if maximum number of retries have been met
@@ -21,12 +21,12 @@ export const genericRetryStrategy = ({
             ) {
                 return throwError(error);
             }
-            console.log(
-                `Attempt ${retryAttempt}: retrying in ${durationBeforeRetry}ms`
-            );
+            // console.log(
+            //     `Attempt ${retryAttempt}: retrying in ${durationBeforeRetry}ms`
+            // );
             // retry after 1s, 2s, etc...
             return timer(durationBeforeRetry);
-        }),
-        finalize(() => console.log('We are done!'))
+        })
+        // ,
+        // finalize(() => console.log('We are done!'))
     );
-};

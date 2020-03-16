@@ -1,16 +1,32 @@
 import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { TransceiverEntity } from "../entities/transceiver.entity";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
-import { from, Observable } from "rxjs";
+import { from, Observable, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { TransceiverDto } from "../dto/transceiver.dto";
 import { TransceiverQueryDto } from "../dto/transceiver.query.dto copy";
+import { classToClass } from "class-transformer";
+import { Inject, forwardRef } from "@nestjs/common";
+import { KafkaService } from "../../kafka/services/kafka.service";
 
 @EntityRepository(TransceiverEntity)
-export class TransceiverExt extends Repository<TransceiverEntity> implements ISynchronize {
+export class TransceiverExt extends Repository<TransceiverEntity> implements ISynchronize<TransceiverEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        throw new Error("Method not implemented.");
+    constructor(@Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService) {
+        super();
+    }
+
+    public synchronize(params: ISynchronizeParams): Observable<TransceiverEntity | boolean> {
+        switch (params.action) {
+            case 'ADD':
+                return this.addTransceiver(classToClass<TransceiverDto>(params.data));
+            case 'UPDATE':
+                return this.updateTransceiver(classToClass<TransceiverDto>(params.data));
+            case 'DELETE':
+                return this.deleteTransceiver(params.data.id);
+            default:
+                break;
+        }
     }
 
     public updateTransceiver(data: any): Observable<TransceiverEntity> {

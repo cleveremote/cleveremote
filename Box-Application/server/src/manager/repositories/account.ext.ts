@@ -10,10 +10,11 @@ import { PartitionConfigEntity } from "../entities/partitionconfig.entity";
 import { FORMERR } from "dns";
 
 @EntityRepository(AccountEntity)
-export class AccountExt extends Repository<AccountEntity> implements ISynchronize {
+export class AccountExt extends Repository<AccountEntity> implements ISynchronize<AccountEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        this.updateAccount(data.data).subscribe();
+    public synchronize(params: ISynchronizeParams): Observable<AccountEntity | boolean> {
+        //this.updateAccount(data.data).subscribe();
+        return of(new AccountEntity());
     }
 
     public updateAccount(data: any): Observable<AccountEntity> {

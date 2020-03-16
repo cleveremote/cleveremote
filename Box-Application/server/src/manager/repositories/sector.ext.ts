@@ -1,22 +1,32 @@
 import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 import { SchemeEntity } from "../entities/scheme.entity";
-import { Observable, from } from "rxjs";
+import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { ModuleQueryDto } from "../dto/module.query.dto";
-import { plainToClass } from "class-transformer";
+import { plainToClass, classToClass } from "class-transformer";
 import { SchemeQueryDto } from "../dto/scheme.query.dto";
 import { SectorEntity } from "../entities/sector.entity";
 import { SectorQueryDto } from "../dto/sector.query.dto";
+import { SectorDto } from "../dto/sector.dto";
 
 @EntityRepository(SectorEntity)
-export class SectorExt extends Repository<SectorEntity> implements ISynchronize {
+export class SectorExt extends Repository<SectorEntity> implements ISynchronize<SectorEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        throw new Error("Method not implemented.");
+    public synchronize(params: ISynchronizeParams): Observable<SectorEntity | boolean> {
+        switch (params.action) {
+            case 'ADD':
+                return this.addSector(classToClass<SectorDto>(params.data));
+            case 'UPDATE':
+                return this.updateSector(classToClass<SectorDto>(params.data));
+            case 'DELETE':
+                return this.deleteSector(params.data.id);
+            default:
+                break;
+        }
     }
 
-    public updateSector(data: any): Observable<SectorEntity> {
+    public updateSector(data: SectorDto): Observable<SectorEntity> {
         return from(this.save(data)).pipe(
             map((acc: SectorEntity) => {
 
@@ -30,7 +40,7 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize 
             }));
     }
 
-    public addSector(data: any): Observable<SectorEntity> {
+    public addSector(data: SectorDto): Observable<SectorEntity> {
         return from(this.save(data)).pipe(
             map((acc: SectorEntity) => {
 

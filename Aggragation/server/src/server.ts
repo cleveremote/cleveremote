@@ -2,12 +2,12 @@
 import { Observable, of as observableOf, from as observableFrom, EMPTY, of } from 'rxjs';
 import { tap, flatMap, map } from 'rxjs/operators';
 
-import { ormConnection } from './entities';
+import { ormConnection } from './manager/entities';
 import { Router } from './router';
 // import { RedisClient, createClient } from 'redis';
 // import * as connectRedis from 'connect-redis';
 
-import { PassportService } from './services/passport.service';
+import { PassportService } from './manager/services/passport.service';
 import * as bodyParser from 'body-parser';
 import * as compression from 'compression';
 import * as express from 'express';
@@ -16,10 +16,9 @@ import * as logger from 'morgan';
 import * as passportType from "passport";
 import * as mongoose from 'mongoose';
 import * as cookieParser from 'cookie-parser';
-import { KafkaService } from './services/kafka/kafka.service';
-import { XbeeService } from './services/xbee.service';
-import { Tools } from './services/tools-service';
-import { DispatchService } from './services/dispatch.service';
+import { KafkaService } from './kafka/services/kafka.service';
+import { Tools } from './common/tools-service';
+import { DispatchService } from './dispatch/services/dispatch.service';
 
 export class Server {
 
@@ -34,11 +33,9 @@ export class Server {
             flatMap(() => this.initDb().pipe(
                 flatMap(() => this.initKafka().pipe(
                     flatMap(() => this.initDispatch().pipe(
-                        flatMap(() => this.initXbee().pipe(
-                            flatMap(() => this.initPassport().pipe(
-                                flatMap(() => this.initDbMongoose().pipe(
-                                    flatMap(() => this.initRoutes()), map(() => this.app))
-                                ))
+                        flatMap(() => this.initPassport().pipe(
+                            flatMap(() => this.initDbMongoose().pipe(
+                                flatMap(() => this.initRoutes()), map(() => this.app))
                             ))
                         ))
                     ))
@@ -73,23 +70,7 @@ export class Server {
         return kafkaInstance.init();
     }
 
-    public initXbee(): Observable<void> {
-        Tools.loginfo('* start init xbee...');
-        if (process.env.NODE_ENV === 'development') {
-            return of(true).pipe(
-                map((res: boolean) => {
-                    Tools.logWarn('  => current App server Xbee not needed');
-                }, (err: any) => {
-                    Tools.logError(`  => KO! ${err}`);
 
-                    return err;
-                }));
-        }
-
-        const xbee = new XbeeService();
-
-        return xbee.init();
-    }
 
     public initDbMongoose(): Observable<void> {
         Tools.loginfo('* start init mongoDB...');

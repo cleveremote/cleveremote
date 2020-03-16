@@ -53,9 +53,11 @@
     "typescript": "^3.3.3"
   },
   "dependencies": {
+    "@types/cli-progress": "^3.4.2",
     "angular-user-idle": "^2.1.2",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.19.0",
+    "cli-progress": "^3.6.0",
     "compression": "^1.7.4",
     "connect-flash": "^0.1.1",
     "connect-redis": "^3.4.1",

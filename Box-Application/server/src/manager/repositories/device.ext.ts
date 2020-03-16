@@ -1,14 +1,15 @@
 import { EntityRepository, Repository } from "typeorm";
-import { Observable, from } from "rxjs";
+import { Observable, from, of } from "rxjs";
 import { DeviceEntity } from "../entities/device.entity";
 import { map } from "rxjs/operators";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 
 @EntityRepository(DeviceEntity)
-export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize {
+export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize<DeviceEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        throw new Error("Method not implemented.");
+    public synchronize(params: ISynchronizeParams): Observable<DeviceEntity | boolean> {
+        //this.updateAccount(data.data).subscribe();
+        return of(new DeviceEntity());
     }
 
     public getDevices(): Observable<Array<DeviceEntity>> {

@@ -1,211 +1,189 @@
-import { map, tap, mergeMap, flatMap, merge, take, repeatWhen, takeUntil, delay, takeWhile, repeat, retryWhen, catchError, filter } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, bindCallback, from, interval, Subject, fromEvent, timer, race, throwError, forkJoin } from 'rxjs';
-// tslint:disable-next-line:max-line-length
-import { Message, Offset, KafkaClient, ConsumerGroupOptions, HighLevelProducer, CustomPartitionAssignmentProtocol, ClusterMetadataResponse, ConsumerGroupStream, ProduceRequest, ProducerStream } from 'kafka-node';
+import { map, mergeMap, flatMap, take, delay, retryWhen, catchError, filter, tap, timeout } from 'rxjs/operators';
+import { Observable, of, bindCallback, race, forkJoin, pipe } from 'rxjs';
+import { Message, Offset, ConsumerGroupStream, ProduceRequest } from 'kafka-node';
 import { v1 } from 'uuid';
-import { getCustomRepository } from "typeorm";
-import { DeviceExt } from "../../manager/repositories/device.ext";
 import { Tools } from '../../common/tools-service';
 import { genericRetryStrategy } from '../../common/generic-retry-strategy';
 import { KafkaBase } from './kafka.base';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { ConsumerCustom } from '../classes/consumer.custom.class';
+import { Payload } from '../classes/payload.class';
+import { ISendResponse } from '../interfaces/send.response.interface';
+import { SendResponse } from '../classes/send.response.class';
+import { IPartitionConfig } from '../interfaces/partition.config.interface';
 
 @Injectable()
 export class KafkaService extends KafkaBase {
 
-    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ack = false): Observable<any> {
+    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ackFrom = 'box_action_response', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
+        const messageId = JSON.parse(payloads[0].messages).messageId;
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
-        if (checkResponse) {
-            const obs = sendObs().pipe(mergeMap((data: any) => {
+        let obs: Observable<ISendResponse | [Message, boolean]> = of(true)
+            .pipe(delay(200))
+            .pipe(mergeMap(() => sendObs()))
+            .pipe(mergeMap((data: [any, ISendResponse]) => {
                 Tools.loginfo('   - message sent => ');
-                console.log(data);
-
-                return of(data);
-            })).pipe(mergeMap((data: any) =>
-                this.checkReponseMessage(data)));
-            if (ack) {
-                return obs.pipe(mergeMap((response: any) => this.waitResponseAck('init_connexion1', 5000)));
-            }
-
-            return obs;
+                Tools.logWarn(`   ${JSON.stringify(payloads)}`);
+                return of(data[1]);
+            }));
+        if (checkResponse) {
+            obs = obs.pipe(mergeMap((data: ISendResponse) => this.checkReponseMessage(messageId, checkResponse, ackFrom, timeOut)));
         }
-
-        return sendObs().pipe(mergeMap((data: any) => {
-            Tools.loginfo('   - message sent => ');
-            console.log(data);
-
-            return of(data);
-        }));
-
+        return obs;
     }
 
-    public waitResponseAck(target: string, timeout: number): Observable<any> {
-        const consumersFound =
-            this.consumers.filter((consumer: ConsumerGroupStream) => {
-                const exits = (consumer.consumerGroup as any).topics.find((topic: string) =>
-                    topic.indexOf(target) !== -1);
-                return exits ? true : false;
-            });
-        if (consumersFound && consumersFound.length > 0) {
-            const timer$ = timer(timeout);
-            const obs = [];
-            consumersFound.forEach(consumer => {
-                obs.push(this.startListenConsumer(consumer)
-                    .pipe(mergeMap((message: Message) => this.commitMessage(consumer, message, true)))
-                    .pipe(mergeMap((isCommited: boolean) => this.sendAck(isCommited, { ack: true })))
-                );
-            });
-            return race(obs);
+    public waitResponseAck(messageId: string, topicName: string, timeOut: number): Observable<Message> {
+        Tools.loginfo('   - checking proccessing ');
+        const consumersByTopic = this.getConsumersByToptic(topicName);
+
+        if (consumersByTopic.length === 0) {
+            throw { error: "No consumer" };
+        }
+
+        if (consumersByTopic.length === 1) {
+            return this.startListenConsumer(consumersByTopic[0], messageId, timeOut)
+                .pipe(mergeMap((message: Message) => this.commitMessage(consumersByTopic[0].consumer, message, true)));
+        }
+        const obs = [];
+        consumersByTopic.forEach(consumer => {
+            obs.push(this.startListenConsumer(consumer, messageId, timeOut)
+                .pipe(mergeMap((message: Message) => this.commitMessage(consumer.consumer, message, true)))
+            );
+        });
+        return race(obs);
+    }
+
+    public clearPreviousMessages(topicName: string): Observable<boolean> {
+        const offset = new Offset(this.client);
+        const consumersByTopic = this.getConsumersByToptic(topicName);
+        const obs = [];
+        let progressBar;
+        //todo message proccessing get message in pipe
+        return this.getMaxToTake(offset, topicName)
+            .pipe(mergeMap((maxToTake: number) => {
+                progressBar = Tools.startProgress('Clear stream before start sync ', 0, maxToTake);
+                if (consumersByTopic.length === 0) { return of(true); }
+
+                if (consumersByTopic.length === 1) {
+                    return this.startListenConsumerUntil(consumersByTopic[0], maxToTake, progressBar);
+                }
+
+                consumersByTopic.forEach(consumer => {
+                    obs.push(this.startListenConsumerUntil(consumer, maxToTake, progressBar));
+                });
+                return forkJoin(obs);
+
+            })).pipe(map(() => true))
+            .pipe(tap(() => Tools.stopProgress('Clear stream before start sync ', progressBar)))
+            .pipe(
+                catchError(error => {
+                    Tools.stopProgress('Clear stream before start sync ', progressBar, error);
+                    return of(false);
+                })
+            );;
+    }
+
+    public commitMessage(consumer: ConsumerGroupStream, message: Message, force = false): Observable<Message> {
+        const commitBind = bindCallback(consumer.commit.bind(consumer, message, force));
+        return commitBind().pipe(mergeMap((result: [any, Message]) => {
+            Tools.logWarn(`consumer read msg ${message.value} Topic=${message.topic} Partition=${message.partition} Offset=${message.offset}`);
+            return of(message);
+        }));
+    }
+
+    public sendAck(message: any): Observable<ISendResponse | [Message, boolean]> {
+        const payloads = [new Payload('box_action_response', JSON.stringify(message), 'server_1')];
+        return this.sendMessage(payloads);
+    }
+
+    public startListenConsumer(consumer: ConsumerCustom, messageId: string, timeOut = 15000): Observable<Message> {
+        return consumer.eventData
+            .pipe(filter((message: Message) => JSON.parse(String(message.value)).messageId === messageId))
+            .pipe(take(1)).pipe(timeout(timeOut));;
+    }
+
+    public startListenConsumerUntil(consumer: ConsumerCustom, maxToTake?: number, progressBar?: any, timeOut = 30000): Observable<boolean> {
+        if (maxToTake) {
+            return consumer.eventData.pipe(mergeMap((message: Message) => {
+                if (maxToTake - message.offset !== 0) {
+                    this.commitMessage(consumer.consumer, message, true).subscribe();
+                    progressBar.increment();
+                }
+                return of(true);
+            }))
+                .pipe(take(maxToTake)).pipe(timeout(timeOut));
         }
         return of(true);
     }
 
-    public clearPreviousMessages(target: string, timeout: number): Observable<any> {
-        const consumersFound =
-            this.consumers.filter((consumer: ConsumerGroupStream) => {
-                const exits = (consumer.consumerGroup as any).topics.find((topic: string) =>
-                    topic.indexOf(target) !== -1);
-                return exits ? true : false;
-            });
-
-        const topicInfo = '123456789_init_connexion1';
-        const offset = new Offset(this.client);
-        const offsetObs = bindCallback(offset.fetch.bind(offset, [
-            { topic: topicInfo, time: -1 }
-        ]));
-        const offsetComittedObs = bindCallback(offset.fetchCommits.bind(offset, process.env.GROUPID, [
-            { topic: topicInfo, partition: 0 }
-        ]));
-
-        const latestOffset = offsetObs().pipe(
-            mergeMap((results: any) => {
-                if (!!(results.message || results[0] !== null)) {
-                    Tools.logSuccess('     => KO');
-                    throw false;
-                }
-                const maxOffset = results[1][topicInfo][0];
-                return of(maxOffset);
-            })
-        );
-
-
-        return latestOffset.pipe(mergeMap(offsetmax =>
-            offsetComittedObs().pipe(map((results: any) => {
-                const lastcommitIndex = results[1][topicInfo][0];
-                return (offsetmax[0] - lastcommitIndex);
-            }))
-        ))
-            .pipe(mergeMap((maxToTake: number) => {
-                if (consumersFound && consumersFound.length > 0) {
-                    const timer$ = timer(timeout);
-                    const obs = [];
-                    if (maxToTake === 0) {
-                        return of(true);
-                    }
-                    consumersFound.forEach(consumer => {
-                        obs.push(this.startListenConsumerUntil(consumer, maxToTake)
-                            .pipe(mergeMap((message: Message) => this.commitMessage(consumer, message, true)))
-                            // .pipe(mergeMap((isCommited: boolean) => this.sendAck(isCommited, { ack: true })))
-                        );
-                    });
-                    return forkJoin(obs);
-                }
-                return of({});
-            }));
-    }
-
-    public commitMessage(consumer: ConsumerGroupStream, message: Message, force = false): Observable<boolean> {
-        consumer.commit(message, true, (error, data) => {
-            if (!error) {
-                console.log('consumer read msg %s Topic="%s" Partition=%s Offset=%d', message.value, message.topic, message.partition, message.offset);
-            } else {
-                console.log(error);
-            }
-        });
-        const commitBind = bindCallback(consumer.commit.bind(consumer, message, force));
-        return commitBind().pipe(mergeMap((result: Array<any>) => of(true)));
-    }
-
-    public sendAck(isCommited: boolean, message: any): Observable<any> {
-        if (!isCommited) {
-            return of(false);
+    public checkReponseMessage(messageId: string, needAck = false, ackFrom = 'box_action_response', timeOut = 15000): Observable<[Message, boolean]> {
+        const obsLst = [];
+        if (needAck) {
+            obsLst.push(this.waitResponseAck(messageId, ackFrom, timeOut));
         }
-        const payloads = [
-            { topic: 'box_action_response', messages: JSON.stringify(message), key: 'server_1' }
-        ];
+        obsLst.push(of(true));
+        // params data: ISendResponse,
+        // obsLst.push(of(data).pipe(
+        //     mergeMap((dataIn: ISendResponse) => {
+        //         const initial = new SendResponse(dataIn);
+        //         const topicName = initial.topic;
+        //         const offset = new Offset(this.clientProducer);
+        //         const offsetObs = bindCallback(offset.fetchCommits.bind(offset, process.env.AGGREGATION_GROUPID, [
+        //             { topic: topicName, partition: Object.keys(data[topicName])[0] }
+        //         ]));
 
-        return this.sendMessage(payloads, true);
+        //         return offsetObs().pipe(
+        //             map((results: ISendResponse) => {
+        //                 if (!!(results.message || results[0] !== null)) {
+        //                     Tools.logSuccess('     => KO');
+        //                     throw false;
+        //                 }
+        //                 const current = new SendResponse(results[1]);
+        //                 if ((current.offset >= initial.offset + 1) && current.partition === initial.partition) {
+        //                     Tools.logSuccess(`     => message sent OK`);
+        //                     return true;
+        //                 }
+        //                 throw false;
+        //             })
+        //         );
+        //     }),
+        //     retryWhen(genericRetryStrategy({ durationBeforeRetry: 100, maxRetryAttempts: 200 }))
+        // ));
+
+        return forkJoin(obsLst).pipe(map((results: [Message, boolean]) => results));
     }
 
-    public startListenConsumer(consumer: any, flt?: string): Observable<any> {
-        // const timer$ = timer(20000); //ttakeUntil(timer$)
-        return fromEvent(consumer, 'data').pipe(take(1));
-    }
-
-    public startListenConsumerUntil(consumer: any, max?: number): Observable<any> {
-        // const timer$ = timer(20000); //ttakeUntil(timer$)
-        return of(true)
-            .pipe(mergeMap(result =>
-                fromEvent(consumer, 'data').pipe(mergeMap((res: any) => {
-                    if (max - res.offset !== 0) {
-                        this.commitMessage(consumer, res, true).subscribe();
-                        return of(true);
-                    }
-                    return of(res);
-                })).pipe(take(max)))
+    public initCommonKafka(): Observable<boolean> {
+        const progressBar = Tools.startProgress('Kafka common configuration     ', 0, 3,'* Start micro-service KAFKA');
+        return this.initializeCLients()
+            .pipe(tap(() => progressBar.increment()))
+            .pipe(flatMap(() => this.setCheckhError()))
+            .pipe(tap(() => progressBar.increment()))
+            .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)))
+            .pipe(tap(() => progressBar.increment()))
+            .pipe(tap(() => Tools.stopProgress('Kafka common configuration     ', progressBar)))
+            .pipe(
+                catchError(error => {
+                    Tools.stopProgress('Kafka common configuration     ', progressBar, error);
+                    return of(false);
+                })
             );
-
     }
 
-    public checkReponseMessage(data: any): Observable<any> {
-        return of(data).pipe(
-            mergeMap((x: any) => {
-                const topicInfo = Object.keys(data[1])[0];
-                const offset = new Offset(this.clientProducer);
-                const offsetObs = bindCallback(offset.fetchCommits.bind(offset, process.env.AGGREGATION_GROUPID, [
-                    { topic: topicInfo, partition: Object.keys(data[1][topicInfo])[0] }
-                ]));
-
-                return offsetObs().pipe(
-                    map((results: any) => {
-                        if (!!(results.message || results[0] !== null)) {
-                            Tools.logSuccess('     => KO');
-                            throw false;
-                        }
-                        const offsetRes: number = results[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
-                        const offsetIn: number = data[1][topicInfo][Object.keys(data[1][topicInfo])[0]];
-                        const partitionRes = Object.keys(results[1][topicInfo])[0];
-                        const partitionIn = Object.keys(data[1][topicInfo])[0];
-                        if ((offsetRes >= offsetIn + 1) && partitionRes === partitionIn) {
-                            Tools.logSuccess(`     => OK [PartitionIn,OffsetIn]=[${partitionIn},${offsetIn}] [PartitionRes,OffsetRes]=[${partitionRes},${offsetRes}]`);
-
-                            return { pin: partitionIn, oin: offsetIn };
-                        }
-                        Tools.logSuccess(`     => KO [PartitionIn,OffsetIn]=[${partitionIn},${offsetIn}] [PartitionRes,OffsetRes]=[${partitionRes},${offsetRes}]`);
-                        throw { status: 'KO', message: "process timeOut!" };
-                    })
-                );
-            }),
-            retryWhen(genericRetryStrategy({ durationBeforeRetry: 200, maxRetryAttempts: 40 }))
-        );
-    }
-
-    public initCommonKafka(): Observable<any> {
-        Tools.loginfo('* Start micro-service KAFKA');
-        this.progressBar = Tools.startProgress('KAFKA   ', 0, 5);
-        return this.InitClients()
-            .pipe(flatMap(() => this.setPublicationTopics(process.env.KAFKA_TOPICS_PUBLICATION)), catchError(val => val));
-    }
-
-    public initKafka(cfg?: any): Observable<any> {
+    public initKafka(partitionConfig?: IPartitionConfig): Observable<boolean> {
+        const progressBar = Tools.startProgress('Kafka deep configuration       ', 0, 2);
         return of(true)
-            .pipe(mergeMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION, cfg)), catchError(val => val))
-            .pipe(mergeMap(() => this.initializeConsumer()), catchError(val => val))
-            .pipe(catchError((response: any) => {
-                Tools.stopProgress('KAFKA   ', this.progressBar, response);
-                return of(true);
-            }));
+            .pipe(mergeMap(() => this.setSubscriptionTopics(process.env.KAFKA_TOPICS_SUBSCRIPTION, partitionConfig)), catchError(val => of(false)))
+            .pipe(tap(() => progressBar.increment()))
+            .pipe(mergeMap(() => this.initializeConsumer()), catchError(val => of(false)))
+            .pipe(tap(() => progressBar.increment()))
+            .pipe(tap(() => Tools.stopProgress('Kafka deep configuration       ', progressBar)))
+            .pipe(
+                catchError(error => {
+                    Tools.stopProgress('Kafka deep configuration       ', progressBar, error);
+                    return of(false);
+                })
+            );
     }
 
 }

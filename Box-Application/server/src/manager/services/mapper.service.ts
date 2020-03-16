@@ -5,14 +5,23 @@ import { DeviceExt } from "../repositories/device.ext";
 import { TransceiverExt } from "../repositories/transceiver.ext";
 import { PartitionConfigExt } from "../repositories/partitionConfig.ext";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { ModuleExt } from "../repositories/module.ext";
+import { ProviderExt } from "../repositories/provider.ext";
+import { SchemeExt } from "../repositories/scheme.ext";
+import { SectorExt } from "../repositories/sector.ext";
+import { Observable } from "rxjs";
 
 export class MapperService {
     public classStore = [
         AccountExt,
         UserExt,
-        TransceiverExt,
         DeviceExt,
-        PartitionConfigExt
+        PartitionConfigExt,
+        ModuleExt,
+        ProviderExt,
+        SchemeExt,
+        SectorExt,
+        TransceiverExt
     ];
 
     public dynamicType(entityName: string): any {
@@ -25,11 +34,11 @@ export class MapperService {
         return t;
     }
 
-    public dataBaseSynchronize(message: string): void {
+    public dataBaseSynchronize(message: string): Observable<any> {
         const data: ISynchronizeParams = JSON.parse(message);
         const type = this.dynamicType(data.entity);
         const repository = getCustomRepository(type);
-        (repository as ISynchronize).synchronize(data);
+        return (repository as ISynchronize<typeof type>).synchronize(data);
     }
 
 }

@@ -11,9 +11,11 @@
     ]
   },
   "rules": {
+    "no-unnecessary-callback-wrapper":false,
     "newline-before-return": false,
     "no-floating-promises": false,
     "newline-per-chained-call": false,
+    "no-void-expression": false,
     "file-name-casing": [false, "kebab-case"],
     "member-access": [
       true

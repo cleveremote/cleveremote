@@ -1,16 +1,17 @@
 import { EntityRepository, Repository } from "typeorm";
 import { UserEntity } from "../entities/user.entity";
 import * as bcrypt from 'bcrypt-nodejs';
-import { Observable, from } from "rxjs";
+import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { AccountEntity } from "../entities/account.entity";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 
 @EntityRepository(UserEntity)
-export class UserExt extends Repository<UserEntity> implements ISynchronize {
+export class UserExt extends Repository<UserEntity> implements ISynchronize<UserEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        throw new Error("Method not implemented.");
+    public synchronize(params: ISynchronizeParams): Observable<UserEntity | boolean> {
+        //this.updateAccount(data.data).subscribe();
+        return of(new UserEntity());
     }
 
     public generateHash(password: any): string {

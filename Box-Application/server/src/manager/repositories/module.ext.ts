@@ -1,19 +1,29 @@
 import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 import { ModuleEntity } from "../entities/module.entity";
-import { Observable, from } from "rxjs";
+import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { ModuleQueryDto } from "../dto/module.query.dto";
-import { plainToClass } from "class-transformer";
+import { plainToClass, classToClass } from "class-transformer";
+import { ModuleDto } from "../dto/module.dto";
 
 @EntityRepository(ModuleEntity)
-export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize {
+export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<ModuleEntity | boolean> {
 
-    public synchronize(data: ISynchronizeParams): any {
-        throw new Error("Method not implemented.");
+    public synchronize(params: ISynchronizeParams): Observable<ModuleEntity | boolean> {
+        switch (params.action) {
+            case 'ADD':
+                return this.addModule(classToClass<ModuleDto>(params.data));
+            case 'UPDATE':
+                return this.updateModule(classToClass<ModuleDto>(params.data));
+            case 'DELETE':
+                return this.updateModule(params.data.id);
+            default:
+                break;
+        }
     }
 
-    public updateModule(data: any): Observable<ModuleEntity> {
+    public updateModule(data: ModuleDto): Observable<ModuleEntity> {
         return from(this.save(data)).pipe(
             map((acc: ModuleEntity) => {
 
@@ -27,7 +37,7 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize 
             }));
     }
 
-    public addModule(data: any): Observable<ModuleEntity> {
+    public addModule(data: ModuleDto): Observable<ModuleEntity> {
         return from(this.save(data)).pipe(
             map((acc: ModuleEntity) => {
 
@@ -41,8 +51,8 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize 
             }));
     }
 
-    public deleteModule(moduleId1: string): Observable<boolean> {
-        return from(this.delete({ moduleId: moduleId1 })).pipe(
+    public deleteModule(id: string): Observable<boolean> {
+        return from(this.delete({ moduleId: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {

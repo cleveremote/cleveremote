@@ -62,8 +62,7 @@ export class XbeeService extends DeviceService {
     }
 
     public init(): Observable<boolean> {
-        Tools.loginfo('* Start micro-service : XBEE...');
-        this.progressBar = Tools.startProgress('XBEE    ', 0, 1);
+        this.progressBar = Tools.startProgress('RF module Xbee configuration   ', 0, 1, '* Start micro-service : RF network ...');
         const exists = portName => SerialPort.list().then(ports => ports.some(port => port.comName === portName));
         const xbeeObs = new Observable<any>(observer => {
             let xbee: any;
@@ -90,7 +89,7 @@ export class XbeeService extends DeviceService {
                     map((xbee: any) => {
                         this.xbee = xbee;
                         this.progressBar.increment();
-                        Tools.stopProgress('XBEE    ',  this.progressBar);
+                        Tools.stopProgress('XBEE    ', this.progressBar);
                         return true;
                     }, (err: any) => {
                         Tools.logError(`  => Xbee initilization failed ${err}`);
@@ -100,15 +99,14 @@ export class XbeeService extends DeviceService {
             Tools.logWarn(`  => Xbee port not found!`);
             return of(false);
         }))
-            .pipe(catchError((response) => {
-                let cloneOption = {} as any;
-                cloneOption = Object.assign(cloneOption, (multibar as any).options);
-                cloneOption.format = _colors.red('XBEE progress      ') + '|' + _colors.red('{bar}') + '| {percentage}%' + '\n';
-                this.progressBar.options = cloneOption;
-                multibar.stop();
-                Tools.logError(response);
-                return of(false);
-            }));;
+            .pipe(tap(() => this.progressBar.increment()))
+            .pipe(tap(() => Tools.stopProgress('RF module Xbee configuration   ', this.progressBar)))
+            .pipe(
+                catchError(error => {
+                    Tools.stopProgress('RF module Xbee configuration   ', this.progressBar, error);
+                    return of(false);
+                })
+            );
     }
 
     public initTransceivers(): Observable<any> {
