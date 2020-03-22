@@ -1,37 +1,37 @@
 {
   "compilerOptions": {
-      "module": "commonjs",
-      "target": "es6",
-      "moduleResolution": "node",
-      "inlineSourceMap": true,
-      "inlineSources": true,
-      "outDir": "dist",
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "declaration": false,
-      "baseUrl": ".",
-      "plugins": [
-        {
-          "name": "typescript-tslint-plugin",
-          "configFile": "tslint.json"
-        }
-      ],
-      "lib": [
-          "es2017",
-          "dom"
-      ],
-      "paths": {
-          "*": [
-              "node_modules/*",
-              "src/types/*"
-          ]
+    "module": "commonjs",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "outDir": "dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "declaration": false,
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "configFile": "tslint.json"
       }
+    ],
+    "lib": [
+      "es2020.string",
+      "dom"
+    ],
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "src/types/*"
+      ]
+    }
   },
   "include": [
-      "src/**/*"
+    "src/**/*"
   ],
   "exclude": [
-      "**/*.component.ts",
-      "**/*.directive.ts"
+    "**/*.component.ts",
+    "**/*.directive.ts"
   ]
 }

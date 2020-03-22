@@ -1,0 +1,16 @@
+
+  <nb-card-header>
+      <div style= "padding-left: 10px;padding-right: 10px;margin-bottom: -10px;margin-top: -12px;">
+        <input type="text" nbInput fullWidth placeholder="Project">
+      </div>
+    
+  </nb-card-header>
+<div style="overflow-y:auto; height: 65vh; background-color: #ffffff; flex-wrap: wrap;padding-bottom: 15px;">
+    <div class="col-md-12" style='margin-top: 0.5rem;'*ngFor="let module of modules">
+      <ngx-status-card1 (onChecked)="modifyGroup($event)" [module]="module" [source]="sourceType.CONFIG">
+            <!-- <i [ngClass]="statusCard.iconClass"></i> -->
+            <!-- <nb-icon icon="power" pack="eva" style="width: 32px;height: 32px;"></nb-icon> -->
+            <!-- <div style="font-size: 32px;">26°</div> -->
+        </ngx-status-card1>
+    </div>
+</div>

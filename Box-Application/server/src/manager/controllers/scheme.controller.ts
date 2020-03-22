@@ -4,9 +4,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as pump from "pump";
 import * as fs from "fs";
 import { SchemeQueryDto } from '../dto/scheme.query.dto';
-import { Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import { SchemeService } from '../services/scheme.service';
 import { SchemeDto } from '../dto/scheme.dto';
+import * as multer from "multer";
+import { tap } from 'rxjs/operators';
+import * as  findInFiles from 'find-in-files';
+
 
 @Controller('scheme')
 export class SchemeController {
@@ -50,15 +54,28 @@ export class SchemeController {
         return this.schemeService.add(schemeDto);
     }
 
+    // @Post('upload')
+    // public upload(@Req() req, @Res() reply): void {
+    //     const mp = req.multipart((field, file, filename, encoding, mimetype) => {
+    //         pump(file, fs.createWriteStream('fileNadime')) //File path
+    //         const t = 2;
+    //     }, (err: any) => {
+    //         console.log('upload completed');
+    //         reply.code(200).send();
+    //     });
+    // }
+
     @Post('upload')
-    public upload(@Req() req, @Res() reply): void {
-        const mp = req.multipart((field, file, filename, encoding, mimetype) => {
-            pump(file, fs.createWriteStream('fileNadime')) //File path
-            const t = 2;
-        }, (err: any) => {
-            console.log('upload completed');
-            reply.code(200).send();
-        });
+    @UseInterceptors(FileInterceptor('file'))
+    public uploadFile(@Body() schemeDto: any, @UploadedFile() file): Observable<any> {
+        
+        return this.schemeService.saveAndCreateScheme(file, JSON.parse(schemeDto.data));
+    }
+
+    @Get('svg/:id')
+    public getSvg(@Param('id') id: string): Observable<any> {
+        
+        return this.schemeService.getSvg(id);
     }
 
 }

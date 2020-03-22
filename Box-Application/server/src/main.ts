@@ -15,9 +15,9 @@ dotenv.config({ path: ".env" });
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const adapter = new FastifyAdapter();
-  adapter.register(require('fastify-multipart'));
-  from(NestFactory.create<NestFastifyApplication>(AppModule, adapter))
+ // const adapter = new FastifyAdapter();
+  // adapter.register(require('fastify-multipart'));
+  from(NestFactory.create<NestFastifyApplication>(AppModule))
     .pipe(mergeMap((app: any) => {
 
       const server: Server = new Server(app);

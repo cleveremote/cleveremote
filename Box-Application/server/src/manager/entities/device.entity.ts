@@ -10,6 +10,7 @@ import { AccountEntity } from "./account.entity";
 import { PartitionConfigEntity } from "./partitionconfig.entity";
 import { SchemeEntity } from "./scheme.entity";
 import { TransceiverEntity } from "./transceiver.entity";
+import { GroupViewEntity } from "./groupView.entity";
 
 @Index("device_pkey", ["deviceId"], { unique: true })
 @Index("device_name_key", ["name"], { unique: true })
@@ -56,4 +57,10 @@ export class DeviceEntity {
     transceiver => transceiver.device
   )
   public transceivers: Array<TransceiverEntity>;
+
+  @OneToMany(
+    () => GroupViewEntity,
+    groupView => groupView.device
+  )
+  groupViews: Array<GroupViewEntity>;
 }

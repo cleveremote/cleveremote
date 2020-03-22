@@ -15,7 +15,7 @@ import { IPartitionConfig } from '../interfaces/partition.config.interface';
 @Injectable()
 export class KafkaService extends KafkaBase {
 
-    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ackFrom = 'box_action_response', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
+    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ackFrom = 'box_ack', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
         const messageId = JSON.parse(payloads[0].messages).messageId;
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
         let obs: Observable<ISendResponse | [Message, boolean]> = of(true)
@@ -92,7 +92,7 @@ export class KafkaService extends KafkaBase {
     }
 
     public sendAck(message: any): Observable<ISendResponse | [Message, boolean]> {
-        const payloads = [new Payload('box_action_response', JSON.stringify(message), 'server_1')];
+        const payloads = [new Payload('aggregator_ack', JSON.stringify(message), 'server_1')];
         return this.sendMessage(payloads);
     }
 
@@ -116,45 +116,18 @@ export class KafkaService extends KafkaBase {
         return of(true);
     }
 
-    public checkReponseMessage(messageId: string, needAck = false, ackFrom = 'box_action_response', timeOut = 15000): Observable<[Message, boolean]> {
+    public checkReponseMessage(messageId: string, needAck = false, ackFrom = 'box_ack', timeOut = 15000): Observable<[Message, boolean]> {
         const obsLst = [];
         if (needAck) {
             obsLst.push(this.waitResponseAck(messageId, ackFrom, timeOut));
         }
         obsLst.push(of(true));
-        // params data: ISendResponse,
-        // obsLst.push(of(data).pipe(
-        //     mergeMap((dataIn: ISendResponse) => {
-        //         const initial = new SendResponse(dataIn);
-        //         const topicName = initial.topic;
-        //         const offset = new Offset(this.clientProducer);
-        //         const offsetObs = bindCallback(offset.fetchCommits.bind(offset, process.env.AGGREGATION_GROUPID, [
-        //             { topic: topicName, partition: Object.keys(data[topicName])[0] }
-        //         ]));
-
-        //         return offsetObs().pipe(
-        //             map((results: ISendResponse) => {
-        //                 if (!!(results.message || results[0] !== null)) {
-        //                     Tools.logSuccess('     => KO');
-        //                     throw false;
-        //                 }
-        //                 const current = new SendResponse(results[1]);
-        //                 if ((current.offset >= initial.offset + 1) && current.partition === initial.partition) {
-        //                     Tools.logSuccess(`     => message sent OK`);
-        //                     return true;
-        //                 }
-        //                 throw false;
-        //             })
-        //         );
-        //     }),
-        //     retryWhen(genericRetryStrategy({ durationBeforeRetry: 100, maxRetryAttempts: 200 }))
-        // ));
 
         return forkJoin(obsLst).pipe(map((results: [Message, boolean]) => results));
     }
 
     public initCommonKafka(): Observable<boolean> {
-        const progressBar = Tools.startProgress('Kafka common configuration     ', 0, 3,'* Start micro-service KAFKA');
+        const progressBar = Tools.startProgress('Kafka common configuration     ', 0, 3, '* Start micro-service KAFKA');
         return this.initializeCLients()
             .pipe(tap(() => progressBar.increment()))
             .pipe(flatMap(() => this.setCheckhError()))
@@ -184,6 +157,14 @@ export class KafkaService extends KafkaBase {
                     return of(false);
                 })
             );
+    }
+
+    public syncDataWithBox(dataToSync: any, action: string, entityName: string, boxId: string): Observable<boolean> {
+        const payloads = [{
+            topic: 'aggregator_dbsync',
+            messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync }), key: 'server_1'
+        }];
+        return this.sendMessage(payloads, true).pipe(map(() => true));
     }
 
 }

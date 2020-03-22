@@ -4,7 +4,7 @@ import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interfa
 import { from, Observable, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { TransceiverDto } from "../dto/transceiver.dto";
-import { TransceiverQueryDto } from "../dto/transceiver.query.dto copy";
+import { TransceiverQueryDto } from "../dto/transceiver.query.dto";
 import { classToClass } from "class-transformer";
 import { Inject, forwardRef } from "@nestjs/common";
 import { KafkaService } from "../../kafka/services/kafka.service";

@@ -7,14 +7,17 @@ import { map, tap, catchError } from "rxjs/operators";
 import { Tools } from "../../common/tools-service";
 
 export class ManagerService {
+    public deviceId: string;
     constructor(
         @InjectRepository(DeviceExt) private readonly deviceRepository: DeviceExt) { }
 
     public getPartitionconfig(): Observable<PartitionConfigEntity | boolean> {
         const progressBar = Tools.startProgress('load device configuration      ', 0, 1);
         return this.deviceRepository.getDevice()
-            .pipe(map((currentDevice: DeviceEntity) =>
-                currentDevice && currentDevice.partitionConfigs && currentDevice.partitionConfigs.length > 0 ? currentDevice.partitionConfigs[0] : undefined))
+            .pipe(map((currentDevice: DeviceEntity) => {
+                this.deviceId = currentDevice.deviceId;
+                return currentDevice && currentDevice.partitionConfigs && currentDevice.partitionConfigs.length > 0 ? currentDevice.partitionConfigs[0] : undefined
+            }))
             .pipe(tap(() => progressBar.increment()))
             .pipe(tap(() => Tools.stopProgress('load device configuration      ', progressBar)))
             .pipe(

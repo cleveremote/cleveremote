@@ -23,7 +23,7 @@ export class KafkaBase {
 
     public InitClients(): Observable<boolean> {
 
-        return this.initializeCLients()
+        return this.initializeCLients();
     }
 
     public setCheckhError(): Observable<boolean> {
@@ -309,7 +309,6 @@ export class KafkaBase {
             ))
     }
 
-
     public getConsumersByToptic(topicName: string): Array<ConsumerCustom> {
         return this.consumers.filter((consumer: ConsumerCustom) => {
             const exits = (consumer.consumer.consumerGroup as any).topics.find((topic: string) =>
@@ -317,7 +316,5 @@ export class KafkaBase {
             return exits ? true : false;
         });
     }
-
-
 
 }

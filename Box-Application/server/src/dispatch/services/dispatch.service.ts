@@ -35,7 +35,7 @@ export class DispatchService {
         const consumerObs = [];
         this.kafkaService.consumers.forEach(consumer => {
             const obs = consumer.eventData
-                .pipe(filter((message: Message) => message.topic !== 'box_action_response' && message.topic !== `${Tools.serialNumber}_init_connexion`))
+                .pipe(filter((message: Message) => message.topic !== 'box_ack' && message.topic !== `${Tools.serialNumber}_init_connexion`))
                 .pipe(tap((message: Message) => this.consumeDataProccess(consumer.consumer, message)));
 
             consumerObs.push(obs);
@@ -62,7 +62,7 @@ export class DispatchService {
 
 
     public routeMessage(message: Message): void {
-        const messageData = JSON.parse(String(message.value))
+        const messageData = JSON.parse(String(message.value));
         switch (message.topic) {
             case `${Tools.serialNumber}_init_connexion`:
                 this.proccessSyncConnexion(String(message.value));

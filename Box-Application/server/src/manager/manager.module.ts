@@ -15,9 +15,10 @@ import { SectorController } from './controllers/sector.controller';
 import { SchemeExt } from './repositories/scheme.ext';
 import { SectorExt } from './repositories/sector.ext';
 import { XbeeModule } from '../xbee/xbee.module';
+import { KafkaModule } from '../kafka/kafka.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), XbeeModule],
+  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), XbeeModule, KafkaModule],
   controllers: [ModuleController, TransceiverController, SchemeController, SectorController],
   providers: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService],
   exports: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService]

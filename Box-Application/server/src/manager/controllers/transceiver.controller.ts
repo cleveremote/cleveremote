@@ -2,7 +2,7 @@ import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntP
 import { of, Observable } from 'rxjs';
 import { TransceiverService } from '../services/transceiver.service';
 import { TransceiverDto } from '../dto/transceiver.dto';
-import { TransceiverQueryDto } from '../dto/transceiver.query.dto copy';
+import { TransceiverQueryDto } from '../dto/transceiver.query.dto';
 import { XbeeService } from '../../xbee/services/xbee.service';
 
 @Controller('transceiver')

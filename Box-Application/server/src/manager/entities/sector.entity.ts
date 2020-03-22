@@ -1,6 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { SchemeEntity } from "./scheme.entity";
 import { ModuleEntity } from "./module.entity";
+import { GroupViewEntity } from "./groupView.entity";
 
 @Index("sector_pkey", ["sectorId"], { unique: true })
 @Entity("Sector", { schema: "public" })
@@ -11,12 +12,6 @@ export class SectorEntity {
     length: 255
   })
   public sectorId: string;
-
-  @OneToMany(
-    () => ModuleEntity,
-    module => module.sector
-  )
-  public modules: Array<ModuleEntity>;
 
   @Column("character varying", { name: "name", length: 255 })
   public name: string;
@@ -31,4 +26,11 @@ export class SectorEntity {
   )
   @JoinColumn([{ name: "schemeId", referencedColumnName: "schemeId" }])
   public scheme: SchemeEntity;
+
+  @ManyToOne(
+    () => GroupViewEntity,
+    groupView => groupView.sectors
+  )
+  @JoinColumn([{ name: "groupId", referencedColumnName: "groupId" }])
+  group: GroupViewEntity;
 }
