@@ -29,7 +29,7 @@ export class ModuleService {
 
     public add(moduleDto: ModuleDto): Observable<any> {
         return this.moduleRepository.addModule(moduleDto);
-            //.pipe(mergeMap((data: ModuleEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, moduleDto.moduleId)));
+        //.pipe(mergeMap((data: ModuleEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, moduleDto.moduleId)));
     }
 
     public update(moduleDto: ModuleDto): Observable<any> {
@@ -63,8 +63,27 @@ export class ModuleService {
     }
 
     public getModuleType(port: string, transceiverCfg: any): TYPE_MODULE {
-        return transceiverCfg[port] === TYPE_IO.DIGITAL_OUTPUT_HIGH || TYPE_IO.DIGITAL_OUTPUT_LOW ? TYPE_MODULE.RELAY : TYPE_MODULE.SENSOR;
+        return transceiverCfg[port].params[0] === TYPE_IO.DIGITAL_OUTPUT_LOW || transceiverCfg[port].params[0] === TYPE_IO.DIGITAL_OUTPUT_HIGH  ? TYPE_MODULE.RELAY : TYPE_MODULE.SENSOR;
     }
+
+    public getAllByAccountId(accountId: string): Observable<any> {
+        return this.moduleRepository.getAllByAccountId(accountId)
+            .pipe(mergeMap((result: Array<ModuleEntity>) => {
+                const response = [];
+                result.forEach(element => {
+                    const module = {} as any;
+                    module.moduleId = element.moduleId;
+                    module.name = element.name;
+                    module.type = this.getModuleType(element.port, (element.transceiver.configuration as any).IOCfg);
+                    module.configuration = { data: "comming soon" };
+                    module.value = module.type === TYPE_MODULE.RELAY ? 'ON' : '26°';
+                    response.push(module);
+                });
+                return of(response);
+            }));
+    }
+
+
 
 
 }

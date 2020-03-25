@@ -1,0 +1,22 @@
+@media (min-width: 992px) {
+    .navbar {
+        height:50px;
+    }
+}
+/deep/
+.links { 
+    stroke: #999; 
+    stroke-opacity: 0.6; 
+    stroke-width: 1.55px; 
+    cursor: default;
+    }
+    /deep/
+    text {
+    pointer-events: none;
+    fill: #000;
+    font: 10px sans-serif;
+    }
+    /deep/
+    svg{
+    border:1px solid #000;
+    }

@@ -106,6 +106,10 @@ export class WebSocketService {
                     };
                     ws.onerror = (e: IWebSocketError) => { Tools.logWarn(`Client disconnected - reason: ${e.error}`); };
                     ws.send(this.createMessage('Connected to the WebSocket server'));
+                    setInterval(() => {
+                        ws.send(this.createMessage('nadime test websocket'));
+                    }, 10000);
+                    
                 });
                 this.stayConnected();
             }));

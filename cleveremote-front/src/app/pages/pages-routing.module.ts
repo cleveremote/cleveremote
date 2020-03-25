@@ -6,6 +6,9 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { ECommerceComponent } from './e-commerce/e-commerce.component';
 import { NotFoundComponent } from './miscellaneous/not-found/not-found.component';
 import { SchemeComponent } from './scheme/e-commerce.component';
+import { ConfigurationComponent } from './configuration/configuration.component';
+import { CoreDataService } from '../services/core.data.service';
+import { GraphComponent } from './configuration/transceivers/graph/graph.component';
 
 const routes: Routes = [{
   path: '',
@@ -13,7 +16,11 @@ const routes: Routes = [{
   children: [
     {
       path: 'Scheme',
-      component: SchemeComponent,
+      component: GraphComponent,
+    },
+    {
+      path: 'Configuration',
+      component: ConfigurationComponent,
     },
     {
       path: 'dashboard',

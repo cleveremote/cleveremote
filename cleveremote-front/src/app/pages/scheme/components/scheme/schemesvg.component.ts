@@ -7,6 +7,8 @@ import { Observable, of } from 'rxjs';
 import { NbDialogService } from '@nebular/theme';
 import { ModuleComponent } from '../module/module.component';
 import { ModuleListComponent } from '../module/module-list/module.list.component';
+import { CoreDataService } from '../../../../services/core.data.service';
+import { DataService } from '../../../../services/websocket/websocket.service';
 
 enum Status {
   SELECT = 'rgb(0, 150, 136)',
@@ -32,37 +34,34 @@ export class SchemeSvgComponent {
 
   constructor(private http: HttpClient,
     private dialogService: NbDialogService,
-    private profitBarAnimationChartService: ProfitBarAnimationChartData, private sanitizer: DomSanitizer) {
+    private profitBarAnimationChartService: ProfitBarAnimationChartData, private sanitizer: DomSanitizer,private dataService: DataService,
+    private service: CoreDataService) {
     this.profitBarAnimationChartService.getChartData()
       .pipe(takeWhile(() => this.alive))
       .subscribe((linesData) => {
         this.linesData = linesData;
       });
   }
+
+
+ 
+
+
+
   ngOnInit() {
-    this.loadScheme('bb0fa1d0-6be8-11ea-93fa-b7a5085e3196')
-      .subscribe((result) => {
-        const sectors = ['sel_1', 'sel_2', 'sel_4', 'sel_5', 'sel_6']
-         this.initScheme(sectors);
-      });
-  }
-
-
-  public loadScheme(schemeId: string): Observable<SafeHtml> {
-    let svg: SafeHtml;
-    const svgStored = localStorage.getItem(schemeId);
-    if (svgStored) {
-      svg = this.sanitizer.bypassSecurityTrustHtml(svgStored);
+  //   this.dataService.observable.subscribe((x) => {
+  //     console.log(x);
+  // });
+    const schemeId = '2a7e97a0-6e06-11ea-b0ac-0dbf788232cf';
+    const svgdata = this.service.schemes[0].data;
+   const svg = this.sanitizer.bypassSecurityTrustHtml(svgdata);
       this.svg = svg;
-      return of(svg).pipe(delay(500));
-    }
-    return this.http.get('http://192.168.1.14:4200/api/scheme/svg/' + schemeId)
-      .pipe(mergeMap((result: any) => {
-        svg = this.sanitizer.bypassSecurityTrustHtml(result.data);
-        localStorage.setItem(schemeId, result.data);
-        this.svg = svg;
-        return of(svg).pipe(delay(3000));
-      }));
+      of(true).pipe(delay(2000)).subscribe(() => {
+        const sectors = ['sel_1', 'sel_2', 'sel_4', 'sel_5', 'sel_6'];
+        this.initScheme(sectors);
+      });
+    
+
   }
 
   public setColor(newColor?: string) {

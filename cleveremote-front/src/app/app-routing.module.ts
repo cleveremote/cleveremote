@@ -8,12 +8,18 @@ import {
   NbRequestPasswordComponent,
   NbResetPasswordComponent,
 } from '@nebular/auth';
+import { CoreDataService } from './services/core.data.service';
+import { AuthGuard } from './auth/auth.guard';
+import { LoginComponent } from './authentication/login/login.component';
 
 const routes: Routes = [
+  { path: 'login', redirectTo: '/auth/login', pathMatch: 'full' },
   {
     path: 'pages',
+    resolve: { data: CoreDataService },
     loadChildren: () => import('app/pages/pages.module')
       .then(m => m.PagesModule),
+    canActivate: [AuthGuard],
   },
   {
     path: 'auth',
@@ -25,7 +31,7 @@ const routes: Routes = [
       },
       {
         path: 'login',
-        component: NbLoginComponent,
+        component: LoginComponent,
       },
       {
         path: 'register',

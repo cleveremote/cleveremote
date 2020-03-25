@@ -5,6 +5,7 @@ import { NbDialogRef } from '@nebular/theme';
 import { ModuleType, IModuleElement, SourceType } from './interfaces/module.interfaces';
 import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 import { DeviceDetectorService } from 'ngx-device-detector';
+import { CoreDataService } from '../../../../services/core.data.service';
 
 @Component({
   selector: 'module',
@@ -18,13 +19,14 @@ export class ModuleComponent implements OnInit {
   public modulesAll: Array<IModuleElement> = [];
   public groupChanges = [];
   public isMobile;
-  constructor(private deviceService: DeviceDetectorService) {
+  constructor(private deviceService: DeviceDetectorService,
+    private coreDataService: CoreDataService) {
     this.isMobile = this.deviceService.isMobile();
   }
 
   ngOnInit() {
 
-    //get group information => 
+    //get group information =>  https://github.com/silentmatt/expr-eval/tree/master
     const dataJson = `{
       "group": {
           "groupId": "server_1",
@@ -165,9 +167,10 @@ export class ModuleComponent implements OnInit {
 }
 ]`;
 
-    const data = JSON.parse(dataJson);
-    const dataAll = JSON.parse(allModulesjson);
-    data.modules.forEach(entry => {
+    // const data = JSON.parse(dataJson);
+    // const dataAll = JSON.parse(allModulesjson);
+    ;
+    this.coreDataService.devices[0].groupViews[0].modules.forEach(entry => {
       const module = entry;
 
       const moduleElement: any = {
@@ -181,7 +184,7 @@ export class ModuleComponent implements OnInit {
 
     });
 
-    dataAll.forEach(element => {
+    this.coreDataService.modules.forEach(element => {
       if (this.modules.find((m) => m.name === element.name)) {
         element.checked = true;
         this.groupChanges.push(element);

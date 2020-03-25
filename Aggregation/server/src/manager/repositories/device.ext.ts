@@ -88,7 +88,7 @@ export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize<
             filter[key] = value;
         }
 
-        return from(this.find({ where: filter, relations: ['partitionConfigs', 'account', 'account.users'] })).pipe(
+        return from(this.find({ where: filter, relations: ['partitionConfigs', 'account', 'account.users', 'transceivers', 'transceivers.modules', 'groupViews', 'groupViews.assGroupViewModules', 'schemes', 'schemes.parentscheme'] })).pipe(
             map((accounts: Array<DeviceEntity>) => {
 
                 if (!accounts) {

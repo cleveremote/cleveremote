@@ -50,7 +50,9 @@ export class ProfileComponent implements AfterContentInit {
 
   ngAfterContentInit() {
 
-
+    this.apiRequestsService.getAllLogs('server_1').subscribe(response => {
+      const t = 2;
+    });
     this.initSvg();
 
     const dataset = this.initData(2);
@@ -233,7 +235,7 @@ export class ProfileComponent implements AfterContentInit {
           { id: 6, name: 'endDevice4', label: 'endDevice4', group: 'Team B', runtime: 40 },
         ],
         links: [
-          { source: 1, target: 2, type: 'Signal -->> 255' },
+          { source: 1, target: 2, type: 'SIGNAL STRENGTH -->> 255' },
           { source: 2, target: 1, type: 'SIGNAL STRENGTH -->> 255' },
           { source: 2, target: 3, type: 'SIGNAL STRENGTH -->> 168' },
           { source: 2, target: 4, type: 'SIGNAL STRENGTH -->> 200' },
@@ -393,12 +395,5 @@ export class ProfileComponent implements AfterContentInit {
     return this.d3.scaleOrdinal() //=d3.scaleOrdinal(d3.schemeSet2)
       .domain(["Team A", "Team B", "Team C", "Team D", "Team E"])
       .range(['#ff9e6d', '#86cbff', '#c2e5a0', '#fff686', '#9e79db']) as any;
-  }
-
-
-  public seConfig() {
-    this.apiRequestsService.getAllLogs('server_1').subscribe(response => {
-      const t = 2;
-    });
   }
 }

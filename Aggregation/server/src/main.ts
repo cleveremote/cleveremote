@@ -24,7 +24,7 @@ async function bootstrap() {
       return server.init();
     }))
     .pipe(mergeMap((app: any) =>
-      from(app.listen(process.env.PORT ? Number(process.env.PORT) || 3000 : 3000, process.env.NEST_HOST || '127.0.0.1'))))
+      from(app.listen(process.env.PORT ? Number(process.env.PORT) || 3000 : 3000, '192.168.1.14' || '127.0.0.1'))))
     .pipe(mergeMap((serverInstance: any) => {
         console.log(`* server OK on port ${process.env.PORT}`);
         Tools.titleStarted(true);

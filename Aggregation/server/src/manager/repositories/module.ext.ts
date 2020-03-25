@@ -124,6 +124,34 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
             }));
     }
 
+    public getAllByAccountId(accountId: string): Observable<Array<ModuleEntity>> {
+
+        return from(this.find({
+            where: qb => {
+                qb.where('transceiver.deviceId = device.deviceId')
+                    .andWhere('device.accountId=:accountId', { accountId: accountId }); // Filter related field
+            },
+            join: { alias: 'module', innerJoin: { transceiver: 'module.transceiver', device: 'transceiver.device' } },
+            relations: ['transceiver']
+        })).pipe(
+            map((modules: Array<ModuleEntity>) => {
+
+                if (!modules) {
+                    console.log('no account found');
+
+                    return [];
+                }
+
+                if (modules.length === 0) {
+                    console.log('No devices');
+
+                    return [];
+                }
+
+                return modules;
+            }));
+    }
+
 
 
     public getModule(id?: string): Observable<ModuleEntity> {

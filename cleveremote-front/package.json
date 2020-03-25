@@ -12,7 +12,7 @@
   "scripts": {
     "ng": "ng",
     "conventional-changelog": "conventional-changelog",
-    "start": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
+    "start": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json --disable-host-check",
     "build": "ng build",
     "build:prod": "npm run build -- --prod --aot",
     "test": "ng test",
@@ -45,7 +45,9 @@
     "@nebular/security": "4.4.0",
     "@nebular/theme": "4.4.0",
     "@swimlane/ngx-charts": "^10.0.0",
+    "@types/d3": "^5.7.2",
     "angular-tree-component": "7.2.0",
+    "angular-user-idle": "^2.2.1",
     "angular2-chartjs": "0.4.1",
     "angular2-toaster": "^7.0.0",
     "bootstrap": "4.3.1",
@@ -53,6 +55,7 @@
     "ckeditor": "4.7.3",
     "classlist.js": "1.1.20150312",
     "core-js": "2.5.1",
+    "d3": "^5.15.0",
     "echarts": "^4.0.2",
     "eva-icons": "^1.1.0",
     "intl": "1.2.5",
@@ -108,6 +111,6 @@
     "ts-node": "3.2.2",
     "tslint": "^5.7.0",
     "tslint-language-service": "^0.9.9",
-    "typescript": "3.4.5"
+    "typescript": "^3.7.4"
   }
 }

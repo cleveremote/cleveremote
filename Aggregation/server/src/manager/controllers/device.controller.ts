@@ -14,7 +14,7 @@ import { DeviceService } from '../services/device.service';
 import { DeviceQueryDto } from '../dto/device.query.dto';
 import { DeviceDto } from '../dto/device.dto';
 
-@Controller('api/device')
+@Controller('device')
 export class DeviceController {
     constructor(private readonly deviceService: DeviceService, private readonly authService: AuthService) { }
 

@@ -6,12 +6,13 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { CoreModule } from './@core/core.module';
 import { ThemeModule } from './@theme/theme.module';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { DeviceDetectorModule } from 'ngx-device-detector';
+import { FormsModule } from '@angular/forms';
 
 import {
   NbChatModule,
@@ -22,10 +23,35 @@ import {
   NbToastrModule,
   NbWindowModule,
 } from '@nebular/theme';
+import { CoreDataService } from './services/core.data.service';
+import { RessourcesService } from './services/ressources.service';
+import { ConfigurationService } from './services/configuration.service';
+import { AuthInterceptor } from './auth/auth-interceptor.service';
+import { AuthGuard } from './auth/auth.guard';
+import { DataService } from './services/websocket/websocket.service';
+import { TimerService } from './services/timer.service';
+import { LoginModule } from './authentication/login/login.module';
+import { AuthService } from './auth/auth.service';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [AppComponent],
+  providers: [
+    ConfigurationService,
+    AuthGuard,
+    DataService,
+    TimerService,
+    AuthService,
+    RessourcesService,
+    ConfigurationService,
+    CoreDataService,
+
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    
+  ],
   imports: [
+    CommonModule,
+    LoginModule,
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,

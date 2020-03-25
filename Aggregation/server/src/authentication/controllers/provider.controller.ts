@@ -5,7 +5,7 @@ import { ProviderQueryDto } from '../dto/provider.query.dto';
 import { UserService } from '../services/user.service';
 import { ProviderService } from '../services/provider.service';
 
-@Controller('api/provider')
+@Controller('provider')
 export class ProviderController {
     constructor(private readonly providerService: ProviderService) { }
 

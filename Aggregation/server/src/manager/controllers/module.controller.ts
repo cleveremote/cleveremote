@@ -11,7 +11,7 @@ import { IUser } from '../../api/models/userModel';
 import { WebSocketService } from '../../websocket/services/websocket.service';
 import { tap } from 'rxjs/operators';
 
-@Controller('api/module')
+@Controller('module')
 export class ModuleController {
     constructor(private readonly moduleService: ModuleService, private readonly authService: AuthService) { }
 
@@ -23,6 +23,11 @@ export class ModuleController {
     @Get('device/:deviceId')
     public getAllByDeviceId(@Param('deviceId') deviceId: string): Observable<boolean> {
         return this.moduleService.getAllByDeviceId(deviceId);
+    }
+
+    @Get('account/:accountId')
+    public getAllByAccountId(@Param('accountId') accountId: string): Observable<boolean> {
+        return this.moduleService.getAllByAccountId(accountId);
     }
 
     @Get(':id')

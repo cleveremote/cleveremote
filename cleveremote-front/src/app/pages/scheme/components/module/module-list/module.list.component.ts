@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, Input } from '@angular/core';
+import { Component, ViewChild, ElementRef, Input, OnInit } from '@angular/core';
 import { ProfitBarAnimationChartData } from '../../../../../@core/data/profit-bar-animation-chart';
 import { takeWhile, tap, mergeMap, delay } from 'rxjs/operators';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -15,9 +15,14 @@ import { ModuleType, IModuleElement, SourceType } from '../interfaces/module.int
   styleUrls: ['./module.list.component.scss'],
   templateUrl: './module.list.component.html',
 })
-export class ModuleListComponent {
+export class ModuleListComponent implements OnInit {
   @Input() modules: Array<IModuleElement> = [];
   public sourceType = SourceType;
+  @ViewChild("searchInput", { static: true }) private searchInput: ElementRef<HTMLElement>;
+
+ ngOnInit(){
+  this.searchInput.nativeElement.blur();
+ }
 
   ngOnDestroy() {
   }

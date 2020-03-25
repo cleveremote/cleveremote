@@ -8,6 +8,10 @@ import { ECommerceModule } from './e-commerce/e-commerce.module';
 import { PagesRoutingModule } from './pages-routing.module';
 import { MiscellaneousModule } from './miscellaneous/miscellaneous.module';
 import { SchemeModule } from './scheme/e-commerce.module';
+import { CoreDataService } from '../services/core.data.service';
+import { ConfigurationService } from '../services/configuration.service';
+import { RessourcesService } from '../services/ressources.service';
+import { ConfigurationModule } from './configuration/configuration.module';
 
 @NgModule({
   imports: [
@@ -18,10 +22,16 @@ import { SchemeModule } from './scheme/e-commerce.module';
     ECommerceModule,
     MiscellaneousModule,
     SchemeModule,
+    ConfigurationModule
   ],
   declarations: [
     PagesComponent,
   ],
+  // providers: [
+  //   RessourcesService,
+  //   ConfigurationService,
+  //   CoreDataService
+  // ]
 })
 export class PagesModule {
 }

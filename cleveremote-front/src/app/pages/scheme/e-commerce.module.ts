@@ -38,6 +38,9 @@ import { ModuleListAllComponent } from './components/module/module-list-all/modu
 import { ModuleListComponent } from './components/module/module-list/module.list.component';
 import { DialogNamePromptComponent } from '../modal-overlays/dialog/dialog-name-prompt/dialog-name-prompt.component';
 import { StatusCardComponent } from './components/module/module.element/status-card.component';
+import { CoreDataService } from '../../services/core.data.service';
+import { RessourcesService } from '../../services/ressources.service';
+import { ConfigurationService } from '../../services/configuration.service';
 
 @NgModule({
  
@@ -58,7 +61,6 @@ import { StatusCardComponent } from './components/module/module.element/status-c
     NgxEchartsModule,
     NgxChartsModule,
     LeafletModule,
-
   ],
   declarations: [
     ModuleComponent,
@@ -83,7 +85,10 @@ import { StatusCardComponent } from './components/module/module.element/status-c
     ModuleListComponent,
     StatusCardComponent,
   ],
-  providers: [
-  ],
+  // providers: [
+  //   RessourcesService,
+  //   ConfigurationService,
+  //   CoreDataService,
+  // ],
 })
 export class SchemeModule { }

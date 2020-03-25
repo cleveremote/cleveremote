@@ -4,7 +4,7 @@ import { AccountQueryDto } from '../dto/account.query.dto';
 import { AccountDto } from '../dto/account.dto';
 import { AccountService } from '../services/account.service';
 
-@Controller('api/account')
+@Controller('account')
 export class AccountController {
     constructor(private readonly accountService: AccountService) { }
 

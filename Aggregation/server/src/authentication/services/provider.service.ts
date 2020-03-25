@@ -16,7 +16,7 @@ export class ProviderService {
     ) { }
 
     public get(id: string): Observable<any> {
-        console.log("caller is " + (this.get as any ).callee.caller);
+        //console.log("caller is " + (this.get as any ).callee.caller);
         return this.providerRepository.getProvider(id);
     }
 

@@ -1,10 +1,44 @@
 import { NbMenuItem } from '@nebular/theme';
 
 export const MENU_ITEMS: NbMenuItem[] = [
+
+  {
+    title: 'Devices',
+    icon: { icon: 'server', pack: 'font-awesome' },
+    children: [
+      {
+        icon: { icon: 'square', pack: 'font-awesome' },
+        title: 'Device 1'
+      },
+      {
+        icon: { icon: 'square', pack: 'font-awesome' },
+        title: 'Device 2'
+      },
+      {
+        icon: { icon: 'square', pack: 'font-awesome' },
+        title: 'Device 3'
+      },
+      {
+        icon: { icon: 'square', pack: 'font-awesome' },
+        title: 'Device 4'
+      },
+      {
+        icon: { icon: 'square', pack: 'font-awesome' },
+        title: 'Device 5'
+      },
+    ],
+  },
   {
     title: 'Scheme',
-    icon: 'home-outline',
+    data: '123456',
+    icon: { icon: 'cog', pack: 'font-awesome' },
     link: '/pages/Scheme',
+  },
+  {
+    title: 'Configuration',
+    data: '123456',
+    icon: { icon: 'sliders-h', pack: 'font-awesome' },
+    link: '/pages/Configuration',
   },
   {
     title: 'E-commerce',

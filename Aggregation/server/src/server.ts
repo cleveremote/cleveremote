@@ -34,10 +34,10 @@ export class Server {
         });
         return Tools.getSerialNumber().pipe(
             flatMap(() => this.initDependencies().pipe(
-               // flatMap(() => this.initPassport().pipe(
-                    flatMap(() => this.initDbMongoose().pipe(
-                        map(() => this.app))
-                    ))
+                // flatMap(() => this.initPassport().pipe(
+                flatMap(() => this.initDbMongoose().pipe(
+                    map(() => this.app))
+                ))
                 // ))
             ));
     }
@@ -72,6 +72,11 @@ export class Server {
             map(() => {
                 this.app.use(bodyParser.urlencoded({ extended: true }));
                 this.app.useGlobalPipes(new ValidationPipe());
+                // this.app.use(function (req, res, next) {
+                //     res.header("Access-Control-Allow-Origin", "*");
+                //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+                //     next();
+                // });
                 // this.app.use(bodyParser.urlencoded({extended: true}));
                 // this.app.use(express.static('public'));
                 // this.app.use(express.static('files'));

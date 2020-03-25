@@ -5,7 +5,7 @@ import { AuthGuard } from '@nestjs/passport';
 import * as jwt from 'jsonwebtoken';
 import { IUser } from '../../api/models/userModel';
 
-@Controller('api/authentication')
+@Controller('authentication')
 export class AuthenticationController {
     constructor(private readonly authService: AuthService) { }
 

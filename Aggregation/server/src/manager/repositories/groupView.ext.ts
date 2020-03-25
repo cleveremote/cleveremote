@@ -81,4 +81,5 @@ export class GroupViewExt extends Repository<GroupViewEntity> implements ISynchr
                 return groups;
             }));
     }
+
 }
