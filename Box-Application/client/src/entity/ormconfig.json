@@ -1,0 +1,14 @@
+[
+  {
+    "name": "default",
+    "type": "postgres",
+    "host": "92.151.110.11",
+    "port": 5432,
+    "username": "test",
+    "password": "1234",
+    "database": "cleverTest",
+    "schema": "public",
+    "synchronize": false,
+    "entities": ["entities/*.js"]
+  }
+]

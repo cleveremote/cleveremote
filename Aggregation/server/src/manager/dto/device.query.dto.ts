@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 export class DeviceQueryDto {
     @IsOptional()
-    public deviceId: string;
+    public id: string;
     @IsOptional()
     public name: string;
     @IsOptional()

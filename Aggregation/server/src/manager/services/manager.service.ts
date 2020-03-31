@@ -17,7 +17,7 @@ export class ManagerService {
                 const devicesConfig: Array<IPartitionConfig> = [];
                 currentDevices.forEach(device => {
                     if (device.partitionConfigs && device.partitionConfigs.length > 0) {
-                        const cfg: IPartitionConfig = { deviceId: device.deviceId, startRange: device.partitionConfigs[0].startRange, endRange: device.partitionConfigs[0].endRange };
+                        const cfg: IPartitionConfig = { deviceId: device.id, startRange: device.partitionConfigs[0].startRange, endRange: device.partitionConfigs[0].endRange };
                         devicesConfig.push(cfg);
                     }
                 });

@@ -10,7 +10,7 @@ import { ModuleEntity } from "./module.entity";
 import { DeviceEntity } from "./device.entity";
 
 @Index("transceiver_name_key", ["name"], { unique: true })
-@Index("transceiver_pkey", ["transceiverId"], { unique: true })
+@Index("transceiver_pkey", ["id"], { unique: true })
 @Entity("Transceiver", { schema: "public" })
 export class TransceiverEntity {
   @Column("character varying", {
@@ -18,7 +18,7 @@ export class TransceiverEntity {
     name: "transceiverId",
     length: 255
   })
-  public transceiverId: string;
+  public id: string;
 
   @Column("character varying", { name: "name", unique: true, length: 50 })
   public name: string;
@@ -49,7 +49,7 @@ export class TransceiverEntity {
     device => device.transceivers,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "id" }])
   public device: DeviceEntity;
 
 }

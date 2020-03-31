@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 export class ModuleDto {
-    public moduleId: string;
+    public id: string;
     @IsNotEmpty()
     public port: string;
     @IsNotEmpty()
@@ -9,6 +9,8 @@ export class ModuleDto {
     public name: string;
     @IsNotEmpty()
     public transceiverId: string;
+    @IsOptional()
+    public value: string;
 
 }
 

@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, Subject } from 'rxjs';
 import { Resolve } from '@angular/router';
 import { of } from 'rxjs';
 import { RessourcesService } from './ressources.service';
@@ -7,6 +7,21 @@ import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 import { mergeMap } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
 import { DataService } from './websocket/websocket.service';
+import { IWSMessage, ACTION_TYPE, LEVEL_TYPE } from './websocket/interfaces/ws.message.interfaces';
+import { ElementFactory } from './collections/elements/element.factory';
+import { ModuleCollection } from './collections/module.collection';
+import { ModuleElement } from './collections/elements/module.element';
+import { GroupViewCollection } from './collections/groupview.collection';
+import { TransceiverCollection } from './collections/transceiver.collection';
+import { DeviceCollection } from './collections/device.collection';
+import { SectorCollection } from './collections/sector.collection';
+import { SchemeCollection } from './collections/scheme.collection';
+import { DeviceElement } from './collections/elements/device.element';
+import { GroupViewElement } from './collections/elements/groupview.element';
+import { BaseCollection } from './collections/base.collection';
+import { UserCollection } from './collections/user.collection';
+import { AccountCollection } from './collections/account.collection';
+import { ValueCollection } from './collections/value.collection';
 
 export class Message {
     constructor(
@@ -21,85 +36,113 @@ export class Message {
 @Injectable()
 export class CoreDataService implements OnDestroy, Resolve<any> {
     public sub: Subscription;
-    public modules: Array<any> = [];
-    public devices: Array<any> = [];
-    public schemes: Array<any> = [];
+
+    public subscriptions = [];
+    public onDataChanges = new Subject<any>();
+
+    public collectionStore: Array<BaseCollection<any>> = [];
+
+    private _currentDevice: DeviceElement;
+    private _currtentAccount: any;
+
     constructor(private sanitizer: DomSanitizer,
         private ressourceService: RessourcesService,
-        private dataService: DataService) {
-            this.sub = this.dataService.observable.subscribe((x) => {
-                console.log(x);
-            });
+        private dataService: DataService,
+        public moduleCollection: ModuleCollection,
+        public groupViewCollection: GroupViewCollection,
+        public transceiverCollection: TransceiverCollection,
+        public deviceCollection: DeviceCollection,
+        public sectorCollection: SectorCollection,
+        public schemeCollection: SchemeCollection,
+        public userCollection: UserCollection,
+        public accountCollection: AccountCollection,
+        public valueCollection: ValueCollection
+    ) {
+        this.collectionStore.push(this.moduleCollection);
+        this.collectionStore.push(this.groupViewCollection);
+        this.collectionStore.push(this.transceiverCollection);
+        this.collectionStore.push(this.deviceCollection);
+        this.collectionStore.push(this.schemeCollection);
+        this.collectionStore.push(this.sectorCollection);
+        this.collectionStore.push(this.userCollection);
+        this.collectionStore.push(this.accountCollection);
+        this.collectionStore.push(this.valueCollection);
+
+        this.subscriptions.push(this.dataService.observable.subscribe((message: any) => this.proccessWSMessage(message)));
     }
 
-   
+    get currentDevice(): DeviceElement {
+        return this._currentDevice;
+    }
 
+    set currentDevice(deviceElement: DeviceElement) {
+        this._currentDevice = deviceElement;
+    }
 
     ngOnDestroy() {
- this.sub.unsubscribe();
+        this.sub.unsubscribe();
     }
 
     public resolve(): Observable<any> {
-        return this.ressourceService.getAccountDevices('server_1')
-            .pipe(mergeMap((devices: any) => {
-                return this.ressourceService.getAccountModules('server_1')
-                    .pipe(mergeMap((modules: Array<any>) => {
-                        this.buildDevicesData(devices, modules);
-                        setInterval(() => {
-                            this.modules[0].value = Math.floor(Math.random() * 30).toString();
-                        }, 3000);
-                        return of(modules);
+        return this.ressourceService.getFrontAccountData()
+            .pipe(mergeMap((account: any) => {
+                return of(this.accountCollection.reload([account]));
+            }))
+            .pipe(mergeMap((result) => {
+                const moduleids = this.moduleCollection.elements.map(module => module.id);
+                return this.ressourceService.getAllLastModuleValues(moduleids)
+                    .pipe(mergeMap((lastLogData: Array<any>) => {
+                        this.moduleCollection.updateValues(lastLogData);
+                        this.valueCollection.reload();
+                        return of(true);
                     }));
-            })).pipe(mergeMap((result: any) => {
-                const svgStored = localStorage.getItem('2a7e97a0-6e06-11ea-b0ac-0dbf788232cf');
-                if (svgStored) {
-                    this.schemes.push({ data: svgStored });
-                   
-                    return of(true);
-                }
-                return this.ressourceService.getScheme('2a7e97a0-6e06-11ea-b0ac-0dbf788232cf').pipe(mergeMap((result) => {
-                    const svg = this.sanitizer.bypassSecurityTrustHtml(result.data);
-                    localStorage.setItem('2a7e97a0-6e06-11ea-b0ac-0dbf788232cf', result.data);
-                    this.schemes.push(result);
-                   
-                    return of(true);
-                }));
             }));
-
     }
 
-    public buildDevicesData(devices: Array<any>, modules: Array<any>): void {
-        devices.forEach(device => {
-            if (device.groupViews && device.groupViews.length > 0) {
-                device.groupViews.forEach(groupView => {
-                    groupView.modules = [];
-                    if (groupView.assGroupViewModules && groupView.assGroupViewModules.length > 0) {
-                        groupView.assGroupViewModules.forEach(ass => {
-                            const moduleRef = modules.find((m) => m.moduleId === ass.moduleId);
-                            groupView.modules.push(moduleRef);
-                        });
-                    }
-                });
-            }
-            if (device.transceivers && device.transceivers.length > 0) {
-                device.transceivers.forEach(transceiver => {
-                    if (transceiver.modules && transceiver.modules.length) {
-                        transceiver.modules.forEach((module, index) => {
-                            transceiver.modules[index] = modules.find((m) => m.moduleId === module.moduleId);
-                        });
-                    }
-                });
-            }
 
+    public initFrontData(account: any): any {
+        if (account && account.devices && account.devices.length > 0) {
+            this.deviceCollection.reload(account.devices);
+        }
+    }
+
+
+    public deepFindAndSync(wsMessage) {
+        const entityType = wsMessage.target;
+        const sourceData = wsMessage.data;
+        const actionType = wsMessage.typeAction;
+
+        const parentsToSync = this.getParents(sourceData[0]);
+        parentsToSync.forEach(parentToSync => {
+            const collectionInstance = this.getCollectionInstanceByType(parentToSync.name);
+            collectionInstance.reload(sourceData, entityType, actionType);
         });
-
-        this.devices = devices;
-        this.modules = modules;
     }
 
-    public buildModulesData(modules: Array<any>) {
-
+    getParents(element) {
+        const founds: Array<any> = [];
+        for (const prop in element) {
+            if (element.hasOwnProperty(prop)) {
+                if (prop.slice(-2) === 'Id') {
+                    const name = prop.slice(0, -2);
+                    const nameCapitalized = name.charAt(0).toUpperCase() + name.slice(1);
+                    founds.push({ name: nameCapitalized, value: element[prop] });
+                }
+            }
+        }
+        return founds;
     }
 
+    getCollectionInstanceByType(type: string) {
+        const collectionName = type + 'Collection';
+        return this.collectionStore.find((c: any) => c.constructor.name === collectionName);
+    }
+
+    public proccessWSMessage(message) {
+        try {
+            const wsMessage = JSON.parse(message.content);
+            this.deepFindAndSync(wsMessage);
+        } catch (e) { }
+    }
 
 }

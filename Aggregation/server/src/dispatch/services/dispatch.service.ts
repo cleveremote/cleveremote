@@ -124,12 +124,12 @@ export class DispatchService {
     public createAccount(message?: any): Observable<boolean> {
         const accountData: IAccount = { account_id: 'server_3', name: 'name12', description: 'description' } as any;
         const accountToSave = new AccountEntity();
-        accountToSave.accountId = accountData.account_id;
+        accountToSave.id = accountData.account_id;
         accountToSave.name = accountData.name;
         accountToSave.description = accountData.description;
 
         const userData: IUser = {
-            userId: 'server_3',
+            id: 'server_3',
             email: 'email1',
             password: '$2a$08$GvDZDoL..cHoc8n8HFUp6en6PiH5I2cqYvj4xDsbomC25WPc/6Iwa1',
             number_phone: '0682737505',
@@ -137,7 +137,7 @@ export class DispatchService {
             firstName: 'first_name'
         } as any;
         const userToSave = new UserEntity();
-        userToSave.userId = userData.userId;
+        userToSave.id = userData.id;
         userToSave.email = userData.email;
         userToSave.phone = userData.phone;
         userToSave.firstName = userData.firstName;
@@ -159,19 +159,19 @@ export class DispatchService {
                 const deviceToSave = new DeviceEntity();
                 deviceToSave.account = currentAccount;
                 deviceToSave.description = deviceData.description;
-                deviceToSave.deviceId = deviceData.device_id;
+                deviceToSave.id = deviceData.device_id;
                 deviceToSave.name = deviceData.name;
 
                 const partitionData: IPartitionConfig = { config_id: 'server_3', start_range: 2, end_range: 3 } as any;
                 const partitionToSave = new PartitionConfigEntity();
-                partitionToSave.configId = partitionData.config_id;
+                partitionToSave.id = partitionData.config_id;
                 partitionToSave.startRange = partitionData.start_range;
                 partitionToSave.endRange = partitionData.end_range;
 
                 deviceToSave.partitionConfigs = [partitionToSave];
 
                 const userData: IUser = {
-                    userId: 'server_3',
+                    id: 'server_3',
                     email: 'email1',
                     password: '$2a$08$GvDZDoL..cHoc8n8HFUp6en6PiH5I2cqYvj4xDsbomC25WPc/6Iwa1',
                     number_phone: '0682737505',
@@ -179,7 +179,7 @@ export class DispatchService {
                     firstName: 'first_name'
                 } as any;
                 const userToSave = new UserEntity();
-                userToSave.userId = userData.userId;
+                userToSave.id = userData.id;
                 userToSave.email = userData.email;
                 userToSave.phone = userData.phone;
                 userToSave.firstName = userData.firstName;

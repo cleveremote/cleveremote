@@ -13,7 +13,11 @@ export class AuthService implements OnDestroy {
   private token: string;
   private tokenTimer: any;
   private authStatusListener = new Subject<boolean>();
+
   private userId: string;
+  private accountId: string;
+  private sessionId: string;
+
   public event: any;
   public modalReference = null;
   public counterLogout = 0;
@@ -41,6 +45,14 @@ export class AuthService implements OnDestroy {
     return this.userId;
   }
 
+  geSessionId() {
+    return this.sessionId;
+  }
+
+  geAccountId() {
+    return this.accountId;
+  }
+
   getIsAuth() {
     return this.isAuthenticated;
   }
@@ -60,12 +72,14 @@ export class AuthService implements OnDestroy {
         const expiresInDuration = response.expiresIn;
         this.timerService.setAuthTimer(expiresInDuration);
         this.isAuthenticated = true;
-        this.userId = response.user.userId;
+        this.userId = response.user.id;
+        this.sessionId = response.user.sessionId;
+        this.accountId = response.user.accountId;
         this.authStatusListener.next(true);
         const now = new Date();
         const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
         console.log(expirationDate);
-        this.saveAuthData(token, expirationDate, this.userId);
+        this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.sessionId);
         this.router.navigate(["/pages/Scheme"]);
       }
     });
@@ -79,12 +93,14 @@ export class AuthService implements OnDestroy {
         const expiresInDuration = response.expiresIn;
         this.timerService.setAuthTimer(expiresInDuration);
         this.isAuthenticated = true;
-        this.userId = response.user.userId;
+        this.userId = response.user.id;
+        this.sessionId = response.user.sessionId;
+        this.accountId = response.user.accountId;
         this.authStatusListener.next(true);
         const now = new Date();
         const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
         console.log(expirationDate);
-        this.saveAuthData(token, expirationDate, this.userId);
+        this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.sessionId);
       }
     }));
   }
@@ -105,77 +121,89 @@ export class AuthService implements OnDestroy {
   }
 
 
-    saveGoogle(response) {
-      const token = response.token;
-      this.token = token;
-      if (token) {
-        const expiresInDuration = response.expiresIn;
-        this.timerService.setAuthTimer(Number(expiresInDuration));
-        this.isAuthenticated = true;
-        this.userId = response.data.userId;
-        this.authStatusListener.next(true);
-        const now = new Date();
-        const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
-        console.log(expirationDate);
-        this.saveAuthData(token, expirationDate, this.userId);
-        this.router.navigate(["/"]);
-      }
-    }
-
-    ngOnDestroy() {
-
-      this.obsMessage.unsubscribe();
-      console.log('Service destroy auth');
-    }
-
-    autoAuthUser() {
-      const authInformation = this.getAuthData();
-      if (!authInformation) {
-        return;
-      }
+  saveGoogle(response) {
+    const token = response.token;
+    this.token = token;
+    if (token) {
+      const expiresInDuration = response.expiresIn;
+      this.timerService.setAuthTimer(Number(expiresInDuration));
+      this.isAuthenticated = true;
+      this.userId = response.data.id;
+      this.sessionId = response.data.sessionId;
+      this.accountId = response.data.accountId;
+      this.authStatusListener.next(true);
       const now = new Date();
-      const expiresIn = authInformation.expirationDate.getTime() - now.getTime();
-      if (expiresIn > 0) {
-        this.token = authInformation.token;
-        this.isAuthenticated = true;
-        this.userId = authInformation.userId;
-        this.timerService.setAuthTimer(expiresIn / 1000);
-        this.authStatusListener.next(true);
-      }
+      const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
+      console.log(expirationDate);
+      this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.sessionId);
+      this.router.navigate(["/"]);
     }
+  }
 
-    logout() {
-      this.token = null;
-      this.isAuthenticated = false;
-      this.authStatusListener.next(false);
-      this.clearAuthData();
-      this.router.navigate(["/login"]);
-      this.userId = null;
+  ngOnDestroy() {
+
+    this.obsMessage.unsubscribe();
+    console.log('Service destroy auth');
+  }
+
+  autoAuthUser() {
+    const authInformation = this.getAuthData();
+    if (!authInformation) {
+      return;
     }
+    const now = new Date();
+    const expiresIn = authInformation.expirationDate.getTime() - now.getTime();
+    if (expiresIn > 0) {
+      this.token = authInformation.token;
+      this.isAuthenticated = true;
+      this.userId = authInformation.id;
+      this.accountId = authInformation.accountId;
+      this.sessionId = authInformation.sessionId;
+      this.timerService.setAuthTimer(expiresIn / 1000);
+      this.authStatusListener.next(true);
+    }
+  }
 
-  private saveAuthData(token: string, expirationDate: Date, userId: string) {
-    localStorage.setItem("token", token);
-    localStorage.setItem("expiration", expirationDate.toISOString());
-    localStorage.setItem('userId', userId);
+  logout() {
+    this.token = null;
+    this.isAuthenticated = false;
+    this.authStatusListener.next(false);
+    this.clearAuthData();
+    this.router.navigate(["/login"]);
+    this.userId = null;
+    this.accountId = null;
+    this.sessionId = null;
+  }
+
+  private saveAuthData(token: string, expirationDate: Date, userId: string, accountId: string, sessionId: string) {
+    localStorage.setItem('token', token);
+    localStorage.setItem('expiration', expirationDate.toISOString());
+    localStorage.setItem('id', userId);
+    localStorage.setItem('accountId', accountId);
+    localStorage.setItem('sessionId', sessionId);
   }
 
   private clearAuthData() {
     localStorage.removeItem("token");
     localStorage.removeItem("expiration");
-    localStorage.removeItem("userId");
+    localStorage.removeItem("id");
   }
 
   private getAuthData() {
     const token = localStorage.getItem("token");
     const expirationDate = localStorage.getItem("expiration");
-    const userId = localStorage.getItem("userId");
+    const userId = localStorage.getItem("id");
+    const accountId = localStorage.getItem("accountId");
+    const sessionId = localStorage.getItem("sessionId");
     if (!token || !expirationDate || !userId) {
       return;
     }
     return {
       token: token,
       expirationDate: new Date(expirationDate),
-      userId: userId
+      id: userId,
+      accountId: accountId,
+      sessionId: sessionId
     };
   }
 }

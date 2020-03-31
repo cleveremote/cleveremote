@@ -34,12 +34,12 @@ export class SectorService {
 
     public add(sectorDto: SectorDto): Observable<any> {
         return this.sectorRepository.addSector(sectorDto)
-            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, sectorDto.sectorId)));
+            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, sectorDto.id)));
     }
 
     public update(sectorDto: SectorDto): Observable<any> {
         return this.sectorRepository.updateSector(sectorDto)
-            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, sectorDto.sectorId)));
+            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, sectorDto.id)));
     }
 
     public delete(id: string): Observable<any> {

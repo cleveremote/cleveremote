@@ -3,7 +3,7 @@ import { DeviceEntity } from "../../manager/entities/device.entity";
 import { UserEntity } from "./user.entity";
 
 @Entity("Account", { schema: "public" })
-@Index("account_pkey", ["accountId"], { unique: true })
+@Index("account_pkey", ["id"], { unique: true })
 @Index("account_name_key", ["name"], { unique: true })
 export class AccountEntity {
 
@@ -13,7 +13,7 @@ export class AccountEntity {
         length: 255,
         name: "accountId"
     })
-    accountId: string;
+    id: string;
 
 
     @Column("character varying", {

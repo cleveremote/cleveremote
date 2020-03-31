@@ -53,6 +53,7 @@
     "bootstrap": "4.3.1",
     "chart.js": "2.7.1",
     "ckeditor": "4.7.3",
+    "class-transformer": "^0.2.3",
     "classlist.js": "1.1.20150312",
     "core-js": "2.5.1",
     "d3": "^5.15.0",
@@ -111,6 +112,6 @@
     "ts-node": "3.2.2",
     "tslint": "^5.7.0",
     "tslint-language-service": "^0.9.9",
-    "typescript": "^3.7.4"
+    "typescript": "3.4.5"
   }
 }

@@ -2,7 +2,7 @@ import { IsOptional } from "class-validator";
 
 export class AccountQueryDto {
     @IsOptional()
-    public accountId: string;
+    public id: string;
     @IsOptional()
     public name: string;
     @IsOptional()

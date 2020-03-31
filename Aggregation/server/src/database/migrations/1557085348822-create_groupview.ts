@@ -7,8 +7,10 @@ export class createSector1557085348822 implements MigrationInterface {
             "groupId" VARCHAR (255) PRIMARY KEY,
             "name" VARCHAR (255) NOT NULL,
             "description" TEXT,
-            "deviceId" VARCHAR (255) NOT NULL,
-            FOREIGN KEY ("deviceId") REFERENCES "Device"("deviceId") ON DELETE CASCADE
+            "deviceId" VARCHAR (255),
+            FOREIGN KEY ("deviceId") REFERENCES "Device"("deviceId") ON DELETE CASCADE,
+            "sectorId" VARCHAR (255),
+            FOREIGN KEY ("sectorId") REFERENCES "Sector"("sectorId") ON DELETE CASCADE
            );`);
     }
 

@@ -1,7 +1,7 @@
 import { IsNotEmpty } from "class-validator";
 
 export class AccountDto {
-    public accountId: string;
+    public id: string;
     @IsNotEmpty()
     public name: string;
     @IsNotEmpty()

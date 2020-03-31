@@ -1,7 +1,7 @@
 import { IsOptional } from "class-validator";
 export class TransceiverQueryDto {
     @IsOptional()
-    public transceiverId: string;
+    public id: string;
     @IsOptional()
     public name: string;
     @IsOptional()

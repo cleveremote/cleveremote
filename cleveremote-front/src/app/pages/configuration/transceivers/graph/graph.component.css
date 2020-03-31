@@ -10,13 +10,13 @@
     stroke-width: 1.55px; 
     cursor: default;
     }
-    /deep/
-    text {
+    
+    .links text {
     pointer-events: none;
     fill: #000;
     font: 10px sans-serif;
     }
-    /deep/
-    svg{
+    
+    .links svg{
     border:1px solid #000;
     }

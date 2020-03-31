@@ -1,38 +1,31 @@
-import { UseGuards, Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post, Request, Req } from '@nestjs/common';
-import { of, Observable } from 'rxjs';
-import { ModuleService } from '../services/module.service';
-import { ModuleDto } from '../dto/module.dto';
-import { ModuleQueryDto } from '../dto/module.query.dto';
-import { AuthService } from '../../authentication';
+import { UseGuards, Controller, Get, Query, ValidationPipe, Param, UsePipes, Put, Body, Post, Request } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { AuthGuard } from '@nestjs/passport';
-import { UserEntity } from '../../authentication/entities/user.entity';
-import * as jwt from 'jsonwebtoken';
-import { IUser } from '../../api/models/userModel';
-import { WebSocketService } from '../../websocket/services/websocket.service';
-import { tap } from 'rxjs/operators';
 import { GroupViewService } from '../services/groupView.service';
 
-@Controller('api/groupview')
+@Controller('groupview')
 export class GroupViewController {
-    constructor(private readonly groupViewService: GroupViewService, private readonly authService: AuthService) { }
+    constructor(private readonly groupViewService: GroupViewService) { }
 
     @Get('all')
     public getAll(@Query(ValidationPipe) groupViewQueryDto: any): Observable<boolean> {
         return this.groupViewService.getAll(groupViewQueryDto);
     }
 
-    
-    @Delete(':goupId/module/:moduleId')
+
+    @Post('/:goupId')
     // @SetMetadata('roles', ['readwrite'])
+    @UseGuards(AuthGuard('jwt'))
     @UsePipes(ValidationPipe)
-    public deleteGroupView(@Param('goupId') groupId: string,@Param('moduleId') moduleId: string): Observable<boolean> {
-        return this.groupViewService.delete(groupId,moduleId);
+    public deleteGroupView(@Request() req, @Body() modules: Array<string>, @Param('goupId') groupId: string): Observable<boolean> {
+        return this.groupViewService.removeFromGroup(modules, groupId, req);
     }
 
     @UsePipes(ValidationPipe)
-    @Put()
-    public update(@Body() groupViewDto: any): Observable<any> {
-        return this.groupViewService.saveGroup(groupViewDto);
+    @Put('/:goupId')
+    @UseGuards(AuthGuard('jwt'))
+    public addToGroup(@Request() req, @Body() modules: Array<string>, @Param('goupId') groupId: string): Observable<any> {
+        return this.groupViewService.saveToGroup(modules, groupId, req);
     }
 
     @UsePipes(ValidationPipe)
@@ -41,7 +34,7 @@ export class GroupViewController {
         return this.groupViewService.addGroup(groupViewDto);
     }
 
-    
+
 
 
 }

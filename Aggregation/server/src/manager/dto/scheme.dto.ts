@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 export class SchemeDto {
     @IsNotEmpty()
-    public schemeId: string;
+    public id: string;
     @IsNotEmpty()
     public file: string;
     @IsNotEmpty()

@@ -108,7 +108,7 @@ export class GraphComponent implements AfterContentInit {
   public createLinks(dataset): any {
     const links = this.svg.selectAll(".links")
       .data(dataset)
-      .join("line")
+      .enter().append('line')
       .attr("class", "links")
       .attr('marker-end', 'url(#arrowhead)')
       .attr('stroke-width', '5');
@@ -124,7 +124,7 @@ export class GraphComponent implements AfterContentInit {
   public createEdgePaths(dataset): any {
     const edgepaths = this.svg.selectAll(".edgepath")
       .data(dataset)
-      .join("path")
+      .enter().append('path')
       .attr('class', 'edgepath')
       .attr('fill-opacity', 0)
       .attr('stroke-opacity', 0)
@@ -140,7 +140,7 @@ export class GraphComponent implements AfterContentInit {
   public createEdgeLabels(dataset): any {
     const edgelabels = this.svg.selectAll(".edgelabel")
       .data(dataset)
-      .join('text')
+      .enter().append('text')
       .style("pointer-events", "auto")
       .attr('class', 'edgelabel')
       .attr('id', function (d, i) { return 'edgelabel' + i })
@@ -166,7 +166,7 @@ export class GraphComponent implements AfterContentInit {
   public createNodes(dataset): any {
     const nodes = this.svg.selectAll(".nodes")
       .data(dataset)
-      .join("g")
+      .enter().append('g')
       .attr("class", "nodes")
       .call(this.d3.drag()
         .on("start", (d: any) => {
@@ -290,8 +290,9 @@ export class GraphComponent implements AfterContentInit {
     if (!this.svg) {
       this.svg = this.d3.select('#content')
         .append("svg")
-        .attr("width", this.getWidth() + this.getMargin().left + this.getMargin().right)
-        .attr("height", this.getHeight() + this.getMargin().top + this.getMargin().bottom)
+        .attr("overflow", 'auto')
+         .attr("width", '90vw')
+         .attr("height", '90vh')
         .append("g")
         .attr("transform", `translate(${this.getMargin().left},${this.getMargin().top})`);
 

@@ -59,7 +59,7 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize<
     }
 
     public deleteSector(sectorId: string): Observable<boolean> {
-        return from(this.delete({ sectorId: sectorId })).pipe(
+        return from(this.delete({ id: sectorId })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -101,7 +101,7 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize<
     }
 
     public getSector(id?: string): Observable<SectorEntity> {
-        return from(this.findOne({ where: { sectorId: id }, relations: ['modules'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['groupView', 'groupView.modules','groupView.modules.transceiver'] })).pipe(
             map((sector: SectorEntity) => {
 
                 if (!sector) {

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { AuthService } from './services/auth.service';
 import { PassportModule } from '@nestjs/passport';
@@ -18,6 +18,7 @@ import { AccountService } from './services/account.service';
 import { UserService } from './services/user.service';
 import { ProviderService } from './services/provider.service';
 import { GoogleAccountStrategy } from './strategies/google.account.strategy';
+import { ManagerModule } from '../manager/manager.module';
 
 @Module({
 
@@ -31,7 +32,8 @@ import { GoogleAccountStrategy } from './strategies/google.account.strategy';
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '7d' }
-    })
+    }),
+    forwardRef(() => ManagerModule)
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy, GoogleAccountStrategy, AccountService, UserService, ProviderService, AuthService],
   exports: [PassportModule, LocalStrategy, GoogleStrategy, GoogleAccountStrategy, AuthService, AccountService, UserService, ProviderService],

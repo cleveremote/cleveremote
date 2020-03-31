@@ -1,22 +1,12 @@
-import { UseGuards, Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post, Request, Req } from '@nestjs/common';
-import { of, Observable } from 'rxjs';
-import { ModuleService } from '../services/module.service';
-import { ModuleDto } from '../dto/module.dto';
-import { ModuleQueryDto } from '../dto/module.query.dto';
-import { AuthService } from '../../authentication';
-import { AuthGuard } from '@nestjs/passport';
-import { UserEntity } from '../../authentication/entities/user.entity';
-import * as jwt from 'jsonwebtoken';
-import { IUser } from '../../api/models/userModel';
-import { WebSocketService } from '../../websocket/services/websocket.service';
-import { tap } from 'rxjs/operators';
+import { Controller, Get, Query, ValidationPipe, Param, UsePipes, Delete, Put, Body, Post } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { DeviceService } from '../services/device.service';
 import { DeviceQueryDto } from '../dto/device.query.dto';
 import { DeviceDto } from '../dto/device.dto';
 
 @Controller('device')
 export class DeviceController {
-    constructor(private readonly deviceService: DeviceService, private readonly authService: AuthService) { }
+    constructor(private readonly deviceService: DeviceService) { }
 
     @Get('all')
     public getAll(@Query(ValidationPipe) deviceQueryDto: DeviceQueryDto): Observable<boolean> {

@@ -8,6 +8,7 @@ import {
   NbRequestPasswordComponent,
   NbResetPasswordComponent,
 } from '@nebular/auth';
+import 'reflect-metadata';
 import { CoreDataService } from './services/core.data.service';
 import { AuthGuard } from './auth/auth.guard';
 import { LoginComponent } from './authentication/login/login.component';

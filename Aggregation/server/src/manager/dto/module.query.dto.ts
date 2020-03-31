@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 export class ModuleQueryDto {
     @IsOptional()
-    public moduleId: string;
+    public id: string;
     @IsOptional()
     public port: string;
     @IsOptional()

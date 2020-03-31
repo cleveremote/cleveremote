@@ -20,16 +20,18 @@ export class PagesComponent {
     private iconLibraries: NbIconLibraries,
     private coreDataService: CoreDataService) {
     this.iconLibraries.registerFontPack('font-awesome', { iconClassPrefix: 'fa', packClass: 'fa' });
+    this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements.find((res) => res.id === 'server_1');
   }
   menu = MENU_ITEMS;
 
   ngOnInit() {
-    const modules = this.coreDataService.modules;
+    //const modules = this.coreDataService.modules;
     this.devicesElement = this.menu.filter((element: NbMenuItem) => element.title === 'Devices')[0].children;
     // this.setSelected();
     this.deviceService.onItemClick().subscribe((element) => {
       const selected = this.devicesElement.find((device, index) => {
         if (element.item.title === device.title) {
+          this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements.find((res) => res.id === 'server_1');
           this.setSelected(index);
           return true;
         }
@@ -44,12 +46,13 @@ export class PagesComponent {
           }
         });
       }
-     
+
     });
   }
 
-  ngAfterViewInit(){
+  ngAfterViewInit() {
     this.setSelected(0);
+
   }
 
   setSelected(index: number) {
@@ -60,20 +63,21 @@ export class PagesComponent {
       (deviceIcon as any).style.color = '#8f9bb3';
       (element.firstElementChild as any).style.color = '#8f9bb3';
     }
+    //elements[0].firstElementChild.children[1].innerHTML = elements[0].firstElementChild.children[1].innerHTML + `<nb-icon class="menu-icon fa fa-power-off" style="color: green; font-size='18px'"></nb-icon>`//`<nb-icon class="menu-icon fa-spin fa fa-cog" style="color: rgb(51, 102, 255); font-size='18px'"></nb-icon>`;
 
 
     const deviceElement = document.querySelectorAll(".menu-items")[1].children[index];
     const deviceIcon = deviceElement.firstElementChild.firstElementChild;
     (deviceIcon as any).style.color = '#3366ff'; //#192038
     (deviceElement.firstElementChild as any).style.color = '#3366ff'; //#192038
-
     const elementIcon = this.devicesElement[index];
-      elementIcon.icon = { icon: 'check-square', pack: 'font-awesome' };
-      this.devicesElement.forEach(device => {
-        if (device.title !== elementIcon.title) { //replace by id
-          device.icon = { icon: 'square', pack: 'font-awesome' };
-        }
-      });
+    // deviceIcon.classList.add('fa-spin'); for spinning
+    elementIcon.icon = { icon: 'check-square', pack: 'font-awesome' }; //sync-alt
+    this.devicesElement.forEach(device => {
+      if (device.title !== elementIcon.title) { //replace by id
+        device.icon = { icon: 'square', pack: 'font-awesome' };
+      }
+    });
   }
 
   public testClick(param: any) {

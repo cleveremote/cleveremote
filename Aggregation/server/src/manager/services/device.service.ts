@@ -1,26 +1,18 @@
 
-import * as WebSocket from 'ws';
-import * as http from "http";
-import { map, tap, mergeMap } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, from } from 'rxjs';
-import * as xbeeRx from 'xbee-rx'; // no types ... :(
-import * as SerialPort from 'serialport';
-import { TransceiverExt } from '../repositories/transceiver.ext';
+import { mergeMap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ModuleExt } from '../repositories/module.ext';
-import { ModuleDto } from '../dto/module.dto';
-import { ModuleQueryDto } from '../dto/module.query.dto';
-import { KafkaService } from '../../kafka/services/kafka.service';
 import { forwardRef, Inject } from '@nestjs/common';
-import { ModuleEntity } from '../entities/module.entity';
 import { DeviceExt } from '../repositories/device.ext';
 import { DeviceDto } from '../dto/device.dto';
 import { DeviceQueryDto } from '../dto/device.query.dto';
+import { SchemeService } from './scheme.service';
 
 export class DeviceService {
 
     constructor(
-        @InjectRepository(DeviceExt) private readonly deviceRepository: DeviceExt
+        @InjectRepository(DeviceExt) private readonly deviceRepository: DeviceExt,
+        @Inject(forwardRef(() => SchemeService)) private readonly schemeService: SchemeService
     ) { }
 
     public get(id: string): Observable<any> {
@@ -40,7 +32,20 @@ export class DeviceService {
     }
 
     public getAll(deviceQueryDto: DeviceQueryDto): Observable<any> {
-        return this.deviceRepository.getAll(deviceQueryDto);
+        return this.deviceRepository.getAll(deviceQueryDto)
+            .pipe(mergeMap((devices) => {
+                let obsSvgs = of(true);
+                devices.forEach(device => {
+                    device.schemes.forEach(scheme => {
+                        obsSvgs = obsSvgs.pipe(mergeMap(() => this.schemeService.getSvg(scheme.id)))
+                        .pipe(mergeMap((svg) => {
+                            (scheme as any).svg = svg;
+                            return of(true);
+                        }));
+                    });
+
+                });
+                return obsSvgs.pipe(mergeMap(() => of(devices)))
+            }));
     }
 }
-

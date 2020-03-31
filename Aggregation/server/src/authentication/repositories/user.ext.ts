@@ -120,7 +120,7 @@ export class UserExt extends Repository<UserEntity> implements ISynchronize<User
     }
 
     public deleteUser(id: string): Observable<boolean> {
-        return from(this.delete({ userId: id })).pipe(
+        return from(this.delete({ id: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -162,7 +162,7 @@ export class UserExt extends Repository<UserEntity> implements ISynchronize<User
     }
 
     public getUser(id?: string): Observable<UserEntity> {
-        return from(this.findOne({ where: { userId: id }, relations: ['account'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['account'] })).pipe(
             map((account: UserEntity) => {
 
                 if (!account) {

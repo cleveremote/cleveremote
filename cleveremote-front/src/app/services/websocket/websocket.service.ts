@@ -10,6 +10,7 @@ import { webSocket } from "rxjs/webSocket";
 import { AuthService } from '../../auth/auth.service';
 import { Subject, of, throwError } from 'rxjs';
 import { TimerService } from '../timer.service';
+import { IWSMessage } from './interfaces/ws.message.interfaces';
 
 export class Message {
   constructor(
@@ -26,11 +27,11 @@ export class DataService implements OnDestroy {
 
 
   public socket: any;
-  observer: Observer<Message>;
-  public observable: Observable<Message>;
+  observer: Observer<IWSMessage>;
+  public observable: Observable<IWSMessage>;
 
   public loginData: any = {};
-  public serverMessages = new Array<Message>();
+  public serverMessages = new Array<IWSMessage>();
   public clientMessage = '';
   public isBroadcast = false;
   public sender = '';
@@ -88,7 +89,7 @@ export class DataService implements OnDestroy {
         )
       )
     ).subscribe({
-      next: (message: Message) => {
+      next: (message: IWSMessage) => {
         if (this.observer && message) {
           this.observer.next(message);
         }
@@ -105,12 +106,12 @@ export class DataService implements OnDestroy {
     console.log('Service destroy');
   }
 
-  getQuotes(): Observable<Message> {
+  getQuotes(): Observable<IWSMessage> {
     return this.createObservable();
   }
 
-  createObservable(): Observable<Message> {
-    return new Observable<Message>(observer => {
+  createObservable(): Observable<IWSMessage> {
+    return new Observable<IWSMessage>(observer => {
       this.observer = observer;
     });
   }

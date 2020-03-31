@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber } from "class-validator";
 export class UserDto {
-    public userId: string;
+    public id: string;
     @IsNotEmpty()
     public firstName: string;
     @IsNotEmpty()

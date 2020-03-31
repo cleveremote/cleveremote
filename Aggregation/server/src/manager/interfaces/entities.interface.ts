@@ -29,7 +29,7 @@ export interface ITopic {
 }
 
 export interface IUser {
-    userId: string;
+    id: string;
     firstName: string;
     lastName: string;
     email: string;

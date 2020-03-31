@@ -3,7 +3,6 @@ import { of, Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import * as jwt from 'jsonwebtoken';
-import { IUser } from '../../api/models/userModel';
 
 @Controller('authentication')
 export class AuthenticationController {
@@ -12,7 +11,7 @@ export class AuthenticationController {
     @UseGuards(AuthGuard())
     @Get('token')
     public getToken(@Req() request): Observable<any> {
-        const user = JSON.parse(JSON.stringify(request.user)) as IUser;
+        const user = JSON.parse(JSON.stringify(request.user));
         const token = jwt.sign({ data: user },
             String(process.env.JWT_SECRET),
             { expiresIn: 200000 }

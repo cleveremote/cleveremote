@@ -56,7 +56,7 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
     }
 
     public deleteModule(id: string): Observable<boolean> {
-        return from(this.delete({ moduleId: id })).pipe(
+        return from(this.delete({ id: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -128,7 +128,7 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
 
         return from(this.find({
             where: qb => {
-                qb.where('transceiver.deviceId = device.deviceId')
+                qb.where('transceiver.deviceId = device.id')
                     .andWhere('device.accountId=:accountId', { accountId: accountId }); // Filter related field
             },
             join: { alias: 'module', innerJoin: { transceiver: 'module.transceiver', device: 'transceiver.device' } },
@@ -155,7 +155,7 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
 
 
     public getModule(id?: string): Observable<ModuleEntity> {
-        return from(this.findOne({ where: { moduleId: id }, relations: ['transceiver'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['transceiver', 'groupviews'] })).pipe(
             map((module: ModuleEntity) => {
 
                 if (!module) {

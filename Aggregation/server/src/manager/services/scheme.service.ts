@@ -23,6 +23,8 @@ import { SectorEntity } from '../entities/sector.entity';
 
 import { v1 } from 'uuid';
 import { SectorDto } from '../dto/sector.dto';
+import { GroupViewEntity } from '../entities/groupView.entity';
+import { getRepository } from 'typeorm';
 
 export class SchemeService {
     public entityName = 'Scheme';
@@ -39,48 +41,72 @@ export class SchemeService {
 
     public add(schemeDto: SchemeDto): Observable<any> {
         return this.schemeRepository.addScheme(schemeDto);
-           // .pipe(mergeMap((data: SchemeEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, this.managerService.deviceId)));
+        // .pipe(mergeMap((data: SchemeEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, this.managerService.deviceId)));
     }
 
     public update(schemeDto: SchemeDto): Observable<any> {
         return this.schemeRepository.updateScheme(schemeDto);
-            //.pipe(mergeMap((data: SchemeEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, this.managerService.deviceId)));
+        //.pipe(mergeMap((data: SchemeEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, this.managerService.deviceId)));
     }
 
     public delete(id: string): Observable<any> {
         return this.schemeRepository.deleteScheme(id);
-            //.pipe(mergeMap((isDeleted: boolean) => this.kafkaService.syncDataWithBox(id, 'DELETE', this.entityName, this.managerService.deviceId)));
+        //.pipe(mergeMap((isDeleted: boolean) => this.kafkaService.syncDataWithBox(id, 'DELETE', this.entityName, this.managerService.deviceId)));
     }
 
     public getAll(schemeQueryDto: SchemeQueryDto): Observable<any> {
         return this.schemeRepository.getAll(schemeQueryDto);
     }
 
+
     public saveAndCreateScheme(file: any, schemeDto?: SchemeDto): Observable<any> {
         const regex = /sel_\d/g;
         // let array = [... data.toString().matchAll(regex)];
         // let matches = data.toString().search(regex);
-        const data = file.buffer.toString();
-        const sectorsToSave = data.match(regex) || [];
-        const fileName = v1();
+        let data = file.buffer.toString();
+        const svgSectors = data.match(regex) || [];
 
-        const loadMetadataForTopicsObs = bindCallback(fs.writeFile.bind(fs, fileName + '.svg', file.buffer));
+        const sectorsId = [];
+        svgSectors.forEach(svgSector => {
+            const sectorId = v1();
+            const nameToFind = svgSector.replace('sel_', 'selname_');
+            data = data.replace(svgSector, sectorId);
+            data = data.replace(nameToFind, 'selname_'+sectorId);
+            sectorsId.push(sectorId);
+        });
+
+        const fileName = v1();
+        const groupViewsToSave = [];
+        const loadMetadataForTopicsObs = bindCallback(fs.writeFile.bind(fs, fileName + '.svg', data));
         return loadMetadataForTopicsObs()
             .pipe(mergeMap((result) => {
-                if (!schemeDto.schemeId) {
-                    schemeDto.schemeId = fileName;
-                    schemeDto.file = schemeDto.schemeId;
+                if (!schemeDto.id) {
+                    schemeDto.id = fileName;
+                    schemeDto.file = schemeDto.id;
                 }
                 (schemeDto as any).sectors = [];
-                sectorsToSave.forEach(sectorName => {
-                    const sector = new SectorDto();
-                    sector.name = sectorName;
-                    sector.schemeId = schemeDto.schemeId;
-                    sector.sectorId = sectorName + '?' + schemeDto.schemeId;
+                sectorsId.forEach((sectorId, index) => {
+                    const sector = new SectorEntity();
+                    sector.name = 'sector_tmp_' + index;
+                    sector.schemeId = schemeDto.id;
+                    sector.id = sectorId;
+                    const group = new GroupViewEntity();
+                    group.id = v1();
+                    group.name = 'grouView_name_tmp_' + v1();
+                    group.description = 'description_tmp';
+                    group.sectorId = sectorId;
+                    group.sectors = [];
+                    group.sectors.push(sector);
+                    groupViewsToSave.push(group);
                     (schemeDto as any).sectors.push(sector);
 
+
                 });
-                return this.schemeRepository.addScheme(schemeDto);
+                return this.schemeRepository.addScheme(schemeDto)
+                    .pipe(map((scheme) => {
+                        const repo = getRepository(GroupViewEntity);
+                        return repo.save(groupViewsToSave);
+                    }));
             }
             ));
     }
@@ -92,5 +118,6 @@ export class SchemeService {
                 return of({ data: result[1].toString() });
             }));
     }
+
 
 }

@@ -17,7 +17,7 @@ export class UserEntity {
         length: 255,
         name: "userId"
     })
-    userId: string;
+    id: string;
 
 
     @Column("character varying", {
@@ -69,7 +69,7 @@ export class UserEntity {
 
 
     @ManyToOne(type => AccountEntity, account => account.users, { nullable: false, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'accountId' })
+    @JoinColumn({ name: 'accountId', referencedColumnName: 'id' })
     account: AccountEntity | null;
 
     @OneToMany(type => ProviderEntity, provider => provider.user, { onDelete: 'CASCADE', cascade: true })

@@ -1,13 +1,10 @@
-import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
+import { EntityRepository, Repository, DeleteResult, FindManyOptions, getRepository } from "typeorm";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
-import { ModuleEntity } from "../entities/module.entity";
 import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
-import { ModuleQueryDto } from "../dto/module.query.dto";
-import { plainToClass, classToClass } from "class-transformer";
-import { ModuleDto } from "../dto/module.dto";
+import { plainToClass } from "class-transformer";
 import { GroupViewEntity } from "../entities/groupView.entity";
-import { AssGroupViewModuleEntity } from "../entities/assGroupViewModule.entity";
+import { ModuleEntity } from "../entities/module.entity";
 
 @EntityRepository(GroupViewEntity)
 export class GroupViewExt extends Repository<GroupViewEntity> implements ISynchronize<GroupViewEntity | boolean> {
@@ -47,7 +44,7 @@ export class GroupViewExt extends Repository<GroupViewEntity> implements ISynchr
 
 
     public deleteGroup(id: string): Observable<boolean> {
-        return from(this.delete({ groupId: id })).pipe(
+        return from(this.delete({ id: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -62,14 +59,13 @@ export class GroupViewExt extends Repository<GroupViewEntity> implements ISynchr
 
     public getAll(moduleQueryDto: any): Observable<Array<GroupViewEntity>> {
 
-        const options: FindManyOptions<GroupViewEntity> = { where: plainToClass(GroupViewEntity, moduleQueryDto) };
         const filter = {};
 
         for (let [key, value] of Object.entries(moduleQueryDto)) {
             filter[key] = value;
         }
 
-        return from(this.find({ where: filter, relations: ['assGroupViewModules', 'assGroupViewModules.module'] })).pipe(
+        return from(this.find({ where: filter, relations: ['modules'] })).pipe(
             map((groups: Array<GroupViewEntity>) => {
 
                 if (!groups) {

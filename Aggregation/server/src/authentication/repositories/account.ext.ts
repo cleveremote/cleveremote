@@ -46,12 +46,12 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
     public createAccount(message?: any): Observable<boolean> {
         const accountData: IAccount = { account_id: 'server_3', name: 'name12', description: 'description' } as any;
         const accountToSave = new AccountEntity();
-        accountToSave.accountId = accountData.account_id;
+        accountToSave.id = accountData.account_id;
         accountToSave.name = accountData.name;
         accountToSave.description = accountData.description;
 
         const userData: IUser = {
-            userId: 'server_3',
+            id: 'server_3',
             email: 'email1',
             password: '$2a$08$GvDZDoL..cHoc8n8HFUp6en6PiH5I2cqYvj4xDsbomC25WPc/6Iwa1',
             phone: '0682737505',
@@ -59,7 +59,7 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
             firstName: 'first_name'
         } as any;
         const userToSave = new UserEntity();
-        userToSave.userId = userData.userId;
+        userToSave.id = userData.id;
         userToSave.email = userData.email;
         userToSave.phone = userData.phone;
         userToSave.firstName = userData.firstName;
@@ -81,19 +81,19 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
                 const deviceToSave = new DeviceEntity();
                 deviceToSave.account = currentAccount;
                 deviceToSave.description = deviceData.description;
-                deviceToSave.deviceId = deviceData.device_id;
+                deviceToSave.id = deviceData.device_id;
                 deviceToSave.name = deviceData.name;
 
                 const partitionData: IPartitionConfig = { config_id: 'server_3', start_range: 2, end_range: 3 } as any;
                 const partitionToSave = new PartitionConfigEntity();
-                partitionToSave.configId = partitionData.config_id;
+                partitionToSave.id = partitionData.config_id;
                 partitionToSave.startRange = partitionData.start_range;
                 partitionToSave.endRange = partitionData.end_range;
 
                 deviceToSave.partitionConfigs = [partitionToSave];
 
                 const userData: IUser = {
-                    userId: 'server_3',
+                    id: 'server_3',
                     email: 'email1',
                     password: '$2a$08$GvDZDoL..cHoc8n8HFUp6en6PiH5I2cqYvj4xDsbomC25WPc/6Iwa1',
                     number_phone: '0682737505',
@@ -101,7 +101,7 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
                     first_name: 'first_name'
                 } as any;
                 const userToSave = new UserEntity();
-                userToSave.userId = userData.userId;
+                userToSave.id = userData.id;
                 userToSave.email = userData.email;
                 userToSave.phone = userData.phone;
                 userToSave.firstName = userData.firstName;
@@ -147,7 +147,7 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
     }
 
     public deleteAccount(id: string): Observable<boolean> {
-        return from(this.delete({ accountId: id })).pipe(
+        return from(this.delete({ id: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -189,7 +189,7 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
     }
 
     public getAccount(id?: string): Observable<AccountEntity> {
-        return from(this.findOne({ where: { accountId: id }, relations: ['users', 'devices', 'devices.partitionConfigs', 'users.providers'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['users', 'devices', 'devices.partitionConfigs', 'users.providers'] })).pipe(
             map((account: AccountEntity) => {
 
                 if (!account) {
@@ -207,7 +207,7 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
         return from(this.findOne({
             join: { alias: 'account', innerJoin: { devices: 'account.devices' } },
             where: qb => {
-                qb.where('devices.deviceId = :serialNumber', { serialNumber: serialNumber })
+                qb.where('devices.id = :serialNumber', { serialNumber: serialNumber })
             },
             relations: ['users', 'devices', 'devices.partitionConfigs']
         })).pipe(
@@ -220,7 +220,39 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
                 }
 
                 if (account.devices && account.devices.length > 0) {
-                    account.devices = account.devices.filter((device: DeviceEntity) => device.deviceId === serialNumber);
+                    account.devices = account.devices.filter((device: DeviceEntity) => device.id === serialNumber);
+                }
+
+                return account;
+            }));
+    }
+
+    public getFrontAccountData(accountId: string):Observable<AccountEntity> {
+        return from(this.findOne({
+            where: { id: accountId },
+            relations: [
+                'users',
+                'devices',
+                'devices.groupViews',
+                'devices.groupViews.modules',
+                'devices.groupViews.modules.transceiver',
+                'devices.transceivers',
+                'devices.transceivers.modules',
+                'devices.transceivers.modules.transceiver',
+                'devices.schemes',
+                'devices.schemes.sectors',
+                'devices.schemes.sectors.groupView',
+                'devices.schemes.sectors.groupView.modules',
+                'devices.schemes.sectors.groupView.modules.transceiver'
+
+            ]
+        })).pipe(
+            map((account: AccountEntity) => {
+
+                if (!account) {
+                    console.log('no module found');
+
+                    return undefined;
                 }
 
                 return account;

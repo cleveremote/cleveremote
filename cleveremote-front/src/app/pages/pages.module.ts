@@ -7,7 +7,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ECommerceModule } from './e-commerce/e-commerce.module';
 import { PagesRoutingModule } from './pages-routing.module';
 import { MiscellaneousModule } from './miscellaneous/miscellaneous.module';
-import { SchemeModule } from './scheme/e-commerce.module';
+import { SchemeModule } from './scheme/scheme.module';
 import { CoreDataService } from '../services/core.data.service';
 import { ConfigurationService } from '../services/configuration.service';
 import { RessourcesService } from '../services/ressources.service';

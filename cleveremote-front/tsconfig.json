@@ -15,10 +15,13 @@
     ],
     "lib": [
       "es2017",
-      "dom"
+      "dom",
+      "esnext",
     ],
     "plugins": [
-      { "name": "tslint-language-service"}
+      {
+        "name": "tslint-language-service"
+      }
     ]
   }
 }

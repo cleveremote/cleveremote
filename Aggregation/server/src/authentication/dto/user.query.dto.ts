@@ -1,7 +1,7 @@
 import { IsOptional } from "class-validator";
 
 export class UserQueryDto {
-    public userId: string;
+    public id: string;
     @IsOptional()
     public firstName: string;
     @IsOptional()

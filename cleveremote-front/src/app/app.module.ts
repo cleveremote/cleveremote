@@ -33,6 +33,16 @@ import { TimerService } from './services/timer.service';
 import { LoginModule } from './authentication/login/login.module';
 import { AuthService } from './auth/auth.service';
 import { CommonModule } from '@angular/common';
+import { ElementFactory } from './services/collections/elements/element.factory';
+import { ModuleCollection } from './services/collections/module.collection';
+import { SchemeCollection } from './services/collections/scheme.collection';
+import { GroupViewCollection } from './services/collections/groupview.collection';
+import { TransceiverCollection } from './services/collections/transceiver.collection';
+import { DeviceCollection } from './services/collections/device.collection';
+import { SectorCollection } from './services/collections/sector.collection';
+import { AccountCollection } from './services/collections/account.collection';
+import { UserCollection } from './services/collections/user.collection';
+import { ValueCollection } from './services/collections/value.collection';
 
 @NgModule({
   declarations: [AppComponent],
@@ -44,10 +54,21 @@ import { CommonModule } from '@angular/common';
     AuthService,
     RessourcesService,
     ConfigurationService,
+
+    ModuleCollection,
+    GroupViewCollection,
+    TransceiverCollection,
+    DeviceCollection,
+    SectorCollection,
+    SchemeCollection,
+    AccountCollection,
+    UserCollection,
+    ValueCollection,
+
     CoreDataService,
 
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    
+
   ],
   imports: [
     CommonModule,

@@ -7,6 +7,8 @@ import { Tools } from '../../common/tools-service';
 import { KafkaService } from '../../kafka/services/kafka.service';
 import { genericRetryStrategy } from '../../common/generic-retry-strategy';
 import { v1 } from 'uuid';
+import { IWSMessage, ACTION_TYPE, ELEMENT_TYPE } from './interfaces/ws.message.interfaces';
+import { TYPE_MODULE } from '../../manager/interfaces/module.interfaces';
 
 interface ExtWebSocket extends WebSocket {
     isAlive: boolean;
@@ -37,15 +39,28 @@ export class WebSocketService {
 
     public static wss: WebSocket.Server;
 
-    public static sendMessage(clientId: string, content: string): void {
+    public static sendMessage(clientId: string, content: string, exlude: Array<string> = []): void {
         if (WebSocketService.wss && WebSocketService.wss.clients) {
             const clientArray = [...WebSocketService.wss.clients];
-            const clients = clientArray.filter((x: any) => x.userInfo && x.userInfo.data.userId === 'server_1');
+            const clients = clientArray.filter((x: any) => exlude[0] !== x.protocol);
             clients.forEach(client => {
                 const message = JSON.stringify(new Message(content, false, undefined));
                 client.send(message);
             });
         }
+    }
+
+
+
+    public static syncClients(typeAction: ACTION_TYPE, target: ELEMENT_TYPE, entity: any, request: any): void {
+        const messageToBuild = {
+            typeAction: typeAction,
+            target: target,
+            date: new Date(),
+            data: [entity]
+        };
+        const message = JSON.stringify(messageToBuild);
+        WebSocketService.sendMessage('', message, [request.headers.authorization.split(" ")[1]]);
     }
 
     constructor(serverInstance: http.Server) {
@@ -106,10 +121,11 @@ export class WebSocketService {
                     };
                     ws.onerror = (e: IWebSocketError) => { Tools.logWarn(`Client disconnected - reason: ${e.error}`); };
                     ws.send(this.createMessage('Connected to the WebSocket server'));
-                    setInterval(() => {
-                        ws.send(this.createMessage('nadime test websocket'));
-                    }, 10000);
-                    
+                    // setInterval(() => {
+                    //     const messageToSend = JSON.stringify(this.testAddModule());
+                    //     ws.send(this.createMessage(messageToSend));
+                    // }, 10000);
+
                 });
                 this.stayConnected();
             }));
@@ -214,6 +230,22 @@ export class WebSocketService {
                 // this.sendSuccess(res, JSON.stringify(e));
                 event.target.send(this.createMessage(`response -> ${JSON.stringify(e)}`, false));
             });
+    }
+
+
+    public testAddModule(): IWSMessage {
+        return {
+            typeAction: ACTION_TYPE.ADD,
+            target: ELEMENT_TYPE.MODULE,
+            date: new Date(),
+            data: [{ id: v1(), name: 'module_' + v1(), type: TYPE_MODULE.RELAY, value: 'ON', transceiverId: 'server_1', groupViewId: ['server_1'] }] // aouter transceiverId + groupView
+        };
+        // return {
+        //     typeAction: ACTION_TYPE.DELETE,
+        //     target: ELEMENT_TYPE.MODULE,
+        //     date: new Date(),
+        //     data: [{ id: 'server_1'}]
+        // };
     }
 
 }

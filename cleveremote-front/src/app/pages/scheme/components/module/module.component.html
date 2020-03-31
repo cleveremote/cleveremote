@@ -1,15 +1,25 @@
 <nb-reveal-card [showToggleButton]="false" [revealed]="revealed">
   <nb-card-front>
     <nb-card [className]="isMobile ? 'mobile-dim' : 'desktop-dim'">
-     <module-list [modules]="modules"></module-list>
-      <nb-icon class="toggle-icon" icon="settings-outline" pack="eva" style="width: 32px;height: 32px; color:#598bff;" autofocus (click)="toggleView()"></nb-icon>
+      <nb-card-header>
+        <h4 style="text-align: center;vertical-align: middle;margin-bottom: 10px;color: #656f7f;">Sector Name</h4>
+        <input #searchInput type="text" nbInput fullWidth placeholder="Search device">
+        <nb-icon #testFocus nbPopover="Add module to current sector" nbPopoverTrigger="focus" status='info' nbButton class="toggle-icon" icon="settings-outline" pack="eva" style="width: 32px;height: 32px; color:#598bff;"
+           (click)="toggleView()"></nb-icon>
+      </nb-card-header>
+      <module-list (onDeleteModule)="deleteModule($event)" [modules]="modules"></module-list>
     </nb-card>
   </nb-card-front>
   <nb-card-back>
-    <nb-card  [className]="isMobile ? 'mobile-dim' : 'desktop-dim'">
+
+    <nb-card [className]="isMobile ? 'mobile-dim' : 'desktop-dim'">
+      <nb-card-header>
+        <h4 style="text-align: center;vertical-align: middle;margin-bottom: 10px; color: #656f7f;">Sector Name</h4>
+        <input  type="text" nbInput fullWidth placeholder="Search device">
+        <nb-icon nbPopover="save & quit" nbPopoverTrigger="focus" status='info' nbButton class="toggle-icon" icon="close-square-outline" pack="eva"
+          style="width: 32px;height: 32px; color:#598bff;" (click)="toggleView()"></nb-icon>
+      </nb-card-header>
       <module-list-all [modules]="modulesAll" [groupChanges]="groupChanges"></module-list-all>
-      <nb-icon class="toggle-icon" icon="close-square-outline" pack="eva" style="width: 32px;height: 32px; color:#598bff;" (click)="toggleView()"></nb-icon>
-      <!-- <nb-icon class="toggle-icon" icon="save-outline" pack="eva" style="width: 32px;height: 32px; color:#598bff; margin-right: 32px;" (click)="saveGroupes()"></nb-icon> -->
     </nb-card>
   </nb-card-back>
 </nb-reveal-card>

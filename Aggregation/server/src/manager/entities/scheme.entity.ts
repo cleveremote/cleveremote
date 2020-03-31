@@ -11,7 +11,7 @@ import { SectorEntity } from "./sector.entity";
 
 @Index("scheme_file_name_key", ["file"], { unique: true })
 @Index("scheme_name_key", ["name"], { unique: true })
-@Index("scheme_pkey", ["schemeId"], { unique: true })
+@Index("scheme_pkey", ["id"], { unique: true })
 @Entity("Scheme", { schema: "public" })
 export class SchemeEntity {
   @Column("character varying", {
@@ -19,7 +19,7 @@ export class SchemeEntity {
     name: "schemeId",
     length: 255
   })
-  public schemeId: string;
+  public id: string;
 
   @Column("character varying", { name: "file", unique: true, length: 255 })
   public file: string;
@@ -41,7 +41,7 @@ export class SchemeEntity {
     device => device.schemes,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "id" }])
   public device: DeviceEntity;
 
   @OneToMany(
@@ -55,7 +55,7 @@ export class SchemeEntity {
     scheme => scheme.schemes,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "parentScheme", referencedColumnName: "schemeId" }])
+  @JoinColumn([{ name: "parentScheme", referencedColumnName: "id" }])
   public parentscheme: SchemeEntity;
 
   @OneToMany(

@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber } from "class-validator";
 export class DeviceDto {
-    public deviceId: string;
+    public id: string;
     @IsNotEmpty()
     public name: string;
     @IsNotEmpty()

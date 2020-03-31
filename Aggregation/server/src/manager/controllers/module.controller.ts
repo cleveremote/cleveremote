@@ -7,9 +7,9 @@ import { AuthService } from '../../authentication';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from '../../authentication/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
-import { IUser } from '../../api/models/userModel';
 import { WebSocketService } from '../../websocket/services/websocket.service';
 import { tap } from 'rxjs/operators';
+import { LogMongoEntity } from '../repositories/module-log.mongo';
 
 @Controller('module')
 export class ModuleController {
@@ -40,7 +40,7 @@ export class ModuleController {
     @UseGuards(AuthGuard())
     @Get('token')
     public getToken(@Req() request): Observable<any> {
-        const user = JSON.parse(JSON.stringify(request.user)) as IUser;
+        const user = JSON.parse(JSON.stringify(request.user));
         const token = jwt.sign(user,
             String(process.env.JWT_SECRET),
             { expiresIn: 200000 }
@@ -98,19 +98,17 @@ export class ModuleController {
         return 'JWT is working!';
     }
 
-    // @Post('executiontest')
-    // public executiontest(): Observable<any> {
-    //     return this.moduleService.execution()
-    //     .pipe(tap((result: any) => {
-    //         WebSocketService.sendMessage('server_1', JSON.stringify(result));
-    //     }));
-    // }
+    @UsePipes(new ValidationPipe())
+    @Post('execute')
+    public execute(@Request() req, @Body() moduleDto: any): Observable<LogMongoEntity> {
+        return this.moduleService.execute(moduleDto, req);
+    }
 
-    // @UseGuards(AuthGuard())
-    // @Get('me')
-    // getProfile(@Request() req) {
-    //   return req.user;
-    // }
+    @UsePipes(new ValidationPipe())
+    @Post('values')
+    public getLastLogs(@Request() req, @Body() moduleIds: Array<string>): Observable<Array<LogMongoEntity>> {
+        return this.moduleService.getLastLogs(moduleIds, req);
+    }
 
 
 }

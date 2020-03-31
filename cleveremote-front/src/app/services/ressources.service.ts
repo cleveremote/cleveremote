@@ -21,6 +21,10 @@ export class RessourcesService {
         return this.http.get<any>(this.actionUrl + 'module/device/' + deviceId);
     }
 
+    getAllLastModuleValues(moduleIds: Array<string>): Observable<any> {
+        return this.http.post<any>(this.actionUrl + 'module/values/', moduleIds);
+    }
+
     getAccountModules(accountId: string): Observable<any> {
         return this.http.get<any>(this.actionUrl + 'module/account/' + accountId);
     }
@@ -36,6 +40,26 @@ export class RessourcesService {
 
     getScheme(schemeId: string): Observable<any> {
         return this.http.get<void>(this.actionUrl + 'scheme/svg/' + schemeId);
+    }
+
+    addModulesToGroup(modules: Array<string>, goupId: string): Observable<any> {
+        return this.http.put<void>(this.actionUrl + 'groupview/' + goupId + '/', modules);
+    }
+
+    deleteModulesFromGroup(modules: Array<string>, goupId: string): Observable<any> {
+        return this.http.post<void>(this.actionUrl + 'groupview/' + goupId + '/', modules);
+    }
+
+    getFrontAccountData(): Observable<any> {
+        return this.http.get<any>(this.actionUrl + 'account/front-data/' + 'server_1');
+    }
+
+    getSector(sectorId: string): Observable<any> {
+        return this.http.get<any>(this.actionUrl + 'sector/' + sectorId);
+    }
+
+    execute(jsonBody): Observable<any> {
+        return this.http.post<boolean>(this.actionUrl + 'module/execute', jsonBody);
     }
 
 }

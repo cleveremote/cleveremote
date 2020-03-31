@@ -36,12 +36,12 @@ export class TransceiverService {
 
     public add(moduleDto: TransceiverDto): Observable<any> {
         return this.transceiverRepository.addTransceiver(moduleDto)
-            .pipe(mergeMap((data: TransceiverEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, moduleDto.transceiverId)));
+            .pipe(mergeMap((data: TransceiverEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, moduleDto.id)));
     }
 
     public update(moduleDto: TransceiverDto): Observable<any> {
         return this.transceiverRepository.updateTransceiver(moduleDto)
-            .pipe(mergeMap((data: TransceiverEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, moduleDto.transceiverId)));
+            .pipe(mergeMap((data: TransceiverEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, moduleDto.id)));
     }
 
     public delete(id: string): Observable<any> {

@@ -66,7 +66,7 @@ export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize<
     }
 
     public deleteDevice(id: string): Observable<boolean> {
-        return from(this.delete({ deviceId: id })).pipe(
+        return from(this.delete({ id: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -88,7 +88,20 @@ export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize<
             filter[key] = value;
         }
 
-        return from(this.find({ where: filter, relations: ['partitionConfigs', 'account', 'account.users', 'transceivers', 'transceivers.modules', 'groupViews', 'groupViews.assGroupViewModules', 'schemes', 'schemes.parentscheme'] })).pipe(
+        return from(this.find({
+            where: filter,
+            relations: [
+                'partitionConfigs',
+                'account',
+                'account.users',
+                'transceivers',
+                'transceivers.modules',
+                'groupViews',
+                'groupViews.modules',
+                'schemes',
+                'schemes.parentscheme',
+                'schemes.sectors']
+        })).pipe(
             map((accounts: Array<DeviceEntity>) => {
 
                 if (!accounts) {
@@ -108,7 +121,7 @@ export class DeviceExt extends Repository<DeviceEntity> implements ISynchronize<
     }
 
     public getDevice(id?: string): Observable<DeviceEntity> {
-        return from(this.findOne({ where: { deviceId: id }, relations: ['partitionConfigs', 'account', 'account.users'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['partitionConfigs', 'account', 'account.users'] })).pipe(
             map((account: DeviceEntity) => {
 
                 if (!account) {

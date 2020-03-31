@@ -8,7 +8,7 @@ export const MENU_ITEMS: NbMenuItem[] = [
     children: [
       {
         icon: { icon: 'square', pack: 'font-awesome' },
-        title: 'Device 1'
+        title: 'Device 1',
       },
       {
         icon: { icon: 'square', pack: 'font-awesome' },

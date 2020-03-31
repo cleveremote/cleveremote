@@ -1,8 +1,9 @@
-import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post } from '@nestjs/common';
+import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post, Request } from '@nestjs/common';
 import { of, Observable } from 'rxjs';
 import { AccountQueryDto } from '../dto/account.query.dto';
 import { AccountDto } from '../dto/account.dto';
 import { AccountService } from '../services/account.service';
+import { AccountEntity } from '../entities/account.entity';
 
 @Controller('account')
 export class AccountController {
@@ -45,5 +46,14 @@ export class AccountController {
     public add(@Body() accountDto: AccountDto): Observable<any> {
         return this.accountService.add(accountDto);
     }
+
+    @Get('front-data/:accountId')
+    // @SetMetadata('roles', ['readonly', 'readwrite'])
+    @UsePipes(ValidationPipe)
+    public getFrontAccountData(@Request() req, @Param('accountId') accountId: string): Observable<AccountEntity> {
+        const r = req;
+        return this.accountService.getFrontAccountData(accountId);
+    }
+
 
 }

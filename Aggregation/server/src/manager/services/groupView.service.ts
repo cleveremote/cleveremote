@@ -1,7 +1,7 @@
 import * as WebSocket from 'ws';
 import * as http from "http";
 import { map, tap, mergeMap } from 'rxjs/operators';
-import { of as observableOf, from as observableFrom, Observable, of, observable, from } from 'rxjs';
+import { of as observableOf, from as observableFrom, Observable, of, observable, from, pipe, GroupedObservable } from 'rxjs';
 import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
 import { DeviceService } from './device.service';
@@ -14,59 +14,115 @@ import { KafkaService } from '../../kafka/services/kafka.service';
 import { forwardRef, Inject } from '@nestjs/common';
 import { ModuleEntity } from '../entities/module.entity';
 import { GroupViewExt } from '../repositories/groupView.ext';
-import { AssGroupViewModuleExt } from '../repositories/assGroupViewModule.ext';
-import { AssGroupViewModuleEntity } from '../entities/assGroupViewModule.entity';
 import { TYPE_MODULE, TYPE_IO } from '../interfaces/module.interfaces';
 import { v1 } from 'uuid';
+import { WebSocketService } from '../../websocket/services/websocket.service';
+import { ModuleService } from './module.service';
+import { ELEMENT_TYPE, ACTION_TYPE } from '../../websocket/services/interfaces/ws.message.interfaces';
+import { GroupViewEntity } from '../entities/groupView.entity';
+import { getRepository, In } from 'typeorm';
 
 export class GroupViewService {
     public entityName = 'GroupView';
 
     constructor(
         @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
-        @InjectRepository(AssGroupViewModuleExt) private readonly assGroupViewRepository: AssGroupViewModuleExt,
-        @InjectRepository(AssGroupViewModuleExt) private readonly groupViewRepository: GroupViewExt
+        @Inject(forwardRef(() => ModuleService)) private readonly moduleService: ModuleService,
+        @InjectRepository(GroupViewExt) private readonly groupViewRepository: GroupViewExt
     ) { }
 
-    public saveGroup(moduleDto: any): Observable<any> {
-        moduleDto.forEach(element => {
-            if (!element.assId) {
-                element.assId = v1();
-            }
-        });
-        return this.assGroupViewRepository.SaveGroupe(moduleDto);
-        // .pipe(mergeMap((data: ModuleEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, moduleDto.moduleId)));
+    public saveToGroup(modules: Array<string>, groupId: string, request: any): Observable<any> {
+        return from(getRepository(GroupViewEntity)
+            .findOne({ where: { id: groupId }, relations: ["modules"] }))
+            .pipe(mergeMap(groupe => {
+                groupe.modules = groupe.modules.concat([...modules].map(x => ({ id: x }) as any));
+                return this.groupViewRepository.SaveGroupe(groupe)
+                    .pipe(map((groupView: GroupViewEntity) => {
+                        WebSocketService.syncClients(ACTION_TYPE.ADD, ELEMENT_TYPE.GROUPVIEW, groupView, request);
+                        
+                        return groupView;
+                    }));
+            }));
+    }
+
+    public removeFromGroup(modules: Array<string>, groupId: string, request: any): Observable<any> {
+        return from(getRepository(GroupViewEntity)
+            .findOne({ where: { id: groupId }, relations: ["modules"] }))
+            .pipe(mergeMap(groupe => {
+                groupe.modules = groupe.modules.filter((module: ModuleEntity) => [...modules].indexOf(module.id) === -1);
+                return this.groupViewRepository.SaveGroupe(groupe)
+                    .pipe(map((groupView: GroupViewEntity) => {
+                        WebSocketService.syncClients(ACTION_TYPE.ADD, ELEMENT_TYPE.GROUPVIEW, groupView, request);
+                        return groupView;
+                    }));
+            }));
     }
 
     public addGroup(moduleDto: any): Observable<any> {
-
         return this.groupViewRepository.SaveGroupe(moduleDto);
         // .pipe(mergeMap((data: ModuleEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, moduleDto.moduleId)));
     }
 
-    public delete(groupId: string, moduleId: string): Observable<any> {
-        return this.assGroupViewRepository.deleteModuleFromGroup(groupId, moduleId);
+    public delete(modules: Array<string>, groupId: string): Observable<any> {
+        const assGroupViews = [];
+        modules.forEach(moduleId => {
+            assGroupViews.push({ moduleId: moduleId, groupId: groupId });
+        });
+        // return this.assGroupViewRepository.deleteModuleFromGroup(assGroupViews[0].groupId, assGroupViews[0].moduleId);
         // .pipe(mergeMap((isDeleted: boolean) => this.kafkaService.syncDataWithBox(id, 'DELETE', this.entityName, id)));
+        return of(true);
     }
+
     public getModuleType(port: string, transceiverCfg: any): TYPE_MODULE {
         return transceiverCfg[port] === TYPE_IO.DIGITAL_OUTPUT_HIGH || TYPE_IO.DIGITAL_OUTPUT_LOW ? TYPE_MODULE.RELAY : TYPE_MODULE.SENSOR;
     }
 
-    public getAll(moduleQueryDto: any): Observable<any> {
-        return this.assGroupViewRepository.getAll(moduleQueryDto)
-            .pipe(mergeMap((result: Array<AssGroupViewModuleEntity>) => {
-                const response = {} as any;
-                response.group = result[0].group;
-                response.modules = [];
-                result.forEach(element => {
-                    const module = {} as any;
-                    module.name = element.module.name;
-                    module.type = this.getModuleType(module.port, (element.module.transceiver.configuration as any).IOCfg);
-                    module.configuration = { data: "comming soon" };
-                    module.value = (module as any).type === TYPE_IO.DIGITAL_OUTPUT_HIGH ? 'ON' : 'OFF';
-                    response.modules.push(module);
-                });
-                return of(response);
-            }));
+    public getAll(groupViewQueryDto: any): Observable<any> {
+        return this.groupViewRepository.getAll(groupViewQueryDto)
+            .pipe(mergeMap((result: Array<any>) => of(result)));
     }
 }
+
+ // public saveGroup(modules: Array<string>, groupId: string, request: any): Observable<any> {
+    //     const assGroupViews = [];
+    //     const group = {} as any;
+    //     group.id = groupId;
+    //     group.modules = [...modules];
+
+    //     return this.groupViewRepository.SaveGroupe(group)
+    //         .pipe(mergeMap(result => {
+    //             // return this.moduleService.get(result[0].id)
+    //             //     .pipe(mergeMap((module) => {
+    //             //         const messageToBuild = {
+    //             //             typeAction: ACTION_TYPE.ADD,
+    //             //             target: ELEMENT_TYPE.MODULE,
+    //             //             date: new Date(),
+    //             //             data: [module] // aouter transceiverId + groupView
+    //             //         };
+    //             //         const message = JSON.stringify(messageToBuild);
+    //             //         WebSocketService.sendMessage('', message, [request.headers["authorization"].split(" ")[1]]);
+    //             //         return of(result);
+    //             //     }))
+    //             return of(result)
+    //         }
+
+    //         ));
+
+    //     // .pipe(mergeMap((data: ModuleEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, moduleDto.moduleId)));
+    // }
+
+    // public saveGroup(modules: Array<string>, groupId: string, request: any): Observable<any> {
+    //     const assGroupViews = [];
+    //     return from(getRepository(GroupViewEntity)
+    //         .findOne({ where: { id: groupId }, relations: ["modules"] }))
+    //         .pipe(mergeMap(groupe =>
+    //             from(getRepository(ModuleEntity).find({ where: { id: In([...modules]) } }))
+    //                 .pipe(mergeMap((moduleEntities: Array<ModuleEntity>) => {
+    //                     groupe.modules = groupe.modules.concat(moduleEntities);
+    //                     return this.groupViewRepository.SaveGroupe(groupe)
+    //                         .pipe(map(result => result));
+    //                 }))
+    //         ));
+
+    //     // .pipe(mergeMap((data: ModuleEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, moduleDto.moduleId)));
+    // }

@@ -62,7 +62,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
     }
 
     public deleteTransceiver(transceiverId: string): Observable<boolean> {
-        return from(this.delete({ transceiverId: transceiverId })).pipe(
+        return from(this.delete({ id: transceiverId })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -96,7 +96,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
     }
 
     public getTransceiver(transceiverId: string): Observable<TransceiverEntity> {
-        return from(this.findOne({ where: { transceiverId: transceiverId }, relations: ['modules'] })).pipe(
+        return from(this.findOne({ where: { id: transceiverId }, relations: ['modules'] })).pipe(
             map((transceiver: TransceiverEntity) => {
 
                 if (!transceiver) {

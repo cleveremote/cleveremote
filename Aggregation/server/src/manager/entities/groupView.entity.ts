@@ -4,18 +4,20 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany
+  OneToMany,
+  ManyToMany,
+  JoinTable
 } from "typeorm";
 
-import { AssGroupViewModuleEntity } from "./assGroupViewModule.entity";
 import { SectorEntity } from "./sector.entity";
 import { DeviceEntity } from "./device.entity";
+import { ModuleEntity } from "./module.entity";
 
-@Index("GroupView_pkey", ["groupId"], { unique: true })
+@Index("GroupView_pkey", ["id"], { unique: true })
 @Entity("GroupView", { schema: "public" })
 export class GroupViewEntity {
   @Column("character varying", { primary: true, name: "groupId", length: 255 })
-  groupId: string;
+  id: string;
 
   @Column("character varying", { name: "name", length: 255 })
   name: string;
@@ -23,24 +25,29 @@ export class GroupViewEntity {
   @Column("text", { name: "description", nullable: true })
   description: string | null;
 
-  @OneToMany(
-    () => AssGroupViewModuleEntity,
-    assGroupViewModule => assGroupViewModule.group
+  @ManyToMany(
+    () => ModuleEntity,
+    module => module.groupViews, { cascade: true }
   )
-  assGroupViewModules: AssGroupViewModuleEntity[];
+  modules: ModuleEntity[];
 
+  @Column("character varying", { name: "deviceId", unique: true, length: 255 })
+  public deviceId: string;
+
+  @Column("character varying", { name: "sectorId", unique: true, length: 255 })
+  public sectorId: string;
 
   @ManyToOne(
     () => DeviceEntity,
     device => device.groupViews,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "id" }])
   device: DeviceEntity;
 
   @OneToMany(
     () => SectorEntity,
-    sector => sector.group
+    sector => sector.groupView
   )
   sectors: SectorEntity[];
 
