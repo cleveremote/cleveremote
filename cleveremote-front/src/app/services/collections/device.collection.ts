@@ -10,6 +10,7 @@ import { SchemeCollection } from './scheme.collection';
 import { SectorCollection } from './sector.collection';
 import { TransceiverCollection } from './transceiver.collection';
 import { ACTION_TYPE, LEVEL_TYPE } from '../websocket/interfaces/ws.message.interfaces';
+import { ValueCollection } from './value.collection';
 
 @Injectable()
 export class DeviceCollection extends BaseCollection<DeviceElement> {

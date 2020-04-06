@@ -1,1 +1,19 @@
 <div id='scheme-container' class="svg" [innerHTML]="svg"></div>
+
+<div id="conteneur" style="display: flex;justify-content: center;align-items: center;">
+    <nb-icon *ngIf ='navbarStatus.previous' nbPopover="previous scheme" nbPopoverTrigger="hover" nbPopoverAdjustment="noop" nbPopoverPlacement="right" [options]="{ animation: { type: 'shake' } }" nbButton class="toggle-icon" icon="arrow-back-outline" pack="eva" style="color: #8f9bb3; font-size:48px" (click)="gotoPreviousScheme()"></nb-icon>
+    <nb-icon *ngIf ='!navbarStatus.previous' nbPopover="previous scheme" nbPopoverTrigger="hover" nbPopoverAdjustment="noop" nbPopoverPlacement="right" nbButton class="toggle-icon" icon="arrow-back-outline" pack="eva" style="color: #8f9bb347; font-size:48px"></nb-icon>
+    
+    
+    <nb-icon *ngIf ='navbarStatus.modules' nbPopover="modules" nbPopoverTrigger="hover"  nbPopoverAdjustment="noop" nbPopoverPlacement="left" [options]="{ animation: { type: 'zoom' } }" nbButton class="toggle-icon" icon="menu-outline" pack="eva" style="color: #8f9bb3; font-size:3rem;margin-left: 25vw;margin-right: 2vw;" (click)="openDetail()"></nb-icon>
+    <nb-icon *ngIf ='!navbarStatus.modules' nbPopover="modules" nbPopoverTrigger="hover"  nbPopoverAdjustment="noop" nbPopoverPlacement="left"  nbButton class="toggle-icon" icon="menu-outline" pack="eva" style="color: #8f9bb347; font-size:3rem;margin-left: 25vw;margin-right: 2vw;"></nb-icon>
+    
+    <nb-icon *ngIf ='navbarStatus.settings'nbPopover="settings" nbPopoverTrigger="hover"  nbPopoverAdjustment="noop"nbPopoverPlacement="right" [options]="{ animation: { type: 'zoom' } }" nbButton class="toggle-icon" icon="list-outline" pack="eva" style="color: #8f9bb3; font-size:48px;margin-right: 25vw;" (click)="openSettings()"></nb-icon>
+    <nb-icon *ngIf ='!navbarStatus.settings' nbPopover="settings" nbPopoverTrigger="hover"  nbPopoverAdjustment="noop"nbPopoverPlacement="right"  nbButton class="toggle-icon" icon="list-outline" pack="eva" style="color: #8f9bb347; font-size:48px;margin-right: 25vw;" ></nb-icon>
+    
+    
+    <nb-icon *ngIf ='navbarStatus.next' nbPopover="next scheme" nbPopoverTrigger="hover" nbPopoverAdjustment="noop" nbPopoverPlacement="left" [options]="{ animation: { type: 'shake' } }" nbButton disabled class="toggle-icon" icon="arrow-forward-outline" pack="eva" style="color: #8f9bb3; font-size:48px" (click)="gotoNextScheme()"></nb-icon>
+    <nb-icon *ngIf ='!navbarStatus.next' nbPopover="nothing next!" nbPopoverTrigger="hover" nbPopoverAdjustment="noop" nbPopoverPlacement="left" nbButton disabled class="toggle-icon" icon="arrow-forward-outline" pack="eva" style="color: #8f9bb347; font-size:48px"></nb-icon>
+    
+</div>
+

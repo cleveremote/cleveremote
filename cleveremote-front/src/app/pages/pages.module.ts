@@ -22,16 +22,16 @@ import { ConfigurationModule } from './configuration/configuration.module';
     ECommerceModule,
     MiscellaneousModule,
     SchemeModule,
-    ConfigurationModule
+    ConfigurationModule,
   ],
   declarations: [
     PagesComponent,
   ],
-  // providers: [
-  //   RessourcesService,
-  //   ConfigurationService,
-  //   CoreDataService
-  // ]
+  providers: [
+    RessourcesService,
+    ConfigurationService,
+    CoreDataService
+  ]
 })
 export class PagesModule {
 }

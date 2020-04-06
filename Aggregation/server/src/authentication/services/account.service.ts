@@ -52,6 +52,15 @@ export class AccountService {
                                 (scheme as any).svg = svg;
                                 return of(true);
                             }));
+                        scheme.sectors.forEach(sector => {
+                            if (sector.schemeDetail) {
+                                obsSvgs = obsSvgs.pipe(mergeMap(() => this.schemeService.getSvg(sector.schemeDetail.id)))
+                                .pipe(mergeMap((svg: any) => {
+                                    (sector.schemeDetail as any).svg = svg;
+                                    return of(true);
+                                }));
+                            }
+                        });
                     });
                 });
                 return obsSvgs.pipe(mergeMap(() => of(accountEntity)));

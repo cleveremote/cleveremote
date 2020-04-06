@@ -101,7 +101,19 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize<
     }
 
     public getSector(id?: string): Observable<SectorEntity> {
-        return from(this.findOne({ where: { id: id }, relations: ['groupView', 'groupView.modules','groupView.modules.transceiver'] })).pipe(
+        return from(this.findOne({
+            where: { id: id },
+            relations: [
+                'scheme',
+                'schemeDetail',
+                'schemeDetail.sectors',
+                'schemeDetail.sectors.groupView',
+                'schemeDetail.sectors.groupView.modules',
+                'schemeDetail.sectors.groupView.modules.transceiver',
+                'groupView',
+                'groupView.modules',
+                'groupView.modules.transceiver']
+        })).pipe(
             map((sector: SectorEntity) => {
 
                 if (!sector) {

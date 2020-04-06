@@ -7,6 +7,8 @@ import { SchemeElement } from './elements/scheme.element';
 import { BaseCollection } from './base.collection';
 import { Injectable } from '@angular/core';
 import { SectorCollection } from './sector.collection';
+import { DomSanitizer } from '@angular/platform-browser';
+import { LEVEL_TYPE, ACTION_TYPE } from '../websocket/interfaces/ws.message.interfaces';
 
 @Injectable()
 export class SchemeCollection extends BaseCollection<SchemeElement> {
@@ -19,29 +21,53 @@ export class SchemeCollection extends BaseCollection<SchemeElement> {
 
     public type = 'Scheme';
 
-    constructor(private sectorCollection: SectorCollection) {
+    constructor(private sectorCollection: SectorCollection,
+        private sanitizer: DomSanitizer) {
         super();
     }
 
-    public reload(schemeEntities: any) {
+    public reload(entities: any, levelType: LEVEL_TYPE = LEVEL_TYPE.ROOT, action: ACTION_TYPE = ACTION_TYPE.LOAD) {
+        if (levelType === LEVEL_TYPE.ROOT) {
+            entities.forEach(schemeEntity => {
+                schemeEntity.svg = this.sanitizer.bypassSecurityTrustHtml(schemeEntity.svg.data);
 
-        schemeEntities.forEach(schemeEntity => {
-            schemeEntity.svg = schemeEntity.svg.data;
+                if (schemeEntity.sectors && schemeEntity.sectors.length > 0) {
+                    schemeEntity.sectors = this.sectorCollection.reload(schemeEntity.sectors);
+                    schemeEntity.sectors.forEach(sector => {
+                        if (sector.schemeDetail) {
+                            sector.schemeDetail = this.reload([sector.schemeDetail]);
+                        }
+                    });
+                }
 
-            if (schemeEntity.sectors && schemeEntity.sectors.length > 0) {
-               schemeEntity.sectors = this.sectorCollection.reload(schemeEntity.sectors);
-            }
+                const elementIndex = this.elements.findIndex((g) => g.id === schemeEntity.id);
+                if (elementIndex === -1) {
+                    this.elements.push(schemeEntity);
+                } else {
+                    this.elements[elementIndex] = schemeEntity;
+                }
+                if (schemeEntity.scheme) {
+                    this.reload([schemeEntity.scheme]);
+                }
+            });
 
-            const elementIndex = this.elements.findIndex((g) => g.id === schemeEntity.id);
-            if (elementIndex === -1) {
-                this.elements.push(schemeEntity);
-            } else {
-                this.elements[elementIndex] = schemeEntity;
-            }
-        });
+            const ids = entities.map(entity => entity.id);
+            return this.elements.filter((ele) => ids.indexOf(ele.id) !== -1);
+        }
 
-        const ids = schemeEntities.map(entity => entity.id);
-        return this.elements.filter((ele) => ids.indexOf(ele.id) !== -1);
+        this.loadBylevel(entities, levelType, action);
+    }
 
+    private loadBylevel(entities: any, levelType: LEVEL_TYPE, action: ACTION_TYPE) {
+        let classNameId = this.constructor.name.replace('Collection', '') + 'Id';
+        classNameId = classNameId.charAt(0).toLowerCase() + classNameId.slice(1);
+        const target = this.elements.find((element) => element.id === entities[0][classNameId]);
+        if (!target) return [];
+        switch (levelType) {
+            case LEVEL_TYPE.SECTOR:
+                target.sectors = this.execSync(target.sectors, this.sectorCollection, entities, action);
+                break;
+        }
+        return target;
     }
 }

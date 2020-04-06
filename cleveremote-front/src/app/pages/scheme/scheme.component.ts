@@ -9,7 +9,7 @@ export class SchemeComponent {
   constructor(private coreDataService: CoreDataService) {
   }
 
-  get schemeElement() {
-    return this.coreDataService.schemeCollection.elements.filter((scheme) => scheme.deviceId === this.coreDataService.currentDevice.id)[1];
-  }
+  // get schemeElement() {
+  //   return this.coreDataService.currentDevice.schemes[0];
+  // }
 }

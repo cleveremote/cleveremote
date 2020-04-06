@@ -71,7 +71,7 @@ export class SchemeService {
             const sectorId = v1();
             const nameToFind = svgSector.replace('sel_', 'selname_');
             data = data.replace(svgSector, sectorId);
-            data = data.replace(nameToFind, 'selname_'+sectorId);
+            data = data.replace(nameToFind+'-', 'selname_'+sectorId);
             sectorsId.push(sectorId);
         });
 

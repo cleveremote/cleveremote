@@ -62,4 +62,8 @@ export class RessourcesService {
         return this.http.post<boolean>(this.actionUrl + 'module/execute', jsonBody);
     }
 
+    updateSector(jsonBody): Observable<any> {
+        return this.http.put<any>(this.actionUrl + 'sector/', jsonBody);
+    }
+
 }

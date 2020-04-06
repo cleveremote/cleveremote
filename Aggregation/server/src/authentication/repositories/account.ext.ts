@@ -241,6 +241,11 @@ export class AccountExt extends Repository<AccountEntity> implements ISynchroniz
                 'devices.transceivers.modules.transceiver',
                 'devices.schemes',
                 'devices.schemes.sectors',
+                'devices.schemes.sectors.schemeDetail',
+                'devices.schemes.sectors.schemeDetail.sectors',
+                'devices.schemes.sectors.schemeDetail.sectors.groupView',
+                'devices.schemes.sectors.schemeDetail.sectors.groupView.modules',
+                'devices.schemes.sectors.schemeDetail.sectors.groupView.modules.transceiver',
                 'devices.schemes.sectors.groupView',
                 'devices.schemes.sectors.groupView.modules',
                 'devices.schemes.sectors.groupView.modules.transceiver'

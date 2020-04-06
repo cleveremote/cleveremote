@@ -4,7 +4,8 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany
+  OneToMany,
+  OneToOne
 } from "typeorm";
 import { DeviceEntity } from "./device.entity";
 import { SectorEntity } from "./sector.entity";
@@ -16,7 +17,7 @@ import { SectorEntity } from "./sector.entity";
 export class SchemeEntity {
   @Column("character varying", {
     primary: true,
-    name: "schemeId",
+    name: "id",
     length: 255
   })
   public id: string;
@@ -30,8 +31,8 @@ export class SchemeEntity {
   @Column("text", { name: "description", nullable: true })
   public description: string | null;
 
-  @Column("character varying", { name: "parentScheme", unique: true, length: 255 })
-  public parentScheme: string;
+  @Column("character varying", { name: "sectorId", unique: true, length: 255 })
+  public sectorId: string;
 
   @Column("character varying", { name: "deviceId", unique: true, length: 255 })
   public deviceId: string;
@@ -44,19 +45,11 @@ export class SchemeEntity {
   @JoinColumn([{ name: "deviceId", referencedColumnName: "id" }])
   public device: DeviceEntity;
 
-  @OneToMany(
-    () => SchemeEntity,
-    scheme => scheme.parentscheme
+  @OneToOne(
+    () => SectorEntity,
+    sector => sector.schemeDetail
   )
-  public schemes: Array<SchemeEntity>;
-
-  @ManyToOne(
-    () => SchemeEntity,
-    scheme => scheme.schemes,
-    { onDelete: "CASCADE" }
-  )
-  @JoinColumn([{ name: "parentScheme", referencedColumnName: "id" }])
-  public parentscheme: SchemeEntity;
+  public sector: SectorEntity;
 
   @OneToMany(
     () => SectorEntity,

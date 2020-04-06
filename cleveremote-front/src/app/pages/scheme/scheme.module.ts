@@ -32,6 +32,8 @@ import { ModuleComponent } from './components/module/module.component';
 import { ModuleListAllComponent } from './components/module/module-list-all/module-list-all.component';
 import { ModuleListComponent } from './components/module/module-list/module-list.component';
 import { ModuleElementComponent } from './components/module/module.element/module-element.component';
+import { SectorFormComponent } from './components/forms/sector-form.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
 
@@ -54,6 +56,8 @@ import { ModuleElementComponent } from './components/module/module.element/modul
     LeafletModule,
     NbPopoverModule,
     NbAlertModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
   declarations: [
     ModuleComponent,
@@ -62,12 +66,14 @@ import { ModuleElementComponent } from './components/module/module.element/modul
     SchemeComponent,
     SchemeSvgComponent,
     ModuleElementComponent,
+    SectorFormComponent
   ],
   entryComponents: [
     ModuleComponent,
     ModuleListAllComponent,
     ModuleListComponent,
     ModuleElementComponent,
+    SectorFormComponent
   ],
 })
 export class SchemeModule { }

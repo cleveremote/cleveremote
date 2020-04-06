@@ -1,0 +1,15 @@
+
+  <nb-card [className]="isMobile ? 'mobile-dim' : 'desktop-dim'">
+    <nb-card-header>Sector properties</nb-card-header>
+    <nb-card-body>
+      <form *ngIf="deviceForm" [formGroup]="sectorForm" (ngSubmit)="onSubmit(deviceForm.value)">
+        <div class="form-group">
+          <input   type="text" nbInput fullWidth placeholder="sector name">
+        </div>
+        <div class="form-group">
+          <input   type="text" nbInput fullWidth placeholder="sector description">
+        </div>
+        <button type="save" nbButton status="success">Save</button>
+      </form>
+    </nb-card-body>
+  </nb-card>

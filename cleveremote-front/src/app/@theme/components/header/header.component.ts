@@ -53,7 +53,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.menuService.onItemClick()
       .pipe(filter(({ tag }) => {
-        this.sidebarService.toggle(true, 'menu-sidebar');
+        this.toggleSidebar();
         return tag === this.tag;
       }))
       .subscribe(bag => {
@@ -93,6 +93,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): boolean {
     this.sidebarService.toggle(true, 'menu-sidebar');
+    this.menuService.collapseAll('test');
     this.layoutService.changeLayoutSize();
     return false;
   }

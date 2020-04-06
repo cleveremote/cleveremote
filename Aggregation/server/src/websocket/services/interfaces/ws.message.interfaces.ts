@@ -2,7 +2,8 @@ export enum ELEMENT_TYPE {
     MODULE = 'Module',
     TRANSCEIVER = 'Transceiver',
     GROUPVIEW = 'GroupView',
-    VALUE = 'Value'
+    VALUE = 'Value',
+    SECTOR = 'Sector'
 }
 
 export enum ACTION_TYPE {

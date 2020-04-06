@@ -6,26 +6,26 @@ export const MENU_ITEMS: NbMenuItem[] = [
     title: 'Devices',
     icon: { icon: 'server', pack: 'font-awesome' },
     children: [
-      {
-        icon: { icon: 'square', pack: 'font-awesome' },
-        title: 'Device 1',
-      },
-      {
-        icon: { icon: 'square', pack: 'font-awesome' },
-        title: 'Device 2'
-      },
-      {
-        icon: { icon: 'square', pack: 'font-awesome' },
-        title: 'Device 3'
-      },
-      {
-        icon: { icon: 'square', pack: 'font-awesome' },
-        title: 'Device 4'
-      },
-      {
-        icon: { icon: 'square', pack: 'font-awesome' },
-        title: 'Device 5'
-      },
+      // {
+      //   icon: { icon: 'square', pack: 'font-awesome' },
+      //   title: 'Device 1',
+      // },
+      // {
+      //   icon: { icon: 'square', pack: 'font-awesome' },
+      //   title: 'Device 2'
+      // },
+      // {
+      //   icon: { icon: 'square', pack: 'font-awesome' },
+      //   title: 'Device 3'
+      // },
+      // {
+      //   icon: { icon: 'square', pack: 'font-awesome' },
+      //   title: 'Device 4'
+      // },
+      // {
+      //   icon: { icon: 'square', pack: 'font-awesome' },
+      //   title: 'Device 5'
+      // },
     ],
   },
   {

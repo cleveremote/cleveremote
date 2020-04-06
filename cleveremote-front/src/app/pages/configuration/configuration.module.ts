@@ -25,6 +25,8 @@ import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import { NetworkComponent } from './transceivers/network/network.component';
 import { ConfigurationComponent } from './configuration.component';
 import { GraphComponent } from './transceivers/graph/graph.component';
+import { DeviceFormComponent } from './forms/device-form.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
  
@@ -45,16 +47,19 @@ import { GraphComponent } from './transceivers/graph/graph.component';
     NgxEchartsModule,
     NgxChartsModule,
     LeafletModule,
-
+    FormsModule,
+    ReactiveFormsModule
   ],
   declarations: [
     GraphComponent,
     NetworkComponent,
-    ConfigurationComponent
+    ConfigurationComponent,
+    DeviceFormComponent
   ],
   entryComponents: [
     NetworkComponent,
     ConfigurationComponent,
+    DeviceFormComponent
   ],
   // providers: [
   //   RessourcesService,

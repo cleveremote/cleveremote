@@ -3,35 +3,46 @@ import { Component } from '@angular/core';
 import { MENU_ITEMS } from './pages-menu';
 import { NbMenuService, NbIconLibraries, NbIconConfig, NbMenuItem } from '@nebular/theme';
 import { CoreDataService } from '../services/core.data.service';
+import { from } from 'rxjs';
+import { CanActivate, ActivatedRouteSnapshot, ActivatedRoute, Router } from '@angular/router';
+import { mergeMap } from 'rxjs/operators';
 
 @Component({
   selector: 'ngx-pages',
   styleUrls: ['pages.component.scss'],
   template: `
     <ngx-one-column-layout>
-      <nb-menu (click)='testClick()' [items]="menu"></nb-menu>
+      <nb-menu (click)='testClick()' [items]="menu" tag="test"></nb-menu>
       <router-outlet></router-outlet>
     </ngx-one-column-layout>
   `,
 })
 export class PagesComponent {
   public devicesElement: NbMenuItem[];
-  constructor(private deviceService: NbMenuService,
-    private iconLibraries: NbIconLibraries,
-    private coreDataService: CoreDataService) {
-    this.iconLibraries.registerFontPack('font-awesome', { iconClassPrefix: 'fa', packClass: 'fa' });
-    this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements.find((res) => res.id === 'server_1');
-  }
   menu = MENU_ITEMS;
 
+  constructor(private deviceService: NbMenuService,
+    private iconLibraries: NbIconLibraries,
+    private coreDataService: CoreDataService,
+    private activetedRouter: ActivatedRoute,
+    private router: Router) {
+    this.iconLibraries.registerFontPack('font-awesome', { iconClassPrefix: 'fa', packClass: 'fa' });
+  }
+
+
   ngOnInit() {
-    //const modules = this.coreDataService.modules;
+
     this.devicesElement = this.menu.filter((element: NbMenuItem) => element.title === 'Devices')[0].children;
-    // this.setSelected();
+    this.coreDataService.deviceCollection.elements.forEach(device => {
+      this.devicesElement.push({ icon: { icon: 'square', pack: 'font-awesome' }, title: device.name, data: device });
+    });
+
+    this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements[0];
+
+
     this.deviceService.onItemClick().subscribe((element) => {
       const selected = this.devicesElement.find((device, index) => {
         if (element.item.title === device.title) {
-          this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements.find((res) => res.id === 'server_1');
           this.setSelected(index);
           return true;
         }
@@ -51,8 +62,12 @@ export class PagesComponent {
   }
 
   ngAfterViewInit() {
+    this.removeClickOnDevicePage();
     this.setSelected(0);
+  }
 
+  public removeClickOnDevicePage() {
+    document.querySelectorAll(".menu-items")[0].children[0].children[0].addEventListener("click", () => { }, false);
   }
 
   setSelected(index: number) {
@@ -67,6 +82,7 @@ export class PagesComponent {
 
 
     const deviceElement = document.querySelectorAll(".menu-items")[1].children[index];
+
     const deviceIcon = deviceElement.firstElementChild.firstElementChild;
     (deviceIcon as any).style.color = '#3366ff'; //#192038
     (deviceElement.firstElementChild as any).style.color = '#3366ff'; //#192038
@@ -78,6 +94,22 @@ export class PagesComponent {
         device.icon = { icon: 'square', pack: 'font-awesome' };
       }
     });
+    this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements.find((res) => res.id === this.devicesElement[index].data.id);
+
+    
+
+    // const currentUrl = this.router.url;
+    // this.activetedRouter.snapshot;
+
+    // const currentConfigRoute = this.activetedRouter.snapshot.routeConfig.children.find((child) => child.path === 'Scheme');
+
+    // from(this.router.navigateByUrl('/pages/' + currentConfigRoute.path))
+    //   .subscribe();
+    // //  .pipe(mergeMap(() => {
+    // //   return from(this.router.navigate(['Scheme']));
+    // // }))
+    // // from(this.router.navigateByUrl('/pages/Scheme')).subscribe();
+    // //location.reload()
   }
 
   public testClick(param: any) {

@@ -20,3 +20,16 @@
     .links svg{
     border:1px solid #000;
     }
+
+    #group {
+        stroke-width: 3;
+        stroke: #808080;
+        cursor: -webkit-grab;
+        cursor: grab;
+    }
+    
+    .active {
+        stroke: #ff0000;
+        cursor: -webkit-grabbing;
+        cursor: grabbing;
+    }

@@ -1,8 +1,8 @@
-import { Component, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { ProfitBarAnimationChartData } from '../../../../@core/data/profit-bar-animation-chart';
-import { takeWhile, delay, mergeMap, tap } from 'rxjs/operators';
+import { takeWhile, delay, mergeMap, tap, filter, takeUntil } from 'rxjs/operators';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { of } from 'rxjs';
+import { of, Subject, Subscription } from 'rxjs';
 import { NbDialogService } from '@nebular/theme';
 import { ModuleComponent } from '../module/module.component';
 import { CoreDataService } from '../../../../services/core.data.service';
@@ -10,6 +10,9 @@ import { SectorElement } from '../../../../services/collections/elements/sector.
 import { SchemeElement } from '../../../../services/collections/elements/scheme.element';
 import { RessourcesService } from '../../../../services/ressources.service';
 import { SELECT_STATUS, WORKING_STATUS } from '../../../../services/collections/elements/interfaces/scheme.interfaces';
+import { Router, RouterEvent, NavigationEnd } from '@angular/router';
+import { DeviceElement } from '../../../../services/collections/elements/device.element';
+import { SectorFormComponent } from '../forms/sector-form.component';
 
 
 
@@ -18,7 +21,7 @@ import { SELECT_STATUS, WORKING_STATUS } from '../../../../services/collections/
   styleUrls: ['./schemesvg.component.scss'],
   templateUrl: './schemesvg.component.html',
 })
-export class SchemeSvgComponent implements OnInit {
+export class SchemeSvgComponent implements OnInit, OnDestroy {
   @Input() schemeElement: SchemeElement;
   public sectorName: string;
   public selectedName: string;
@@ -30,33 +33,65 @@ export class SchemeSvgComponent implements OnInit {
 
   public listSectorProcess: Array<any> = [];
   public listSelectStatus: Array<any> = [];
-
+  public destroyed = new Subject<any>();
+  private subscriptions: Array<Subscription> = [];
+  public navbarStatus: any = { previous: false, next: false, modules: false, settings: false };
   constructor(
     private dialogService: NbDialogService,
     private sanitizer: DomSanitizer,
     private coreDataService: CoreDataService,
-    private resourceService: RessourcesService
-  ) { }
+    private resourceService: RessourcesService,
+    private router: Router
+  ) {
+  }
+
+
+  ngOnDestroy(): void {
+    this.unsubscribeAll();
+  }
+
+  public unsubscribeAll() {
+    this.stopAllIprocess();
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
+    this.subscriptions = [];
+  }
 
   ngOnInit() {
-    const svgdata = this.schemeElement.svg;
-    const svg = this.sanitizer.bypassSecurityTrustHtml(svgdata);
-    this.svg = svg;
+    this.loadComponentData();
+  }
 
+  loadComponentData(schemeElement?: SchemeElement) {
 
+    this.stopAllIprocess();
+    this.listSectorProcess = [];
+    this.listSelectStatus = [];
+    this.svg = schemeElement ? schemeElement.svg : this.coreDataService.currentDevice.schemes[0].svg;
     of(true).pipe(delay(500)).subscribe(() => {
-      this.sectors = this.coreDataService.sectorCollection.elements.filter((sector) => sector.schemeId === this.schemeElement.id);
+      this.sectors = this.coreDataService.sectorCollection.elements.filter((sector) => sector.schemeId === (schemeElement ? schemeElement.id : this.coreDataService.currentDevice.schemes[0].id));
       this.svgContainer = document.getElementById('scheme-container');
       this.schemeContainer = (this.svgContainer.children[0] as any);
+      this.unsubscribeAll();
       this.initScheme(this.sectors);
+      this.checkSchemeNavbarStatus();
       this.checkStartProccess(this.sectors);
+      this.listenOnDeviceChange();
     });
   }
 
+  public listenOnDeviceChange() {
+    const subscription = this.coreDataService.onDeviceChange.subscribe((device: DeviceElement) => {
+      this.loadComponentData();
+    });
+    this.subscriptions.push(subscription);
+  }
+
   public listenStatuschange() {
-    this.coreDataService.sectorCollection.onSectorStatusChange.subscribe((sector: any) => {
+    const subscription = this.coreDataService.sectorCollection.onSectorStatusChange.subscribe((sector: any) => {
       this.checkStartProccess([sector]);
     });
+    this.subscriptions.push(subscription);
   }
 
   public checkStartProccess(sectors: Array<SectorElement>) {
@@ -72,6 +107,11 @@ export class SchemeSvgComponent implements OnInit {
     });
 
   }
+  public stopAllIprocess() {
+    this.listSectorProcess.forEach(sectorProcess => {
+      this.setStopInProcess(sectorProcess);
+    });
+  }
 
   public setStatusSelect(sector: SectorElement, status: SELECT_STATUS) {
     const elementStatus = this.listSelectStatus.find((selectStatus) => selectStatus.sector.id === sector.id);
@@ -79,6 +119,7 @@ export class SchemeSvgComponent implements OnInit {
     const target = children.firstChild.nextElementSibling;
     target.style['fill'] = status;
     target.style['stroke'] = status;
+    elementStatus.previousStatus = elementStatus.status;
     elementStatus.status = status;
   }
 
@@ -87,51 +128,92 @@ export class SchemeSvgComponent implements OnInit {
     childrenName.textContent = value;
   }
 
-  public getStatusSelect(sector: SectorElement) {
+  public getCurrentStatus(sector: SectorElement) {
     return this.listSelectStatus.find((selectStatus) => selectStatus.sector.id === sector.id).status;
+  }
+  public getPreviousStatus(sector: SectorElement) {
+    return this.listSelectStatus.find((selectStatus) => selectStatus.sector.id === sector.id).previousStatus;
+  }
+
+  public checkSchemeNavbarStatus() {
+    this.navbarStatus = { previous: false, next: false, modules: false, settings: false };
+    const selectedElement = this.listSelectStatus.find((selectStatus) => selectStatus.status === SELECT_STATUS.SELECT);
+    if (selectedElement) {
+      const selectedSector: SectorElement = selectedElement.sector;
+      this.navbarStatus = { previous: false, next: false, modules: true, settings: true };
+      if (selectedSector.schemeDetailId) {
+        this.navbarStatus.next = true;
+      } else {
+        this.navbarStatus.next = false;
+      }
+      const previousParentSector = this.coreDataService.sectorCollection.elements.find((sector) => sector.schemeDetailId === this.sectors[0].schemeId);
+      if (previousParentSector) {
+        this.navbarStatus.previous = true;
+      } else {
+        this.navbarStatus.previous = false;
+      }
+    } else {
+      this.navbarStatus.modules = false;
+      this.navbarStatus.settings = false;
+      const previousParentSector = this.coreDataService.sectorCollection.elements.find((sector) => sector.schemeDetailId === this.sectors[0].schemeId);
+      if (previousParentSector) {
+        this.navbarStatus.previous = true;
+      } else {
+        this.navbarStatus.previous = false;
+      }
+    }
+
   }
 
   public initScheme(sectorElements: Array<SectorElement>) {
-
     this.sectors.forEach(sector => {
       this.listSectorProcess.push({ sector: sector, interval: undefined });
-      this.listSelectStatus.push({ sector: sector, status: SELECT_STATUS.DEFAULT });
+      this.listSelectStatus.push({ sector: sector, previousStatus: SELECT_STATUS.DEFAULT, status: SELECT_STATUS.DEFAULT });
       this.setStatusSelect(sector, SELECT_STATUS.DEFAULT);
       this.setName(sector, '');
       const children = this.schemeContainer.getElementById(sector.id);
 
       children.addEventListener('click', (event) => {
-        this.unSelectAll(sectorElements);
+
         const sectorData = this.getSectorData(event);
-        this.setName(sectorData);
-        const status = this.getStatusSelect(sector);
+        const status = this.getCurrentStatus(sector);
         if (status !== SELECT_STATUS.SELECT) {
+          this.setName(sectorData);
           this.setStatusSelect(sectorData, SELECT_STATUS.SELECT);
-          this.openSector(event);
+          this.unSelectAll(sectorElements);
+          this.setStatusSelect(sectorData, SELECT_STATUS.SELECT);
+          this.checkSchemeNavbarStatus();
+          if (!this.navbarStatus.next) {
+            this.openSector(event.currentTarget.id);
+          }
         } else {
+          this.setName(sectorData, '');
+          this.sectorName = undefined;
           this.setStatusSelect(sectorData, SELECT_STATUS.DEFAULT);
+          this.checkSchemeNavbarStatus();
         }
       });
 
       children.addEventListener('mouseover', (event) => {
         const sectorData = this.getSectorData(event);
-        this.setName(sectorData);
-        const status = this.getStatusSelect(sectorData);
-        if (status !== SELECT_STATUS.OVER) {
+        const status = this.getCurrentStatus(sectorData);
+        if (status === SELECT_STATUS.DEFAULT) {
+          this.setName(sectorData);
           this.setStatusSelect(sectorData, SELECT_STATUS.OVER);
         }
       });
 
       children.addEventListener('mouseout', (event) => {
         const sectorData = this.getSectorData(event);
-        this.setName(sectorData, '');
-        const status = this.getStatusSelect(sectorData);
+        const status = this.getCurrentStatus(sectorData);
         if (status === SELECT_STATUS.OVER) {
+          this.setName(sectorData, '');
           this.sectorName = undefined;
           this.setStatusSelect(sectorData, SELECT_STATUS.DEFAULT);
         }
       });
     });
+    this.checkSchemeNavbarStatus();
     this.listenStatuschange();
   }
 
@@ -142,8 +224,7 @@ export class SchemeSvgComponent implements OnInit {
   }
 
 
-  openSector(event: any) {
-    const sectorId = event.currentTarget.id;
+  openSector(sectorId: string) {
     this.resourceService.getSector(sectorId)
       .pipe(tap((sector) => {
         const sectorElement = this.coreDataService.sectorCollection.reload([sector])[0];
@@ -151,9 +232,23 @@ export class SchemeSvgComponent implements OnInit {
           context: {
             sectorElement: sectorElement
           },
-        }).onClose.subscribe(name => this.unSelectAll(this.sectors));
+        }).onClose.subscribe(name => {
+          this.coreDataService.sectorCollection.checkStatus(sectorId);
+        });
       })).subscribe();
+  }
 
+  openSectorProperties(sectorId: string) {
+    this.resourceService.getSector(sectorId)
+      .pipe(tap((sector) => {
+        const sectorElement = this.coreDataService.sectorCollection.reload([sector])[0];
+        this.dialogService.open(SectorFormComponent, {
+          context: {
+            sectorElement: sectorElement
+          },
+        }).onClose.subscribe(name => {
+        });
+      })).subscribe();
   }
 
   public getSectorData(event: any) {
@@ -177,7 +272,8 @@ export class SchemeSvgComponent implements OnInit {
     if (data.interval) {
       clearInterval(data.interval);
       data.interval = null;
-      this.setStatusSelect(data.sector, SELECT_STATUS.DEFAULT);
+      // const currentStatus = this.getCurrentStatus(data.sector.id);
+      // this.setStatusSelect(data.sector, currentStatus);
     }
     data.interval = setInterval(() => {
       const children = this.schemeContainer.getElementById(data.sector.id);
@@ -197,7 +293,29 @@ export class SchemeSvgComponent implements OnInit {
   public setStopInProcess(sector) {
     clearInterval(sector.interval);
     sector.interval = null;
-    this.setStatusSelect(sector.sector, SELECT_STATUS.DEFAULT);
+    setTimeout(() => {
+      const currentStatus = this.getCurrentStatus(sector.sector);
+      this.setStatusSelect(sector.sector, currentStatus);
+    }, 500);
+  }
+
+  openDetail() {
+    const selectedSector: SectorElement = this.listSelectStatus.find((selectStatus) => selectStatus.status === SELECT_STATUS.SELECT).sector;
+    this.openSector(selectedSector.id);
+  }
+  openSettings() {
+    const selectedSector: SectorElement = this.listSelectStatus.find((selectStatus) => selectStatus.status === SELECT_STATUS.SELECT).sector;
+    this.openSectorProperties(selectedSector.id);
+  }
+
+  public gotoPreviousScheme() {
+    const previousParentSector = this.coreDataService.sectorCollection.elements.find((sector) => sector.schemeDetailId === this.sectors[0].schemeId);
+    this.loadComponentData(this.coreDataService.schemeCollection.elements.find((scheme) => scheme.id === previousParentSector.schemeId));
+  }
+
+  public gotoNextScheme() {
+    const selectedSector: SectorElement = this.listSelectStatus.find((selectStatus) => selectStatus.status === SELECT_STATUS.SELECT).sector;
+    this.loadComponentData(selectedSector.schemeDetail[0]);
   }
 
 }

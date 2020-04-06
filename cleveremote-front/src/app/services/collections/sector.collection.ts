@@ -10,6 +10,7 @@ import { Injectable } from '@angular/core';
 import { GroupViewCollection } from './groupview.collection';
 import { LEVEL_TYPE, ACTION_TYPE } from '../websocket/interfaces/ws.message.interfaces';
 import { SELECT_STATUS, WORKING_STATUS } from './elements/interfaces/scheme.interfaces';
+import { ValueCollection } from './value.collection';
 
 @Injectable()
 export class SectorCollection extends BaseCollection<SectorElement> {
@@ -51,9 +52,24 @@ export class SectorCollection extends BaseCollection<SectorElement> {
         switch (levelType) {
             case LEVEL_TYPE.GROUPVIEW:
                 target.groupView = this.execSync(target.groupView, this.groupViewCollection, entities, action);
+                this.checkStatus(target.groupView[0].sectorId);
                 break;
         }
         return target;
+    }
+
+    public checkStatus(sectorId: string) {
+        const sector = this.elements.find(_sector => _sector.id === sectorId);
+        if (sector) {
+            const exist = sector.groupView[0].modules.find((moduleGroupView) => moduleGroupView.value === 'ON');
+            if (exist && (sector.status === WORKING_STATUS.STOP)) {
+                sector.status = WORKING_STATUS.INPROCCESS;
+                this.onSectorStatusChange.next(sector);
+            } else if (!exist && sector.status === WORKING_STATUS.INPROCCESS) {
+                sector.status = WORKING_STATUS.STOP;
+                this.onSectorStatusChange.next(sector);
+            }
+        }
     }
 
 }

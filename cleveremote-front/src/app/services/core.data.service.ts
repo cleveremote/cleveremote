@@ -39,6 +39,7 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
 
     public subscriptions = [];
     public onDataChanges = new Subject<any>();
+    public onDeviceChange = new Subject<any>();
 
     public collectionStore: Array<BaseCollection<any>> = [];
 
@@ -77,6 +78,7 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
 
     set currentDevice(deviceElement: DeviceElement) {
         this._currentDevice = deviceElement;
+        this.onDeviceChange.next(deviceElement);
     }
 
     ngOnDestroy() {

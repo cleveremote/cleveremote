@@ -1,4 +1,5 @@
 import { BaseElement } from './base.element';
+import { SectorElement } from './sector.element';
 
 export class SchemeElement extends BaseElement {
     public name: string;
@@ -6,4 +7,5 @@ export class SchemeElement extends BaseElement {
     public parentScheme: string;
     public deviceId: string;
     public svg: string;
+    public sectors: Array<SectorElement>;
 }

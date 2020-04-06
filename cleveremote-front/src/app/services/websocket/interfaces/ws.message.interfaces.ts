@@ -11,7 +11,8 @@ export enum LEVEL_TYPE {
     TRANSCEIVER = 'Transceiver',
     GROUPVIEW = 'GroupView',
     SCHEME = 'Scheme',
-    USER = 'User'
+    USER = 'User',
+    SECTOR = 'Sector'
 }
 
 export enum ACTION_TYPE {
