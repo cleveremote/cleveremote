@@ -2,6 +2,7 @@
 @import '~@nebular/theme/styles/global/breakpoints';
 @import '../../styles/themes';
 
+
 @include nb-install-component() {
   display: flex;
   justify-content: space-between;
@@ -12,6 +13,7 @@
     align-items: center;
     width: calc(#{nb-theme(sidebar-width)} - #{nb-theme(header-padding)});
   }
+ 
 
   nb-action {
     height: auto;
@@ -26,6 +28,8 @@
   ::ng-deep nb-search button {
     padding: 0!important;
   }
+
+ 
 
   .header-container {
     display: flex;
@@ -53,10 +57,8 @@
     }
   }
 
+  
   @include media-breakpoint-down(sm) {
-    .control-item {
-      display: none;
-    }
     .user-action {
       border: none;
       padding: 0;
@@ -69,3 +71,5 @@
     }
   }
 }
+
+

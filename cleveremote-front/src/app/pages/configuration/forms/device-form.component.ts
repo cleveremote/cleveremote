@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, Input } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { CoreDataService } from '../../../services/core.data.service';
@@ -18,6 +18,8 @@ export class DeviceFormComponent implements OnInit {
   public sectorElement: SectorElement;
   public subscription = [];
   public deviceForm;
+
+  @Input() revealed: any;
 
 
   constructor(private deviceService: DeviceDetectorService,
@@ -44,5 +46,13 @@ export class DeviceFormComponent implements OnInit {
     // this.resourceService.updateSector(sectorData).subscribe((result) => {
     //   this.coreDataService.sectorCollection.reload([result]);
     // });
+  }
+
+  save() {
+    this.revealed.visible = !this.revealed.visible;
+  }
+
+  cancel() {
+    this.revealed.visible = !this.revealed.visible;
   }
 }

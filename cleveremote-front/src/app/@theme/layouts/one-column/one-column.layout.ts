@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   template: `
     <nb-layout windowMode>
       <nb-layout-header fixed >
-        <ngx-header style="height=50px"></ngx-header>
+        <ngx-header></ngx-header>
       </nb-layout-header>
 
       <nb-sidebar class="menu-sidebar" state="compacted" tag="menu-sidebar" responsive>

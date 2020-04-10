@@ -3,6 +3,16 @@
         height:50px;
     }
 }
+
+@include nb-install-component() {
+    .toggle-icon {
+      top: 1rem;
+      right: 1.25rem;
+      @include nb-rtl(right, auto);
+      @include nb-rtl(left, 1.25rem);
+      cursor: pointer;
+    }
+}
 /deep/
 .links { 
     stroke: #999; 
@@ -10,26 +20,32 @@
     stroke-width: 1.55px; 
     cursor: default;
     }
-    
+    /deep/   
     .links text {
     pointer-events: none;
     fill: #000;
     font: 10px sans-serif;
     }
-    
+    /deep/   
     .links svg{
     border:1px solid #000;
     }
-
+    /deep/
     #group {
         stroke-width: 3;
         stroke: #808080;
         cursor: -webkit-grab;
         cursor: grab;
     }
-    
+    /deep/  
     .active {
         stroke: #ff0000;
         cursor: -webkit-grabbing;
         cursor: grabbing;
     }
+/* /deep/
+    nb-card-header {
+        padding-bottom: 0.1rem !important;
+        padding-right: 1.25rem !important;
+        padding-top: 0.1rem !important;
+    } */

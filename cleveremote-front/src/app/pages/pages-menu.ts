@@ -37,7 +37,7 @@ export const MENU_ITEMS: NbMenuItem[] = [
   {
     title: 'Configuration',
     data: '123456',
-    icon: { icon: 'sliders-h', pack: 'font-awesome' },
+    icon: { icon: 'project-diagram', pack: 'font-awesome' },
     link: '/pages/Configuration',
   },
   {

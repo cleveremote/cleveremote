@@ -3,7 +3,34 @@
 @import '~@nebular/theme/styles/global/breakpoints';
 
 @include nb-install-component() {
-  .menu-sidebar ::ng-deep .scrollable {
-    padding-top: nb-theme(layout-padding-top);
-  }
+  // .menu-sidebar ::ng-deep .scrollable {
+  //   padding-top: nb-theme(layout-padding-top);
+  // }
+  /deep/
+  nb-layout-header {
+    nav {
+      
+     height: 2.75rem !important;
+    }
+   }
 }
+/deep/
+nb-layout-header.fixed ~ .layout-container {
+  padding-top: 2.75rem !important;
+}
+/deep/
+nb-layout .layout .layout-container nb-sidebar .main-container-fixed {
+  top: 2.75rem !important;
+}
+/deep/
+nb-layout-header.fixed ~ .layout-container nb-sidebar .main-container {
+  height: calc(100vh - 2.75rem)!important;
+}
+/deep/
+nb-layout .layout .layout-container nb-sidebar.fixed, .nb-theme-default nb-layout .layout .layout-container nb-sidebar .main-container-fixed {
+  top: 2.75rem !important;
+}
+
+
+    
+    

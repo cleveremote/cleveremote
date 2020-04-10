@@ -27,9 +27,10 @@ import { ConfigurationComponent } from './configuration.component';
 import { GraphComponent } from './transceivers/graph/graph.component';
 import { DeviceFormComponent } from './forms/device-form.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { IconsComponent } from '../ui-features/icons/icons.component';
 
 @NgModule({
- 
+
   imports: [
     NbDialogModule.forChild(),
     NbCheckboxModule,
@@ -48,18 +49,20 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     NgxChartsModule,
     LeafletModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
   ],
   declarations: [
     GraphComponent,
     NetworkComponent,
     ConfigurationComponent,
-    DeviceFormComponent
+    DeviceFormComponent,
+    IconsComponent,
   ],
   entryComponents: [
     NetworkComponent,
     ConfigurationComponent,
-    DeviceFormComponent
+    DeviceFormComponent,
+    IconsComponent
   ],
   // providers: [
   //   RessourcesService,

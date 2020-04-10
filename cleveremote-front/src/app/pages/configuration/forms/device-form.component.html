@@ -1,15 +1,32 @@
+<nb-card>
+  <nb-card-header style='display: inline-flex;'>
+    <div style="display: flex;justify-content: flex-start;width: 100%;color: #8f9bb3;font-size: 1.5rem;">
+      Edit element
+    </div>
+    <div style="display: flex;justify-content: flex-end;width: 50%;">
+      <nb-icon status='info' nbButton class="toggle-icon" icon="close-square-outline" pack="eva"
+        [options]="{ animation: { type: 'flip' } }" style="width: 32px;height: 32px;color: #598bff;margin-left: 1.5rem;"
+        (click)="cancel()">
+      </nb-icon>
 
-  <nb-card [className]="isMobile ? 'mobile-dim' : 'desktop-dim'">
-    <nb-card-header>Sector properties</nb-card-header>
-    <nb-card-body>
-      <form *ngIf="deviceForm" [formGroup]="sectorForm" (ngSubmit)="onSubmit(deviceForm.value)">
-        <div class="form-group">
-          <input   type="text" nbInput fullWidth placeholder="sector name">
-        </div>
-        <div class="form-group">
-          <input   type="text" nbInput fullWidth placeholder="sector description">
-        </div>
-        <button type="save" nbButton status="success">Save</button>
-      </form>
-    </nb-card-body>
-  </nb-card>
+
+
+    </div>
+
+
+  </nb-card-header>
+  <nb-card-body>
+    <div style="height: 63vh;">
+TEST BODY
+
+    </div>
+  </nb-card-body>
+  <nb-card-footer style="display: flex;justify-content: center;align-items: center;">
+    <nb-icon #testFocus status='info' nbButton class="toggle-icon" icon="close-square-outline" pack="eva"
+        [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+        (click)="cancel()"></nb-icon>
+    <nb-icon status='info' nbButton class="toggle-icon" icon="save-outline" pack="eva"
+        [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+        (click)="save()"></nb-icon>
+</nb-card-footer>
+</nb-card>

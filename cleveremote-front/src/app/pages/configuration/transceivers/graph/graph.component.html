@@ -1,10 +1,42 @@
+<nb-card>
+    <nb-card-header style='display: inline-flex;'>
+        <div style="display: flex;justify-content: flex-start;width: 100%;color: #8f9bb3;font-size: 1.5rem;">
+            Graph Network
+        </div>
+        <div style="display: flex;justify-content: flex-end;width: 50%;">
+            <nb-icon status='info' nbButton class="toggle-icon" icon="save-outline" pack="eva"
+                [options]="{ animation: { type: 'flip' } }"
+                style="width: 32px;height: 32px;color: #598bff;margin-left: 1.5rem;" (click)="saveLayout()">
+            </nb-icon>
+        </div>
 
-<button class="btn btn-outline-primary mb-2 mr-2" (click)="zoomIn()">+</button>
-<button class="btn btn-outline-primary mb-2 mr-2" (click)="zoomOut()">-</button>
-<button class="btn btn-outline-primary mb-2 mr-2" (click)="dragSVG()">drag</button>
-<div id="container" class="svg-container">
-</div>
 
-
-  
-  
+    </nb-card-header>
+    <nb-card-body>
+        <div id="container" class="svg-container"></div>
+    </nb-card-body>
+    <nb-card-footer style="display: flex;justify-content: center;align-items: center;">
+        <nb-icon #testFocus status='info' nbButton class="toggle-icon" icon="maximize-outline" pack="eva"
+            [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+            (click)="zoomIn()"></nb-icon>
+        <nb-icon status='info' nbButton class="toggle-icon" icon="radio-button-on-outline" pack="eva"
+            [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+            (click)="fitGraph()"></nb-icon>
+        <nb-icon status='info' nbButton class="toggle-icon" icon="minimize-outline" pack="eva"
+            [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+            (click)="zoomOut()"></nb-icon>
+        <nb-icon status='info' nbButton class="toggle-icon" icon="sync-outline" pack="eva"
+            [options]="{ animation: { type: 'flip' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+            (click)="organizeGraph()">
+        </nb-icon>
+        <nb-icon icon="code-branch" pack="fas" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"></nb-icon>
+        <!-- <nb-icon status='info' nbButton class="toggle-icon" icon="minus-circle-outline" pack="eva"
+                    [options]="{ animation: { type: 'flip' } }"
+                    style="width: 40px;height: 40px;color: #598bff;margin-left: 1.5rem;" (click)="removeElements()">
+                </nb-icon>
+                <nb-icon status='info' nbButton class="toggle-icon" icon="plus-circle-outline" pack="eva"
+                    [options]="{ animation: { type: 'flip' } }"
+                    style="width: 40px;height: 40px;color: #598bff;margin-left: 1.5rem;" (click)="addElements()">
+                </nb-icon> -->
+    </nb-card-footer>
+</nb-card>
