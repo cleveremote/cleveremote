@@ -2,10 +2,13 @@ export class Device {
     public address64: string | ArrayBuffer;
     public address16: string | ArrayBuffer;
     public type: TRANSCIEVER_TYPE;
-    public nodeIdentifier: string;
-    public remoteParent16: string | ArrayBuffer;
-    public digiProfileID: string | ArrayBuffer;
-    public digiManufacturerID: string | ArrayBuffer;
+    public nodeIdentifier?: string;
+    public remoteParent16?: string | ArrayBuffer;
+    public digiProfileID?: string | ArrayBuffer;
+    public digiManufacturerID?: string | ArrayBuffer;
+    public status: TRANSCIEVER_STATUS;
+    public lastSeen: Date;
+    public powerSupply: number;
 }
 
 export enum TRANSCIEVER_TYPE {
@@ -14,10 +17,8 @@ export enum TRANSCIEVER_TYPE {
     ENDDEVICE = 2
 }
 
-
-
-// export enum exportCpuStatus {
-//     WAIT = 'WAIT',
-//     PROCESSING = 'PROCESSING',
-//     EXPORTED = 'EXPORTED'
-// }
+export enum TRANSCIEVER_STATUS {
+    ACTIF = 'ACTIF',
+    INACTIF = 'INACTIF',
+    SLEEPY = 'SLEEPY'
+}

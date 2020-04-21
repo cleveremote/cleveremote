@@ -35,12 +35,15 @@ export class TransceiverEntity {
   @Column("character varying", { name: "deviceId", length: 255 })
   public deviceId: string;
 
+  @Column("character varying", { name: "status", length: 255 })
+  public status: string;
+
   @Column("json", { name: "configuration" })
   public configuration: object;
 
   @OneToMany(
     () => ModuleEntity,
-    module => module.transceiver
+    module => module.transceiver, { onDelete: 'CASCADE', cascade: true }
   )
   public modules: Array<ModuleEntity>;
 

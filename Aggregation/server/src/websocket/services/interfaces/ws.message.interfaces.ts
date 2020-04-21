@@ -3,7 +3,8 @@ export enum ELEMENT_TYPE {
     TRANSCEIVER = 'Transceiver',
     GROUPVIEW = 'GroupView',
     VALUE = 'Value',
-    SECTOR = 'Sector'
+    SECTOR = 'Sector',
+    NETWORK = 'Network'
 }
 
 export enum ACTION_TYPE {

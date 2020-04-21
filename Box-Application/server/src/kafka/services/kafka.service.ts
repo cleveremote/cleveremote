@@ -99,7 +99,7 @@ export class KafkaService extends KafkaBase {
     public startListenConsumer(consumer: ConsumerCustom, messageId: string, timeOut = 15000): Observable<Message> {
         return consumer.eventData
             .pipe(filter((message: Message) => JSON.parse(String(message.value)).messageId === messageId))
-            .pipe(take(1)).pipe(timeout(timeOut));;
+            .pipe(take(1)).pipe(timeout(timeOut));
     }
 
     public startListenConsumerUntil(consumer: ConsumerCustom, maxToTake?: number, progressBar?: any, timeOut = 30000): Observable<boolean> {
@@ -159,12 +159,20 @@ export class KafkaService extends KafkaBase {
             );
     }
 
-    public syncDataWithBox(dataToSync: any, action: string, entityName: string, boxId: string): Observable<boolean> {
+    public executeDbSync(dataToSync: any, action: string, entityName: string, boxId: string): Observable<boolean> {
         const payloads = [{
             topic: 'aggregator_dbsync',
             messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync }), key: 'server_1'
         }];
         return this.sendMessage(payloads, true).pipe(map(() => true));
+    }
+
+    public executeSync(type: string, dataToSync: any, action: string, entityName: string, boxId: string): Observable<boolean> {
+        const payloads = [{
+            topic: type,
+            messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync }), key: 'server_1'
+        }];
+        return this.sendMessage(payloads, false).pipe(map(() => true));
     }
 
 }

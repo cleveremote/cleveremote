@@ -22,6 +22,7 @@ import { BaseCollection } from './collections/base.collection';
 import { UserCollection } from './collections/user.collection';
 import { AccountCollection } from './collections/account.collection';
 import { ValueCollection } from './collections/value.collection';
+import { NetworkCollection } from './collections/network.collection';
 
 export class Message {
     constructor(
@@ -57,7 +58,8 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         public schemeCollection: SchemeCollection,
         public userCollection: UserCollection,
         public accountCollection: AccountCollection,
-        public valueCollection: ValueCollection
+        public valueCollection: ValueCollection,
+        public networkCollection: NetworkCollection
     ) {
         this.collectionStore.push(this.moduleCollection);
         this.collectionStore.push(this.groupViewCollection);
@@ -68,6 +70,7 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         this.collectionStore.push(this.userCollection);
         this.collectionStore.push(this.accountCollection);
         this.collectionStore.push(this.valueCollection);
+        this.collectionStore.push(this.networkCollection);
 
         this.subscriptions.push(this.dataService.observable.subscribe((message: any) => this.proccessWSMessage(message)));
     }
@@ -91,6 +94,7 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
                 return of(this.accountCollection.reload([account]));
             }))
             .pipe(mergeMap((result) => {
+                // get transceivers = with subscribe.
                 const moduleids = this.moduleCollection.elements.map(module => module.id);
                 return this.ressourceService.getAllLastModuleValues(moduleids)
                     .pipe(mergeMap((lastLogData: Array<any>) => {

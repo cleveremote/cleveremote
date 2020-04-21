@@ -6,13 +6,13 @@ import {
   ManyToOne,
   OneToMany
 } from "typeorm";
-import { AccountEntity } from "./account.entity";
 import { PartitionConfigEntity } from "./partitionconfig.entity";
 import { SchemeEntity } from "./scheme.entity";
 import { TransceiverEntity } from "./transceiver.entity";
 import { GroupViewEntity } from "./groupView.entity";
+import { AccountEntity } from "../../authentication/entities/account.entity";
 
-@Index("device_pkey", ["deviceId"], { unique: true })
+@Index("device_pkey", ["id"], { unique: true })
 @Index("device_name_key", ["name"], { unique: true })
 @Entity("Device", { schema: "public" })
 export class DeviceEntity {
@@ -21,7 +21,7 @@ export class DeviceEntity {
     name: "deviceId",
     length: 255
   })
-  public deviceId: string;
+  public id: string;
 
   @Column("character varying", { name: "name", unique: true, length: 50 })
   public name: string;
@@ -37,7 +37,7 @@ export class DeviceEntity {
     account => account.devices,
     { onDelete: "CASCADE" }
   )
-  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
+  @JoinColumn([{ name: "accountId", referencedColumnName: "id" }])
   public account: AccountEntity;
 
   @OneToMany(

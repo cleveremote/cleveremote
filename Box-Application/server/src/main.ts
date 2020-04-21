@@ -1,18 +1,16 @@
-require('events').EventEmitter.defaultMaxListeners = 0;
 import { NestFactory } from '@nestjs/core';
 import { from } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 
 import * as dotenv from "dotenv";
 import { Server } from './server';
-import { WebSocketService } from './manager/services/websocket.service';
 import { Tools } from './common/tools-service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import "reflect-metadata";
 Tools.titleApplication();
 dotenv.config({ path: ".env" });
 
 import { AppModule } from './app.module';
+import { WebSocketService } from './websocket/services/websocket.service';
 
 async function bootstrap() {
  // const adapter = new FastifyAdapter();

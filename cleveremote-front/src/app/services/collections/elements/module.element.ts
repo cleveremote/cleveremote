@@ -22,6 +22,6 @@ export class ModuleElement extends BaseElement {
     }
 
     public getModuleType(port: string, transceiverCfg: any): TYPE_MODULE {
-        return transceiverCfg[port].params[0] === TYPE_IO.DIGITAL_OUTPUT_HIGH || TYPE_IO.DIGITAL_OUTPUT_LOW ? TYPE_MODULE.RELAY : TYPE_MODULE.SENSOR;
+        return transceiverCfg[port][0] === TYPE_IO.DIGITAL_OUTPUT_HIGH || TYPE_IO.DIGITAL_OUTPUT_LOW ? TYPE_MODULE.RELAY : TYPE_MODULE.SENSOR;
     }
 }

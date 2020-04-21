@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 export class SchemeQueryDto {
     @IsOptional()
-    public schemeId: string;
+    public id: string;
     @IsOptional()
     public file: string;
     @IsOptional()
@@ -9,7 +9,7 @@ export class SchemeQueryDto {
     @IsOptional()
     public description: string;
     @IsOptional()
-    public parentScheme: string;
+    public schemeId: string;
     @IsOptional()
     public deviceId: string;
 }

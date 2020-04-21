@@ -15,7 +15,7 @@ export class ManagerService {
         const progressBar = Tools.startProgress('load device configuration      ', 0, 1);
         return this.deviceRepository.getDevice()
             .pipe(map((currentDevice: DeviceEntity) => {
-                this.deviceId = currentDevice.deviceId;
+                this.deviceId = currentDevice.id;
                 return currentDevice && currentDevice.partitionConfigs && currentDevice.partitionConfigs.length > 0 ? currentDevice.partitionConfigs[0] : undefined
             }))
             .pipe(tap(() => progressBar.increment()))

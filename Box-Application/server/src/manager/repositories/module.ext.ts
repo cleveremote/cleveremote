@@ -17,10 +17,14 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
             case 'UPDATE':
                 return this.updateModule(classToClass<ModuleDto>(params.data));
             case 'DELETE':
-                return this.updateModule(params.data.id);
+                return this.updateModule(params.data);
             default:
                 break;
         }
+    }
+
+    public getDeviceId(id: string): Observable<string> {
+        return of('server_1');
     }
 
     public updateModule(data: ModuleDto): Observable<ModuleEntity> {
@@ -52,7 +56,7 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
     }
 
     public deleteModule(id: string): Observable<boolean> {
-        return from(this.delete({ moduleId: id })).pipe(
+        return from(this.delete({ id: id })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -93,8 +97,65 @@ export class ModuleExt extends Repository<ModuleEntity> implements ISynchronize<
             }));
     }
 
+    public getAllByDeviceId(deviceId: string): Observable<Array<ModuleEntity>> {
+
+        return from(this.find({
+            where: qb => {
+                qb.where('transceiver.deviceId = :deviceId', { deviceId: deviceId }); // Filter related field
+            },
+            join: { alias: 'module', innerJoin: { transceiver: 'module.transceiver' } },
+            relations: ['transceiver']
+        })).pipe(
+            map((modules: Array<ModuleEntity>) => {
+
+                if (!modules) {
+                    console.log('no account found');
+
+                    return [];
+                }
+
+                if (modules.length === 0) {
+                    console.log('No devices');
+
+                    return [];
+                }
+
+                return modules;
+            }));
+    }
+
+    public getAllByAccountId(accountId: string): Observable<Array<ModuleEntity>> {
+
+        return from(this.find({
+            where: qb => {
+                qb.where('transceiver.deviceId = device.id')
+                    .andWhere('device.accountId=:accountId', { accountId: accountId }); // Filter related field
+            },
+            join: { alias: 'module', innerJoin: { transceiver: 'module.transceiver', device: 'transceiver.device' } },
+            relations: ['transceiver']
+        })).pipe(
+            map((modules: Array<ModuleEntity>) => {
+
+                if (!modules) {
+                    console.log('no account found');
+
+                    return [];
+                }
+
+                if (modules.length === 0) {
+                    console.log('No devices');
+
+                    return [];
+                }
+
+                return modules;
+            }));
+    }
+
+
+
     public getModule(id?: string): Observable<ModuleEntity> {
-        return from(this.findOne({ where: { moduleId: id }, relations: ['transceiver'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['transceiver', 'groupviews'] })).pipe(
             map((module: ModuleEntity) => {
 
                 if (!module) {

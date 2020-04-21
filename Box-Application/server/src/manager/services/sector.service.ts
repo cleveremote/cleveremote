@@ -19,12 +19,13 @@ import { SectorDto } from '../dto/sector.dto';
 import { KafkaService } from '../../kafka/services/kafka.service';
 import { forwardRef, Inject } from '@nestjs/common';
 import { SectorEntity } from '../entities/sector.entity';
-import { ManagerService } from './manager.service';
+import { ACTION_TYPE, ELEMENT_TYPE } from '../../websocket/services/interfaces/ws.message.interfaces';
+import { WebSocketService } from '../../websocket/services/websocket.service';
 
 export class SectorService {
     public entityName = 'Sector';
+
     constructor(
-        @Inject(forwardRef(() => ManagerService)) private readonly managerService: ManagerService,
         @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
         @InjectRepository(SectorExt) private readonly sectorRepository: SectorExt,
     ) { }
@@ -35,17 +36,22 @@ export class SectorService {
 
     public add(sectorDto: SectorDto): Observable<any> {
         return this.sectorRepository.addSector(sectorDto)
-            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'ADD', this.entityName, this.managerService.deviceId)));
+            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.executeDbSync(data, 'ADD', this.entityName, sectorDto.id)));
     }
 
-    public update(sectorDto: SectorDto): Observable<any> {
+    public update(sectorDto: SectorDto, request: any): Observable<any> {
         return this.sectorRepository.updateSector(sectorDto)
-            .pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, this.managerService.deviceId)));
+            .pipe(mergeMap(sector => this.get(sector.id)))
+            .pipe(map((sectorEntity: SectorEntity) => {
+                WebSocketService.syncClients(ACTION_TYPE.UPDATE, ELEMENT_TYPE.SECTOR, sectorEntity, request);
+                return sectorEntity;
+            }));
+        //.pipe(mergeMap((data: SectorEntity) => this.kafkaService.syncDataWithBox(data, 'UPDATE', this.entityName, sectorDto.id)));
     }
 
     public delete(id: string): Observable<any> {
         return this.sectorRepository.deleteSector(id)
-            .pipe(mergeMap((isDeleted: boolean) => this.kafkaService.syncDataWithBox(id, 'DELETE', this.entityName, this.managerService.deviceId)));
+            .pipe(mergeMap((isDeleted: boolean) => this.kafkaService.executeDbSync(id, 'DELETE', this.entityName, id)));
     }
 
     public getAll(sectorQueryDto: SectorQueryDto): Observable<any> {

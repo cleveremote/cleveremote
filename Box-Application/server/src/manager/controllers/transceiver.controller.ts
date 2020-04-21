@@ -15,12 +15,12 @@ export class TransceiverController {
         return this.transceiverService.getAll(transceiverQueryDto);
     }
 
-    @Get(':transceiverId')
-    // @SetMetadata('roles', ['readonly', 'readwrite'])
-    @UsePipes(ValidationPipe)
-    public get(@Param('transceiverId') transceiverId: string): Observable<boolean> {
-        return this.transceiverService.get(transceiverId);
-    }
+    // @Get(':transceiverId')
+    // // @SetMetadata('roles', ['readonly', 'readwrite'])
+    // @UsePipes(ValidationPipe)
+    // public get(@Param('transceiverId') transceiverId: string): Observable<boolean> {
+    //     return this.transceiverService.get(transceiverId);
+    // }
 
     @Delete('/:transceiverId')
     // @SetMetadata('roles', ['readwrite'])
@@ -32,7 +32,7 @@ export class TransceiverController {
     @UsePipes(ValidationPipe)
     @Put()
     public update(@Body() transceiverDto: TransceiverDto): Observable<any> {
-        return this.transceiverService.update(transceiverDto);
+        return this.transceiverService.update(transceiverDto[0]);
     }
 
     @UsePipes(new ValidationPipe())
@@ -41,8 +41,4 @@ export class TransceiverController {
         return this.transceiverService.add(transceiverDto);
     }
 
-    @Get('scan')
-    public getScan(): Observable<any> {
-        return this.transceiverService.scanAll();
-    }
 }

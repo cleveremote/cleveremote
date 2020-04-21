@@ -10,7 +10,7 @@ export class PartitionConfigEntity {
         length: 255,
         name: "configId"
     })
-    public configId: string;
+    public id: string;
 
     @Column("integer", {
         nullable: false,

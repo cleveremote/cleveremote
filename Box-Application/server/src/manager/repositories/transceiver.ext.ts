@@ -12,7 +12,7 @@ import { KafkaService } from "../../kafka/services/kafka.service";
 @EntityRepository(TransceiverEntity)
 export class TransceiverExt extends Repository<TransceiverEntity> implements ISynchronize<TransceiverEntity | boolean> {
 
-    constructor(@Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService) {
+    constructor() {
         super();
     }
 
@@ -23,13 +23,17 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             case 'UPDATE':
                 return this.updateTransceiver(classToClass<TransceiverDto>(params.data));
             case 'DELETE':
-                return this.deleteTransceiver(params.data.id);
+                return this.deleteTransceiver(params.data);
             default:
                 break;
         }
     }
 
-    public updateTransceiver(data: any): Observable<TransceiverEntity> {
+    public getDeviceId(id: string): Observable<string> {
+        return of('server_1');
+    }
+
+    public updateTransceiver(data: any, sync = true): Observable<TransceiverEntity> {
         return from(this.save(data)).pipe(
             map((transceiver: TransceiverEntity) => {
 
@@ -58,7 +62,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
     }
 
     public deleteTransceiver(transceiverId: string): Observable<boolean> {
-        return from(this.delete({ transceiverId: transceiverId })).pipe(
+        return from(this.delete({ id: transceiverId })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -92,7 +96,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
     }
 
     public getTransceiver(transceiverId: string): Observable<TransceiverEntity> {
-        return from(this.findOne({ where: { transceiverId: transceiverId }, relations: ['modules'] })).pipe(
+        return from(this.findOne({ where: { id: transceiverId }, relations: ['modules'] })).pipe(
             map((transceiver: TransceiverEntity) => {
 
                 if (!transceiver) {

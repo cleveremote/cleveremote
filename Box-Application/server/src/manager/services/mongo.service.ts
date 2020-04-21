@@ -1,4 +1,4 @@
-import { LogMongoEntity, log } from "../entities/log.mongo.entity";
+import { log, LogMongoEntity } from "../entities/log.mongo.entity";
 import { observable, from, of, Observable } from "rxjs";
 import { tap, mergeMap } from "rxjs/operators";
 

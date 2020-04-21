@@ -59,8 +59,11 @@ export class WebSocketService {
             date: new Date(),
             data: [entity]
         };
+
+        const exclude = request && request.headers && request.headers.authorization && request.headers.authorization.split(" ")[1] ? [request.headers.authorization.split(" ")[1]] : [];
+
         const message = JSON.stringify(messageToBuild);
-        WebSocketService.sendMessage('', message, [request.headers.authorization.split(" ")[1]]);
+        WebSocketService.sendMessage('', message, exclude);
     }
 
     constructor(serverInstance: http.Server) {

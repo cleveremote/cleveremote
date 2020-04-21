@@ -18,7 +18,7 @@ import { XbeeModule } from '../xbee/xbee.module';
 import { KafkaModule } from '../kafka/kafka.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), XbeeModule, KafkaModule],
+  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), KafkaModule],
   controllers: [ModuleController, TransceiverController, SchemeController, SectorController],
   providers: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService],
   exports: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService]

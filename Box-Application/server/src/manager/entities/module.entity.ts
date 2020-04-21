@@ -1,18 +1,16 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, ManyToMany, JoinTable } from "typeorm";
 import { TransceiverEntity } from "./transceiver.entity";
-import { SchemeEntity } from "./scheme.entity";
-import { SectorEntity } from "./sector.entity";
-import { AssGroupViewModuleEntity } from "./assGroupViewModule.entity";
+import { GroupViewEntity } from "./groupView.entity";
 
-@Index("module_pkey", ["moduleId"], { unique: true })
+@Index("module_pkey", ["id"], { unique: true })
 @Entity("Module", { schema: "public" })
 export class ModuleEntity {
   @Column("character varying", {
     primary: true,
-    name: "moduleId",
+    name: "id",
     length: 255
   })
-  public moduleId: string;
+  public id: string;
 
   @Column("character varying", { name: "port", length: 2 })
   public port: string;
@@ -26,23 +24,28 @@ export class ModuleEntity {
   @Column("character varying", { name: "transceiverId", length: 255 })
   public transceiverId: string;
 
-  @Column("character varying", { name: "sectorId", length: 255 })
-  public sectorId: string;
-
-  @OneToMany(
-    () => AssGroupViewModuleEntity,
-    assGroupViewModule => assGroupViewModule.module
+  @ManyToMany(
+    () => GroupViewEntity,
+    groupView => groupView.modules
   )
-  public assGroupViewModules: Array<AssGroupViewModuleEntity>;
+  @JoinTable({
+    name: "AssGroupViewModule",
+    joinColumns: [{ name: "moduleId", referencedColumnName: "id" }],
+    inverseJoinColumns: [
+      { name: "groupId", referencedColumnName: "id" }
+    ],
+    schema: "public"
+  })
+  public groupViews: Array<GroupViewEntity>;
 
   @ManyToOne(
-    type => TransceiverEntity,
+    () => TransceiverEntity,
     transceiver => transceiver.modules,
     { onDelete: "CASCADE" }
   )
   @JoinColumn([
-    { name: "transceiverId", referencedColumnName: "transceiverId" }
+    { name: "transceiverId", referencedColumnName: "id" }
   ])
-  public transceiver: TransceiverEntity  | null;
+  public transceiver: TransceiverEntity | null;
 
 }

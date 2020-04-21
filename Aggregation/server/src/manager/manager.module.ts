@@ -19,11 +19,13 @@ import { SchemeController } from './controllers/scheme.controller';
 import { SchemeService } from './services/scheme.service';
 import { SectorController } from './controllers/sector.controller';
 import { SectorService } from './services/sector.service';
+import { TransceiverController } from './controllers/transceiver.controller';
+import { TransceiverService } from './services/transceiver.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt, GroupViewExt, SchemeExt]), forwardRef(() => AuthModule), KafkaModule],
-  controllers: [ModuleController, DeviceController, GroupViewController, SchemeController, SectorController],
-  providers: [ModuleService, ManagerService, DeviceService, GroupViewService, SchemeService, SectorService],
-  exports: [ModuleService, ManagerService, DeviceService, GroupViewService, SchemeService, SectorService]
+  controllers: [ModuleController, DeviceController, GroupViewController, SchemeController, SectorController, TransceiverController],
+  providers: [ModuleService, ManagerService, DeviceService, GroupViewService, SchemeService, SectorService, TransceiverService],
+  exports: [ModuleService, ManagerService, DeviceService, GroupViewService, SchemeService, SectorService, TransceiverService]
 })
 export class ManagerModule { }

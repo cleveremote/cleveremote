@@ -1,10 +1,25 @@
+export enum TYPE_IOCFG {
+    FULL_DIGITAL_INPUT = 0,
+    FULL_DIGITAL_OUTPUT_HIGH,
+    FULL_DIGITAL_OUTPUT_LOW,
+    FULL_ANALOG_INPUT,
+    INIT
+}
+
+export enum TYPE_IO {
+    ANALOG_INPUT = 2,
+    DIGITAL_INPUT,
+    DIGITAL_OUTPUT_LOW,
+    DIGITAL_OUTPUT_HIGH
+}
+
 export class IOCfg {
-    public D1: { params?: Array<number> };
-    public D2: { params?: Array<number> };
-    public D3: { params?: Array<number> };
-    public D4: { params?: Array<number> };
-    public P0: { params?: Array<number> };
-    public P1: { params?: Array<number> };
+    public D1: Array<number>;
+    public D2: Array<number>;
+    public D3: Array<number>;
+    public D4: Array<number>;
+    public P1: Array<number>;
+    public P2: Array<number>;
 
 
     constructor(type: TYPE_IOCFG) {
@@ -22,12 +37,12 @@ export class IOCfg {
                 this.getFullDigital(false, false);
                 break;
             case TYPE_IOCFG.INIT:
-                this.D1.params = [];
-                this.D2.params = [];
-                this.D3.params = [];
-                this.D4.params = [];
-                this.P0.params = [];
-                this.P1.params = [];
+                this.D1 =  [] ;
+                this.D2 =  [] ;
+                this.D3 =  [] ;
+                this.D4 =  [] ;
+                this.P1 =  [] ;
+                this.P2 =  [] ;
                 break;
             default:
                 break;
@@ -37,37 +52,22 @@ export class IOCfg {
 
     public getFullDigital(isInput: boolean, isHigh?: boolean): void {
         const param = isInput ? [TYPE_IO.DIGITAL_INPUT] : isHigh ? [TYPE_IO.DIGITAL_OUTPUT_HIGH] : [TYPE_IO.DIGITAL_OUTPUT_LOW];
-        this.D1.params = param;
-        this.D2.params = param;
-        this.D3.params = param;
-        this.D4.params = param;
-        this.P0.params = param;
-        this.P1.params = param;
+        this.D1 = param;
+        this.D2 = param;
+        this.D3 = param;
+        this.D4 = param;
+        this.P1 = param;
+        this.P2 = param;
     }
 
     public getFullAnalog(): void {
         const param = [TYPE_IO.ANALOG_INPUT];
-        this.D1.params = param;
-        this.D2.params = param;
-        this.D3.params = param;
-        this.D4.params = [];
-        this.P0.params = [];
-        this.P1.params = [];
+        this.D1 = param;
+        this.D2 = param;
+        this.D3 = param;
+        this.D4 = [];
+        this.P1 = [];
+        this.P2 = [];
     }
 
-}
-
-export enum TYPE_IOCFG {
-    FULL_DIGITAL_INPUT = 0,
-    FULL_DIGITAL_OUTPUT_HIGH,
-    FULL_DIGITAL_OUTPUT_LOW,
-    FULL_ANALOG_INPUT,
-    INIT
-}
-
-export enum TYPE_IO {
-    ANALOG_INPUT = 2,
-    DIGITAL_INPUT,
-    DIGITAL_OUTPUT_LOW,
-    DIGITAL_OUTPUT_HIGH
 }

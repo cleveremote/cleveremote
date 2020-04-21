@@ -1,33 +1,25 @@
-import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
-import { Observable, from, of, fromEvent, forkJoin } from "rxjs";
-import { IAccount, IDevice, IUser } from "../../manager/interfaces/entities.interface";
-import { AccountEntity } from "../../manager/entities/account.entity";
+import { Message, ConsumerGroupStream } from "kafka-node";
+import { Observable, of, forkJoin } from "rxjs";
 import { mergeMap, filter, tap, map, catchError } from "rxjs/operators";
-import { PartitionConfigEntity } from "../../manager/entities/partitionconfig.entity";
-import { UserEntity } from "../../manager/entities/user.entity";
 import { KafkaService } from "../../kafka/services/kafka.service";
 import { MapperService } from "../../manager/services/mapper.service";
 import { LoggerService } from "../../manager/services/logger.service";
 import { Tools } from "../../common/tools-service";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
-import { getRepository } from "typeorm";
-import { multibar } from "../../common/progress.bar";
-import { DeviceEntity } from "../../manager/entities/device.entity";
 import { IPartitionConfig } from "../../kafka/interfaces/partition.config.interface";
 import { v1 } from 'uuid';
 
-import * as cliProgress from 'cli-progress';
 import * as _colors from 'colors';
-import uuid = require("uuid");
+import { XbeeService } from "../../xbee/services/xbee.service";
 
 @Injectable()
 export class DispatchService {
     private mapperService: MapperService;
-    private loggerService: LoggerService;
 
-    constructor(@Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService) {
+    constructor(
+        @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
+        @Inject(forwardRef(() => XbeeService)) private readonly xbeeService: XbeeService) {
         this.mapperService = new MapperService();
-        this.loggerService = new LoggerService();
     }
 
     public init(): Observable<any> {
@@ -49,7 +41,7 @@ export class DispatchService {
     }
 
     public consumeDataProccess(consumer: ConsumerGroupStream, message: Message): void {
-        consumer.commit(message, true, (error, data) => {
+        consumer.commit(message, true, (error) => {
             if (!error) {
                 Tools.loginfo(`message => ${message.topic} received !`);
                 Tools.logWarn(`consumer read msg ${message.value} Topic=${message.topic} Partition=${message.partition} Offset=${message.offset}`);
@@ -65,16 +57,31 @@ export class DispatchService {
         const messageData = JSON.parse(String(message.value));
         switch (message.topic) {
             case `${Tools.serialNumber}_init_connexion`:
-                this.proccessSyncConnexion(String(message.value));
+                this.proccessSyncConnexion();
                 break;
             case "box_action":
-                this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
-                    .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
+                const data = JSON.parse(String(message.value));
+                switch (data.action) {
+                    case 'SCAN':
+                        this.xbeeService.getNetworkGraph().pipe(mergeMap((result) =>
+                            this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true , graphData:result })
+                                .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))
+                        )).subscribe();
+                        break;
+                    case 'SWITCH':
+
+                        break;
+                    default:
+                        break;
+                }
+
+                // this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
+                //     .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
                 break;
             case "box_dbsync":
                 // this.loggerService.logSynchronize(messageData);
                 this.mapperService.dataBaseSynchronize(String(message.value))
-                    .pipe(mergeMap((result) => this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
+                    .pipe(mergeMap(() => this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
                         .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))))
                     .subscribe();
                 break;
@@ -83,7 +90,7 @@ export class DispatchService {
         }
     }
 
-    public proccessSyncConnexion(data: any): Observable<IPartitionConfig> {
+    public proccessSyncConnexion(): Observable<IPartitionConfig> {
         // const data = JSON.parse(String(value));
         // const accountData: IAccount = data.account;
         // const accountToSave = new AccountEntity();
@@ -134,7 +141,7 @@ export class DispatchService {
             .pipe(mergeMap((response: [Message, boolean]) => {
                 const message = JSON.parse(String(response[0].value));
                 progressBar.increment();
-                return this.proccessSyncConnexion(message)
+                return this.proccessSyncConnexion()
                     .pipe(mergeMap((partitionCfg: IPartitionConfig) => {
                         progressBar.increment();
                         return this.kafkaService.sendAck({
@@ -147,7 +154,7 @@ export class DispatchService {
                     ));
             }))
             .pipe(tap(() => Tools.stopProgress('Kafka deep configuration       ', progressBar)))
-            .pipe(tap((config: IPartitionConfig) => Tools.logSuccess(`     => message proccessing OK`)))
+            .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))
             .pipe(
                 catchError(error => {
                     Tools.stopProgress('Kafka deep configuration       ', progressBar, error);

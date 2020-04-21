@@ -22,7 +22,7 @@ export class LaunchService {
         of(true)
             .pipe(delay(1000))
             .pipe(tap(() => Tools.loginfo('* Start required initialization process boot ...')))
-            .pipe(tap(() => Tools.debug = false))
+            .pipe(tap(() => Tools.debug = true))
             .pipe(mergeMap(() => Tools.getSerialNumber()))
             .pipe(mergeMap(() => this.kafkaService.initCommonKafka()))
             .pipe(mergeMap(() => this.initFirstConnexion()))

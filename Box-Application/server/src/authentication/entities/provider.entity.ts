@@ -20,7 +20,7 @@ export class ProviderEntity {
 
 
     @ManyToOne(type => UserEntity, users => users.providers, { nullable: false, onDelete: 'CASCADE', })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: UserEntity | null;
 
 

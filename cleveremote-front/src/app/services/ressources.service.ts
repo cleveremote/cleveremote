@@ -66,4 +66,9 @@ export class RessourcesService {
         return this.http.put<any>(this.actionUrl + 'sector/', jsonBody);
     }
 
+    fullScan(deviceId: string): Observable<any> {
+        return this.http.get<any>(this.actionUrl + 'transceiver/scan/' + deviceId);
+    }
+
+
 }

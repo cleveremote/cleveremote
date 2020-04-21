@@ -20,10 +20,14 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize<
             case 'UPDATE':
                 return this.updateSector(classToClass<SectorDto>(params.data));
             case 'DELETE':
-                return this.deleteSector(params.data.id);
+                return this.deleteSector(params.data);
             default:
                 break;
         }
+    }
+
+    public getDeviceId(id: string): Observable<string> {
+        return of('server_1');
     }
 
     public updateSector(data: SectorDto): Observable<SectorEntity> {
@@ -55,7 +59,7 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize<
     }
 
     public deleteSector(sectorId: string): Observable<boolean> {
-        return from(this.delete({ sectorId: sectorId })).pipe(
+        return from(this.delete({ id: sectorId })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -97,7 +101,19 @@ export class SectorExt extends Repository<SectorEntity> implements ISynchronize<
     }
 
     public getSector(id?: string): Observable<SectorEntity> {
-        return from(this.findOne({ where: { sectorId: id }, relations: ['modules'] })).pipe(
+        return from(this.findOne({
+            where: { id: id },
+            relations: [
+                'scheme',
+                'schemeDetail',
+                'schemeDetail.sectors',
+                'schemeDetail.sectors.groupView',
+                'schemeDetail.sectors.groupView.modules',
+                'schemeDetail.sectors.groupView.modules.transceiver',
+                'groupView',
+                'groupView.modules',
+                'groupView.modules.transceiver']
+        })).pipe(
             map((sector: SectorEntity) => {
 
                 if (!sector) {

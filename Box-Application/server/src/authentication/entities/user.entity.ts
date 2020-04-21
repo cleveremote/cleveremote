@@ -3,7 +3,7 @@ import { AccountEntity } from "./account.entity";
 import { ProviderEntity } from "./provider.entity";
 
 
-@Entity("users", { schema: "public" })
+@Entity("User", { schema: "public" })
 @Index("users_email_key", ["email",], { unique: true })
 @Index("users_first_name_key", ["firstName",], { unique: true })
 @Index("users_last_name_key", ["lastName",], { unique: true })
@@ -17,7 +17,7 @@ export class UserEntity {
         length: 255,
         name: "userId"
     })
-    userId: string;
+    id: string;
 
 
     @Column("character varying", {
@@ -69,10 +69,10 @@ export class UserEntity {
 
 
     @ManyToOne(type => AccountEntity, account => account.users, { nullable: false, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'accountId' })
+    @JoinColumn({ name: 'accountId', referencedColumnName: 'id' })
     account: AccountEntity | null;
 
-    @OneToMany(type => ProviderEntity, provider => provider.user, { onDelete: 'CASCADE' })
+    @OneToMany(type => ProviderEntity, provider => provider.user, { onDelete: 'CASCADE', cascade: true })
     providers: Array<ProviderEntity>;
 
 }

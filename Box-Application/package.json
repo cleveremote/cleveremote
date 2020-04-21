@@ -23,5 +23,9 @@
   "engines": {
     "node": "9.5.0"
   },
-  "homepage": "https://github.com/martinavagyan/mean-ts#readme"
+  "homepage": "https://github.com/martinavagyan/mean-ts#readme",
+  "dependencies": {
+    "deep-diff": "^1.0.2",
+    "deep-object-diff": "^1.1.0"
+  }
 }

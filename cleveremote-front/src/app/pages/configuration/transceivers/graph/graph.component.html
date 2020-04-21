@@ -12,8 +12,11 @@
 
 
     </nb-card-header>
-    <nb-card-body>
-        <div id="container" class="svg-container"></div>
+    <nb-card-body >
+        <div #pContainer style="display: flex;justify-content: flex-start;width: 100%;">
+            <div id="container" class="svg-container" style="width: 100%;"></div>
+            <div id="legendcontainer" class="svg-container"></div>
+        </div>
     </nb-card-body>
     <nb-card-footer style="display: flex;justify-content: center;align-items: center;">
         <nb-icon #testFocus status='info' nbButton class="toggle-icon" icon="maximize-outline" pack="eva"
@@ -29,7 +32,6 @@
             [options]="{ animation: { type: 'flip' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
             (click)="organizeGraph()">
         </nb-icon>
-        <nb-icon icon="code-branch" pack="fas" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"></nb-icon>
         <!-- <nb-icon status='info' nbButton class="toggle-icon" icon="minus-circle-outline" pack="eva"
                     [options]="{ animation: { type: 'flip' } }"
                     style="width: 40px;height: 40px;color: #598bff;margin-left: 1.5rem;" (click)="removeElements()">

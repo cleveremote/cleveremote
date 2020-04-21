@@ -43,6 +43,7 @@ import { SectorCollection } from './services/collections/sector.collection';
 import { AccountCollection } from './services/collections/account.collection';
 import { UserCollection } from './services/collections/user.collection';
 import { ValueCollection } from './services/collections/value.collection';
+import { NetworkCollection } from './services/collections/network.collection';
 
 @NgModule({
   declarations: [AppComponent],
@@ -64,6 +65,7 @@ import { ValueCollection } from './services/collections/value.collection';
     AccountCollection,
     UserCollection,
     ValueCollection,
+    NetworkCollection,
 
     CoreDataService,
 

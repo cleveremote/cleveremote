@@ -6,7 +6,6 @@ import { tap, flatMap, map } from 'rxjs/operators';
 // import { RedisClient, createClient } from 'redis';
 // import * as connectRedis from 'connect-redis';
 
-import { PassportService } from './manager/services/passport.service';
 import * as bodyParser from 'body-parser';
 import * as compression from 'compression';
 import * as express from 'express';
@@ -35,11 +34,11 @@ export class Server {
         });
         return Tools.getSerialNumber().pipe(
             flatMap(() => this.initDependencies().pipe(
-                flatMap(() => this.initPassport().pipe(
+               // flatMap(() => this.initPassport().pipe(
                     flatMap(() => this.initDbMongoose().pipe(
                         map(() => this.app))
                     ))
-                ))
+              //  ))
             ));
     }
 
@@ -99,19 +98,19 @@ export class Server {
 
 
 
-    public initPassport(): Observable<void> {
-        Tools.loginfo('* start init passport...');
+    // public initPassport(): Observable<void> {
+    //     Tools.loginfo('* start init passport...');
 
-        return observableFrom(PassportService.init()).pipe(
-            map((passport: passportType.PassportStatic) => {
-                Tools.logSuccess('  => OK.');
-                this.app.use(passport.initialize());
-                this.app.use(passport.session());
-            }, (err: any) => {
-                Tools.logError(`  => KO! ${err}`);
+    //     return observableFrom(PassportService.init()).pipe(
+    //         map((passport: passportType.PassportStatic) => {
+    //             Tools.logSuccess('  => OK.');
+    //             this.app.use(passport.initialize());
+    //             this.app.use(passport.session());
+    //         }, (err: any) => {
+    //             Tools.logError(`  => KO! ${err}`);
 
-                return err;
-            }));
-    }
+    //             return err;
+    //         }));
+    // }
 
 }

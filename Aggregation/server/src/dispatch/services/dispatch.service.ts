@@ -2,7 +2,7 @@ import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
 import { Observable, from, of, fromEvent, forkJoin } from "rxjs";
 import { getCustomRepository, getRepository } from "typeorm";
 import { AccountExt } from "../../authentication/repositories/account.ext";
-import { IAccount, IDevice, IPartitionConfig, IUser } from "../../manager/interfaces/entities.interface";
+import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronizeParams } from "../../manager/interfaces/entities.interface";
 import { AccountEntity } from "../../authentication/entities/account.entity";
 import { map, mergeMap, retryWhen, catchError, filter, tap, delay } from "rxjs/operators";
 import { DeviceEntity } from "../../manager/entities/device.entity";
@@ -21,6 +21,7 @@ import { KafkaBase } from "../../kafka/services/kafka.base";
 import { v1 } from 'uuid';
 
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
+import { ACTION_TYPE, ELEMENT_TYPE } from "../../websocket/services/interfaces/ws.message.interfaces";
 
 @Injectable()
 export class DispatchService {
@@ -71,7 +72,34 @@ export class DispatchService {
                     .subscribe();
                 break;
             case "aggregator_logsync":
-                this.loggerService.logSynchronize(String(message.value));
+                const kafkaMessage: ISynchronizeParams = JSON.parse(String(message.value));
+                switch (kafkaMessage.entity) {
+                    case 'NETWORK':
+                        console.log('test graph data received', kafkaMessage.data);
+                        // , ELEMENT_TYPE.GROUPVIEW, groupView, request
+                        switch (kafkaMessage.action) {
+                            case ACTION_TYPE.ADD:
+
+                                break;
+                            case ACTION_TYPE.UPDATE:
+                                kafkaMessage.data.NetworkId = 'xxxxx';
+                                WebSocketService.syncClients(kafkaMessage.action, ELEMENT_TYPE.NETWORK, kafkaMessage.data, undefined);
+                                break;
+                            case ACTION_TYPE.DELETE:
+
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        break;
+
+                    default:
+                        break;
+                }
+
+                //this.loggerService.logSynchronize(String(message.value));
                 break;
             default:
                 break;

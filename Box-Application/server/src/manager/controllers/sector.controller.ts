@@ -1,12 +1,5 @@
-import { Controller, Get, Query, Res, ValidationPipe, Param, UsePipes, ParseIntPipe, Delete, Put, Body, Post, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
-import { ModuleService } from '../services/module.service';
-import { FileInterceptor } from '@nestjs/platform-express';
-import * as pump from "pump";
-import * as fs from "fs";
-import { SchemeQueryDto } from '../dto/scheme.query.dto';
+import { Controller, Get, Query, ValidationPipe, Param, UsePipes, Delete, Put, Body, Post, Request } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { SchemeService } from '../services/scheme.service';
-import { SchemeDto } from '../dto/scheme.dto';
 import { SectorService } from '../services/sector.service';
 import { SectorDto } from '../dto/sector.dto';
 import { SectorQueryDto } from '../dto/sector.query.dto';
@@ -36,8 +29,8 @@ export class SectorController {
 
     @UsePipes(ValidationPipe)
     @Put()
-    public update(@Body() sectorDto: SectorDto): Observable<any> {
-        return this.sectorService.update(sectorDto);
+    public update(@Request() req, @Body() sectorDto: SectorDto): Observable<any> {
+        return this.sectorService.update(sectorDto, req);
     }
 
     @UsePipes(new ValidationPipe())

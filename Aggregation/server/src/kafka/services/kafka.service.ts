@@ -18,7 +18,7 @@ import { MapperService } from '../../common/mapper.service';
 export class KafkaService extends KafkaBase {
     public static instance: KafkaService;
 
-    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ackFrom = 'aggregator_ack', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
+    public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ackFrom = 'aggregator_ack', timeOut = 60000): Observable<ISendResponse | [Message, boolean]> {
         const messageId = JSON.parse(payloads[0].messages).messageId;
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
         let obs: Observable<ISendResponse | [Message, boolean]> = of(true)
@@ -127,5 +127,14 @@ export class KafkaService extends KafkaBase {
             messages: JSON.stringify({ messageId: v1(), entity: entityName, action: action, data: dataToSync }), key: `box_dbsync.${mapper.getDeviceId(entityName, id)}`
         }];
         return this.sendMessage(payloads, true).pipe(map(() => true));
+    }
+
+    public sendBoxAction(dataToSync: any, action: string, deviceId: string): Observable<any> {
+        const mapper = new MapperService();
+        const payloads = [{
+            topic: 'box_action',
+            messages: JSON.stringify({ messageId: v1(), action: action, data: dataToSync }), key: `box_action.${deviceId}`
+        }];
+        return this.sendMessage(payloads, true).pipe(map((response: any) => response));
     }
 }

@@ -2,6 +2,7 @@ import { Observable } from "rxjs";
 
 export interface ISynchronize<T> {
     synchronize(data: ISynchronizeParams): Observable<T>;
+    getDeviceId(id: string): Observable<string>;
 }
 
 export interface ISynchronizeParams {
@@ -16,9 +17,9 @@ export interface IPartitionTopic {
 }
 
 export interface IPartitionConfig {
-    configId: string;
-    startRange: number;
-    endRange: number;
+    config_id: string;
+    start_range: number;
+    end_range: number;
 }
 
 export interface ITopic {
@@ -28,7 +29,7 @@ export interface ITopic {
 }
 
 export interface IUser {
-    userId: string;
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -39,7 +40,7 @@ export interface IUser {
 }
 
 export interface IAccount {
-    accountId: string;
+    account_id: string;
     name: string;
     description?: string;
     users: Array<IUser>;
@@ -47,7 +48,7 @@ export interface IAccount {
 }
 
 export interface IDevice {
-    deviceId: string;
+    device_id: string;
     name: string;
     description?: string;
     account: IAccount;
@@ -55,18 +56,25 @@ export interface IDevice {
 }
 
 export interface IProvider {
-    providerId: string;
+    provider_id: string;
     user?: IUser;
     provider: string;
-    providerUid: string;
+    provider_uid: string;
+}
+
+export interface ITransceiverConfig {
+    config_id: string;
+    configuration: Object; // CREATE An object for configuration
+    status: string;
 }
 
 export interface ITransceiver {
-    transceiverId: string;
+    transceiver_id: string;
     name: string;
     description: string | null;
     address: string;
     type: string;
-    configuration: string;
+    config?: ITransceiverConfig | null;
+    coordinator?: ITransceiver | null;
     device: IDevice | null;
 }

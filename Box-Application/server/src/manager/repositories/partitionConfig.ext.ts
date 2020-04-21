@@ -11,4 +11,8 @@ export class PartitionConfigExt extends Repository<PartitionConfigEntity> implem
         return of(new PartitionConfigEntity());
     }
 
+    public getDeviceId(id: string): Observable<string> {
+        return of('server_1');
+    }
+
 }

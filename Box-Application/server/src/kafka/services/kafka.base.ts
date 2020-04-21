@@ -237,7 +237,7 @@ export class KafkaBase {
 
         return result.pipe(map((results: any) => {
             if (results && results[1] && results[1][1]) {
-                this.createConsumers(results[1][1]);
+                this.createConsumers(results[1][1]); // todo check error
                 return true;
             }
             throwError('      => initialization failed!');

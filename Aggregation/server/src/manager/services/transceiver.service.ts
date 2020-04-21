@@ -26,8 +26,9 @@ export class TransceiverService {
         return this.transceiverRepository.getAll(transceiverQueryDto);
     }
 
-    public scanAll(): Observable<any> {
-        return of(true);
+    public scanAll(deviceId: string): Observable<any> {
+        const data = {};
+        return this.kafkaService.sendBoxAction(data, 'SCAN', deviceId);
     }
 
     public generateModules(): Observable<any> {

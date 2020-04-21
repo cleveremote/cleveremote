@@ -1,0 +1,11 @@
+export enum TRANSCIEVER_TYPE {
+    COORDINATOR = 0,
+    ROUTER = 1,
+    ENDDEVICE = 2
+}
+
+export enum TRANSCIEVER_STATUS {
+    ACTIF = 'ACTIF',
+    INACTIF = 'INACTIF',
+    SLEEPY = 'SLEEPY'
+}

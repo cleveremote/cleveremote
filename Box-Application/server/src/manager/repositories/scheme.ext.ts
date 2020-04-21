@@ -17,10 +17,14 @@ export class SchemeExt extends Repository<SchemeEntity> implements ISynchronize<
             case 'UPDATE':
                 return this.updateScheme(classToClass<SchemeDto>(params.data));
             case 'DELETE':
-                return this.deleteScheme(params.data.id);
+                return this.deleteScheme(params.data);
             default:
                 break;
         }
+    }
+
+    public getDeviceId(id: string): Observable<string> {
+        return of('server_1');
     }
 
     public updateScheme(data: SchemeDto): Observable<SchemeEntity> {
@@ -52,7 +56,7 @@ export class SchemeExt extends Repository<SchemeEntity> implements ISynchronize<
     }
 
     public deleteScheme(schemeId: string): Observable<boolean> {
-        return from(this.delete({ schemeId: schemeId })).pipe(
+        return from(this.delete({ id: schemeId })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -94,7 +98,7 @@ export class SchemeExt extends Repository<SchemeEntity> implements ISynchronize<
     }
 
     public getScheme(id?: string): Observable<SchemeEntity> {
-        return from(this.findOne({ where: { schemeId: id }, relations: ['sectors'] })).pipe(
+        return from(this.findOne({ where: { id: id }, relations: ['sectors'] })).pipe(
             map((scheme: SchemeEntity) => {
 
                 if (!scheme) {
