@@ -4,13 +4,14 @@ import { mergeMap, filter, tap, map, catchError } from "rxjs/operators";
 import { KafkaService } from "../../kafka/services/kafka.service";
 import { MapperService } from "../../manager/services/mapper.service";
 import { LoggerService } from "../../manager/services/logger.service";
-import { Tools } from "../../common/tools-service";
+import { Tools, liveRefresh } from "../../common/tools-service";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
 import { IPartitionConfig } from "../../kafka/interfaces/partition.config.interface";
 import { v1 } from 'uuid';
 
 import * as _colors from 'colors';
 import { XbeeService } from "../../xbee/services/xbee.service";
+import { ACTION_TYPE } from "../../websocket/services/interfaces/ws.message.interfaces";
 
 @Injectable()
 export class DispatchService {
@@ -64,12 +65,17 @@ export class DispatchService {
                 switch (data.action) {
                     case 'SCAN':
                         this.xbeeService.getNetworkGraph().pipe(mergeMap((result) =>
-                            this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true , graphData:result })
+                            this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true, graphData: result })
                                 .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))
                         )).subscribe();
                         break;
                     case 'SWITCH':
 
+                        break;
+                    case 'CONNECTIVITY':
+                        liveRefresh.active = data.liveRefresh;
+                        this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
+                            .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
                         break;
                     default:
                         break;

@@ -376,9 +376,9 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
       nodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
 
-     // if (this.status === STATUS.LOAD) {
-        this.findScale();
-     // }
+      // if (this.status === STATUS.LOAD) {
+      this.findScale();
+      // }
 
       this.calculatePointText(nodes._groups[0]);
 
@@ -388,9 +388,9 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
       edgeLabels.selectAll('textPath').text(function (d: any) {
         if (d.target.x <= d.source.x) {
-          return d.lqi && d.lqibis ? d.lqi + '\u{1F878}' + '\u{1F87A}' + d.lqibis + 'bis' : (d.lqi ? d.lqi + '\u{1F878}' : '');
+          return d.lqi && d.lqibis ? d.lqi + '\uf060' + '\uf061' + d.lqibis + 'bis' : (d.lqi ? d.lqi + '\uf060' : '');
         }
-        return d.lqi && d.lqibis ? d.lqibis + '\u{1F878}' + '\u{1F87A}' + d.lqi + 'bis' : (d.lqi ? d.lqi + '\u{1F87A}' : '');
+        return d.lqi && d.lqibis ? d.lqibis + '\uf060' + '\uf061' + d.lqi + 'bis' : (d.lqi ? d.lqi + '\uf061' : '');
       });
 
       const offsetG = this.pcontainer.nativeElement.offsetWidth;
@@ -421,7 +421,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
   public createLinks(dataset, merge: boolean = false): any {
     let links = this.svg.selectAll('.links')
-      .data(dataset, function (d) { return d.source.id + '-' + d.target.id ; }); //+ '-' + d.status + '-' + d.lqi + '-' + d.lqibis
+      .data(dataset, function (d) { return d.source.id + '-' + d.target.id; }); //+ '-' + d.status + '-' + d.lqi + '-' + d.lqibis
     links.exit().remove();
     const enter = links.enter().append('line')
       .attr('class', 'links')
@@ -478,8 +478,9 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       .style('text-anchor', 'middle')
       .style('pointer-events', 'auto')
       .attr('startOffset', '50%')
+      .attr("class", "fa")
       .text(d => {
-        return d.lqi && d.lqibis ? d.lqi + '\u{1F878}' + '\u{1F87A}' + d.lqibis + 'bis' : (d.lqi ? d.lqi + '\u{1F878}' : '');
+        return d.lqi && d.lqibis ? d.lqi + '\uf060' + '\uf061' + d.lqibis + 'bis' : (d.lqi ? d.lqi + '\uf060' : '');
       });
 
     enter.on('click', (d: any) => {
@@ -760,7 +761,8 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       .attr('x', -8)
       .attr('y', 0)
       .attr('fill', d => '#86d698')
-      .text('(x)\u{1F87A}');
+      .attr("class", "fa")
+      .text('(x)\uf060');
 
     direction.append('text')
       .attr('x', 26)

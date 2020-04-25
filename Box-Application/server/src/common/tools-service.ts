@@ -4,6 +4,10 @@ import { map } from "rxjs/operators";
 import * as cliProgress from 'cli-progress';
 import * as _colors from 'colors';
 
+
+
+
+export const liveRefresh = { active: false };
 export class Tools {
     public static serialNumber: string;
     public static debug = true;

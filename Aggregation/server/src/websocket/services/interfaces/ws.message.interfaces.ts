@@ -10,7 +10,9 @@ export enum ELEMENT_TYPE {
 export enum ACTION_TYPE {
     ADD = 'ADD',
     UPDATE = 'UPDATE',
-    DELETE = 'DELETE'
+    DELETE = 'DELETE',
+    CONNECTIVITY = 'CONNECTIVITY',
+    LIVEREFRESH = 'LIVEREFRESH'
 }
 
 export interface IWSMessage {

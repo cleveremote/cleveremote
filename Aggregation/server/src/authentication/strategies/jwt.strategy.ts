@@ -15,6 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   public async validate(payload: any): Promise<any> {
     const user = payload.data;
-    return { id: user.id, accountId: user.accountId, email: user.email, sessionId: user.sessionId ? user.sessionId : v1() };
+    return { id: user.id, accountId: user.accountId, email: user.email, devices: user.devices ? user.devices : user.account.devices.map(x => ({ id: x.id, status: false })), sessionId: user.sessionId ? user.sessionId : v1() };
   }
 }

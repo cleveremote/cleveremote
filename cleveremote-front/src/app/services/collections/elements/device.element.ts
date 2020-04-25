@@ -10,4 +10,5 @@ export class DeviceElement extends BaseElement {
     public groupViews: Array<GroupViewElement>;
     public schemes: Array<SchemeElement>;
     public transceivers: Array<TransceiverElement>;
+    public status: string;
 }

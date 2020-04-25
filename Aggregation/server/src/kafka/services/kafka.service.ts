@@ -17,6 +17,10 @@ import { MapperService } from '../../common/mapper.service';
 
 export class KafkaService extends KafkaBase {
     public static instance: KafkaService;
+    constructor() {
+        super();
+        KafkaService.instance = this;
+    }
 
     public sendMessage(payloads: Array<ProduceRequest>, checkResponse = false, ackFrom = 'aggregator_ack', timeOut = 60000): Observable<ISendResponse | [Message, boolean]> {
         const messageId = JSON.parse(payloads[0].messages).messageId;
@@ -32,7 +36,7 @@ export class KafkaService extends KafkaBase {
         if (checkResponse) {
             obs = obs.pipe(mergeMap((data: ISendResponse) => this.checkReponseMessage(messageId, checkResponse, ackFrom, timeOut)));
         }
-        return obs;
+        return obs.pipe(catchError(e => { throw { error: payloads }; }));
     }
 
     public waitResponseAck(messageId: string, topicName: string, timeOut: number): Observable<Message> {
@@ -86,7 +90,7 @@ export class KafkaService extends KafkaBase {
     public startListenConsumer(consumer: ConsumerCustom, messageId: string, timeOut = 15000): Observable<Message> {
         return consumer.eventData
             .pipe(filter((message: Message) => JSON.parse(String(message.value)).messageId === messageId))
-            .pipe(take(1)).pipe(timeout(timeOut));;
+            .pipe(take(1)).pipe(timeout(timeOut));
     }
 
 

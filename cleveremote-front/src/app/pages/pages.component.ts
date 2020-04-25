@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 
 import { MENU_ITEMS } from './pages-menu';
 import { NbMenuService, NbIconLibraries, NbIconConfig, NbMenuItem } from '@nebular/theme';
@@ -17,9 +17,10 @@ import { mergeMap } from 'rxjs/operators';
     </ngx-one-column-layout>
   `,
 })
-export class PagesComponent {
+export class PagesComponent implements OnDestroy, OnInit {
   public devicesElement: NbMenuItem[];
-  menu = MENU_ITEMS;
+  public menu = MENU_ITEMS;
+  public subscriptions: Array<any> = [];
 
   constructor(private deviceService: NbMenuService,
     private iconLibraries: NbIconLibraries,
@@ -27,8 +28,31 @@ export class PagesComponent {
     private activetedRouter: ActivatedRoute,
     private router: Router) {
     this.iconLibraries.registerFontPack('font-awesome', { iconClassPrefix: 'fa', packClass: 'fa' });
+    this.listenStatuschange();
   }
 
+
+  ngOnDestroy(): void {
+    this.unsubscribeAll();
+  }
+
+  public unsubscribeAll() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
+    this.subscriptions = [];
+  }
+
+  public listenStatuschange() {
+    const subscription = this.coreDataService.deviceCollection.onConnectivityChanges.subscribe((devices: any) => {
+      devices.forEach(element => {
+        const index = this.devicesElement.findIndex(_ => _.data.id === element.id);
+        this.setStatus(index, element.status, this.devicesElement[index].data.status);
+      });
+
+    });
+    this.subscriptions.push(subscription);
+  }
 
   ngOnInit() {
 
@@ -78,7 +102,6 @@ export class PagesComponent {
       (deviceIcon as any).style.color = '#8f9bb3';
       (element.firstElementChild as any).style.color = '#8f9bb3';
     }
-    //elements[0].firstElementChild.children[1].innerHTML = elements[0].firstElementChild.children[1].innerHTML + `<nb-icon class="menu-icon fa fa-power-off" style="color: green; font-size='18px'"></nb-icon>`//`<nb-icon class="menu-icon fa-spin fa fa-cog" style="color: rgb(51, 102, 255); font-size='18px'"></nb-icon>`;
 
 
     const deviceElement = document.querySelectorAll(".menu-items")[1].children[index];
@@ -87,7 +110,7 @@ export class PagesComponent {
     (deviceIcon as any).style.color = '#3366ff'; //#192038
     (deviceElement.firstElementChild as any).style.color = '#3366ff'; //#192038
     const elementIcon = this.devicesElement[index];
-    // deviceIcon.classList.add('fa-spin'); for spinning
+    //deviceIcon.classList.add('fa-spin'); //for spinning
     elementIcon.icon = { icon: 'check-square', pack: 'font-awesome' }; //sync-alt
     this.devicesElement.forEach(device => {
       if (device.title !== elementIcon.title) { //replace by id
@@ -96,7 +119,7 @@ export class PagesComponent {
     });
     this.coreDataService.currentDevice = this.coreDataService.deviceCollection.elements.find((res) => res.id === this.devicesElement[index].data.id);
 
-    
+
 
     // const currentUrl = this.router.url;
     // this.activetedRouter.snapshot;
@@ -110,6 +133,24 @@ export class PagesComponent {
     // // }))
     // // from(this.router.navigateByUrl('/pages/Scheme')).subscribe();
     // //location.reload()
+  }
+
+  setStatus(index: number, status: string, previousStatus: string) {
+    const elements = document.querySelectorAll(".menu-items")[1].children;
+    const deviceElement = document.querySelectorAll(".menu-items")[1].children[index];
+
+    const innerHtmllocation = deviceElement.firstElementChild.children[1];
+    const inactiveInner = `<nb-icon class="menu-icon fa fa-power-off" style="color: rgb(143, 155, 179); font-size:18px; float:right;"></nb-icon>`;
+    //const activeInner = `<nb-icon class="menu-icon fa-spin fa fa-cog" style="color: rgb(51, 102, 255); font-size:18px; margin-left: 1.5rem;"></nb-icon>`;
+    const activeInner = `<nb-icon class="menu-icon fa fa-power-off" style="color: #00a223; font-size:18px; float:right;"></nb-icon>`;
+
+    innerHtmllocation.innerHTML = innerHtmllocation.innerHTML.replace(inactiveInner, '');
+    innerHtmllocation.innerHTML = innerHtmllocation.innerHTML.replace(activeInner, '');
+    if (status === 'INACTIF') {
+      innerHtmllocation.innerHTML = innerHtmllocation.innerHTML + inactiveInner;
+    } else {
+      innerHtmllocation.innerHTML = innerHtmllocation.innerHTML + activeInner;
+    }
   }
 
   public testClick(param: any) {

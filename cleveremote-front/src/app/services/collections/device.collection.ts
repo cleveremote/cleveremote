@@ -18,6 +18,7 @@ export class DeviceCollection extends BaseCollection<DeviceElement> {
     public parentsToSync = [];
     public elements: Array<DeviceElement> = [];
     public type = 'Device';
+    public onConnectivityChanges = new Subject<any>();
 
     constructor(
         private groupViewCollection: GroupViewCollection,

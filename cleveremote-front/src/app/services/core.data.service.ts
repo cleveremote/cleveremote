@@ -23,6 +23,7 @@ import { UserCollection } from './collections/user.collection';
 import { AccountCollection } from './collections/account.collection';
 import { ValueCollection } from './collections/value.collection';
 import { NetworkCollection } from './collections/network.collection';
+import { TimerService } from './timer.service';
 
 export class Message {
     constructor(
@@ -47,6 +48,8 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
     private _currentDevice: DeviceElement;
     private _currtentAccount: any;
 
+    public obsMessage = null;
+
     constructor(private sanitizer: DomSanitizer,
         private ressourceService: RessourcesService,
         private dataService: DataService,
@@ -59,7 +62,8 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         public userCollection: UserCollection,
         public accountCollection: AccountCollection,
         public valueCollection: ValueCollection,
-        public networkCollection: NetworkCollection
+        public networkCollection: NetworkCollection,
+        public timerService: TimerService
     ) {
         this.collectionStore.push(this.moduleCollection);
         this.collectionStore.push(this.groupViewCollection);
@@ -73,6 +77,42 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         this.collectionStore.push(this.networkCollection);
 
         this.subscriptions.push(this.dataService.observable.subscribe((message: any) => this.proccessWSMessage(message)));
+        this.listenMinimizeMaximize();
+
+        window.onbeforeunload = () => {
+
+            var e = e || window.event;
+
+
+
+            //IE & Firefox
+            if (e) {
+                e.returnValue = 'Are you sure?';
+            }
+            this.setClientVisibilityInfo(false);
+            setTimeout(() => {
+                dataService.stopWebSocket();
+                this.obsMessage.unsubscribe();
+                this.obsMessage = undefined;
+            }, 2000);
+
+            // For Safari
+            return 'Are you sure?';
+
+
+        };
+
+        this.obsMessage = this.timerService.chatMessageAdded.subscribe((data) => {
+            if (data === 'disconnect') {
+                this.setClientVisibilityInfo(false);
+                setTimeout(() => {
+                    dataService.stopWebSocket();
+                    this.obsMessage.unsubscribe();
+                    this.obsMessage = undefined;
+                }, 2000);
+
+            }
+        });
     }
 
     get currentDevice(): DeviceElement {
@@ -147,8 +187,55 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
     public proccessWSMessage(message) {
         try {
             const wsMessage = JSON.parse(message.content);
-            this.deepFindAndSync(wsMessage);
+            switch (wsMessage.typeAction) {
+                case 'CONNECTIVITY':
+                    this.setConnectivities(wsMessage.data);
+                    break;
+                case 'CONNECTION':
+                    if (document.hidden) {
+                        this.setClientVisibilityInfo(false);
+                    } else {
+                        this.setClientVisibilityInfo(true);
+                    }
+                    break;
+                default:
+                    this.deepFindAndSync(wsMessage);
+                    break;
+            }
+
         } catch (e) { }
     }
+
+    public setConnectivities(devicesInfo) {
+        const changes: Array<DeviceElement> = [];
+        devicesInfo.forEach(deviceInfo => {
+            const device = this.deviceCollection.elements.find(element => element.id === deviceInfo.id);
+            if (device) {
+                device.status = deviceInfo.status ? 'ACTIF' : 'INACTIF';
+                changes.push(device);
+            }
+        });
+        this.deviceCollection.onConnectivityChanges.next(changes);
+    }
+
+    private listenMinimizeMaximize() {
+        document.hidden ? this.setClientVisibilityInfo(false) : this.setClientVisibilityInfo(true);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.setClientVisibilityInfo(false);
+            } else {
+                this.setClientVisibilityInfo(true);
+            }
+        }
+        );
+    }
+
+    public setClientVisibilityInfo(visible: boolean) {
+        if (this.dataService && this.dataService.socket) {
+            const message = { type: 'VISIBILITY', visible: visible };
+            this.dataService.socket.next(message);
+        }
+    }
+
 
 }

@@ -54,6 +54,9 @@ export class AuthenticationController {
     @UseGuards(AuthGuard('googleLinkAccount'))
     public googleLoginCallbackLink(@Req() req: any, @Res() res: any): void {
         let responseHTML = '<html><head><title>Main</title></head><body></body><script>res = %value%; window.opener.postMessage(res, "*");window.close();</script></html>';
+
+        req.user.data.devices = req.user.data.account.devices.map(x => ({ id: x.id, status: false }));
+        delete req.user.data.account;
         responseHTML = responseHTML.replace('%value%', JSON.stringify({
             user: req.user
         }));
@@ -65,6 +68,5 @@ export class AuthenticationController {
     public protectedResource(): string {
         return 'JWT is working!';
     }
-
 
 }

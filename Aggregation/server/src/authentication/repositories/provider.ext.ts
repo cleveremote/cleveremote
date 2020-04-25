@@ -92,7 +92,7 @@ export class ProviderExt extends Repository<ProviderEntity> implements ISynchron
     }
 
     public getProvider(id?: string): Observable<ProviderEntity> {
-        return from(this.findOne({ where: { providerId: id }, relations: ['user'] })).pipe(
+        return from(this.findOne({ where: { providerId: id }, relations: ['user', 'user.account', 'user.account.devices'] })).pipe(
             map((account: ProviderEntity) => {
 
                 if (!account) {

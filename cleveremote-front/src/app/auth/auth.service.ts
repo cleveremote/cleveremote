@@ -17,6 +17,7 @@ export class AuthService implements OnDestroy {
   private userId: string;
   private accountId: string;
   private sessionId: string;
+  private devices: Array<any>;
 
   public event: any;
   public modalReference = null;
@@ -53,6 +54,10 @@ export class AuthService implements OnDestroy {
     return this.accountId;
   }
 
+  geDevices() {
+    return this.devices;
+  }
+
   getIsAuth() {
     return this.isAuthenticated;
   }
@@ -75,11 +80,12 @@ export class AuthService implements OnDestroy {
         this.userId = response.user.id;
         this.sessionId = response.user.sessionId;
         this.accountId = response.user.accountId;
+        this.devices = response.data.devices;
         this.authStatusListener.next(true);
         const now = new Date();
         const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
         console.log(expirationDate);
-        this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.sessionId);
+        this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.devices, this.sessionId);
         this.router.navigate(["/pages/Scheme"]);
       }
     });
@@ -96,11 +102,12 @@ export class AuthService implements OnDestroy {
         this.userId = response.user.id;
         this.sessionId = response.user.sessionId;
         this.accountId = response.user.accountId;
+        this.devices = response.user.devices;
         this.authStatusListener.next(true);
         const now = new Date();
         const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
         console.log(expirationDate);
-        this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.sessionId);
+        this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.devices, this.sessionId);
       }
     }));
   }
@@ -131,11 +138,12 @@ export class AuthService implements OnDestroy {
       this.userId = response.data.id;
       this.sessionId = response.data.sessionId;
       this.accountId = response.data.accountId;
+      this.devices = response.data.devices;
       this.authStatusListener.next(true);
       const now = new Date();
       const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
       console.log(expirationDate);
-      this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.sessionId);
+      this.saveAuthData(token, expirationDate, this.userId, this.accountId, this.devices, this.sessionId);
       this.router.navigate(["/"]);
     }
   }
@@ -158,6 +166,8 @@ export class AuthService implements OnDestroy {
       this.isAuthenticated = true;
       this.userId = authInformation.id;
       this.accountId = authInformation.accountId;
+
+      this.devices = authInformation.devices;
       this.sessionId = authInformation.sessionId;
       this.timerService.setAuthTimer(expiresIn / 1000);
       this.authStatusListener.next(true);
@@ -173,14 +183,17 @@ export class AuthService implements OnDestroy {
     this.userId = null;
     this.accountId = null;
     this.sessionId = null;
+    this.devices = null;
+    this.timerService.chatMessageAdded.next('disconnect');
   }
 
-  private saveAuthData(token: string, expirationDate: Date, userId: string, accountId: string, sessionId: string) {
+  private saveAuthData(token: string, expirationDate: Date, userId: string, accountId: string, devices: Array<any>, sessionId: string) {
     localStorage.setItem('token', token);
     localStorage.setItem('expiration', expirationDate.toISOString());
     localStorage.setItem('id', userId);
     localStorage.setItem('accountId', accountId);
     localStorage.setItem('sessionId', sessionId);
+    localStorage.setItem('devices', JSON.stringify(devices));
   }
 
   private clearAuthData() {
@@ -194,6 +207,7 @@ export class AuthService implements OnDestroy {
     const expirationDate = localStorage.getItem("expiration");
     const userId = localStorage.getItem("id");
     const accountId = localStorage.getItem("accountId");
+    const devices = JSON.parse(localStorage.getItem("devices"));
     const sessionId = localStorage.getItem("sessionId");
     if (!token || !expirationDate || !userId) {
       return;
@@ -203,7 +217,8 @@ export class AuthService implements OnDestroy {
       expirationDate: new Date(expirationDate),
       id: userId,
       accountId: accountId,
-      sessionId: sessionId
+      sessionId: sessionId,
+      devices: devices
     };
   }
 }

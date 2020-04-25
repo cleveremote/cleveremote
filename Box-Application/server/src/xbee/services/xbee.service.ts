@@ -7,7 +7,7 @@ import { TRANSCIEVER_TYPE, TRANSCIEVER_STATUS } from "../classes/device.class";
 import { IOCfg, TYPE_IOCFG } from "../classes/iocfg.class";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
 
-import { Tools } from "../../common/tools-service";
+import { Tools, liveRefresh } from "../../common/tools-service";
 import { genericRetryStrategy } from "../../common/generic-retry-strategy";
 import * as xbeeRx from 'xbee-rx'; // no types ... :(
 import * as SerialPort from 'serialport';
@@ -99,35 +99,38 @@ export class XbeeService {
 
                         }
                     }
-
-
                 });
             }
-
-
         });
         this.graphData = graphData;
         return this.graphData;
     }
 
     public notifyChanges(): void {
-        const previousGraphData = this.clone(this.graphData);
-        const currentGraphData = this.getGraphData();
-        const differences: any = detailedDiff(previousGraphData, currentGraphData);
-        if (Object.keys(differences.deleted).length > 0) {
-            console.log('graph deleted => ', differences.deleted);
+        if (liveRefresh.active) {
+            const previousGraphData = this.clone(this.graphData);
+            const currentGraphData = this.getGraphData();
+            const differences: any = detailedDiff(previousGraphData, currentGraphData);
+            if (Object.keys(differences.deleted).length > 0) {
+                console.log('graph deleted => ', differences.deleted);
+            }
+
+            if (Object.keys(differences.updated).length > 0) {
+                console.log('graph updated => ', differences.updated);
+                this.kafkaService.executeSync('aggregator_logsync', currentGraphData, 'UPDATE', 'NETWORK', 'server_1').subscribe(
+                    (result) => {
+                        const t = 1;
+                    },
+                    (err) => {
+                        liveRefresh.active = false;
+                        const t = 2;
+                    });
+            }
+
+            if (Object.keys(differences.added).length > 0) {
+                console.log('graph added => ', differences.added);
+            }
         }
-
-        if (Object.keys(differences.updated).length > 0) {
-            console.log('graph updated => ', differences.updated);
-            this.kafkaService.executeSync('aggregator_logsync', currentGraphData, 'UPDATE', 'NETWORK', 'server_1').subscribe();
-        }
-
-        if (Object.keys(differences.added).length > 0) {
-            console.log('graph added => ', differences.added);
-        }
-
-
     }
 
     public clone(data): any {
