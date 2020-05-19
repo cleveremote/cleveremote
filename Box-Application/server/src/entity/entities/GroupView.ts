@@ -28,12 +28,6 @@ export class GroupView {
   )
   assGroupViewModules: AssGroupViewModule[];
 
-  @OneToMany(
-    () => AssGroupViewModule,
-    assGroupViewModule => assGroupViewModule.group2
-  )
-  assGroupViewModules2: AssGroupViewModule[];
-
   @ManyToOne(
     () => Device,
     device => device.groupViews,
@@ -42,15 +36,16 @@ export class GroupView {
   @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
   device: Device;
 
+  @ManyToOne(
+    () => Sector,
+    sector => sector.groupViews
+  )
+  @JoinColumn([{ name: "sectorId", referencedColumnName: "id" }])
+  sector2: Sector;
+
   @OneToMany(
     () => Sector,
     sector => sector.group
   )
   sectors: Sector[];
-
-  @OneToMany(
-    () => Sector,
-    sector => sector.group2
-  )
-  sectors2: Sector[];
 }

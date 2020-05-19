@@ -43,8 +43,7 @@ export class MapperService {
         return t;
     }
 
-    public dataBaseSynchronize(message: string): Observable<any> {
-        const data: ISynchronizeParams = JSON.parse(message);
+    public dataBaseSynchronize(data: ISynchronizeParams): Observable<any> {
         const type = this.dynamicType(data.entity);
         const repository = getCustomRepository(type);
         return (repository as ISynchronize<typeof type>).synchronize(data);

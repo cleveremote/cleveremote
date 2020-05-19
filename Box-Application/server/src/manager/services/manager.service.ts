@@ -4,7 +4,7 @@ import { Observable, of } from "rxjs";
 import { PartitionConfigEntity } from "../entities/partitionconfig.entity";
 import { DeviceEntity } from "../entities/device.entity";
 import { map, tap, catchError } from "rxjs/operators";
-import { Tools } from "../../common/tools-service";
+import { Tools, boxInfo } from "../../common/tools-service";
 
 export class ManagerService {
     public deviceId: string;
@@ -16,6 +16,7 @@ export class ManagerService {
         return this.deviceRepository.getDevice()
             .pipe(map((currentDevice: DeviceEntity) => {
                 this.deviceId = currentDevice.id;
+                boxInfo.id = this.deviceId;
                 return currentDevice && currentDevice.partitionConfigs && currentDevice.partitionConfigs.length > 0 ? currentDevice.partitionConfigs[0] : undefined
             }))
             .pipe(tap(() => progressBar.increment()))

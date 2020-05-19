@@ -22,17 +22,17 @@ export class TransceiverController {
     //     return this.transceiverService.get(transceiverId);
     // }
 
-    @Delete('/:transceiverId')
+    @Delete()
     // @SetMetadata('roles', ['readwrite'])
     @UsePipes(ValidationPipe)
-    public deleteModule(@Param('transceiverId') transceiverId: string): Observable<boolean> {
-        return this.transceiverService.delete(transceiverId);
+    public deleteModule(@Body() transceiverIds: Array<string>, @Param('transceiverId') transceiverId: string): Observable<boolean> {
+        return this.transceiverService.delete(transceiverIds);
     }
 
     @UsePipes(ValidationPipe)
     @Put()
     public update(@Body() transceiverDto: TransceiverDto): Observable<any> {
-        return this.transceiverService.update(transceiverDto[0]);
+        return this.transceiverService.save(transceiverDto[0], false, false);
     }
 
     @UsePipes(new ValidationPipe())

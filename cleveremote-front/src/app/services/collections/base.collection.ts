@@ -20,6 +20,7 @@ export class BaseCollection<T> implements IUpdatable<T> {
         switch (action) {
             case ACTION_TYPE.ADD:
             case ACTION_TYPE.UPDATE:
+            case ACTION_TYPE.SAVE:
                 if (target instanceof Array) {
                     if (entities && entities.length > 0) {
                         target = collection.reload(entities);

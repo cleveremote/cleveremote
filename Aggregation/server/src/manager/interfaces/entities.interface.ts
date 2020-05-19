@@ -5,6 +5,10 @@ export interface ISynchronize<T> {
     getDeviceId(id: string): Observable<string>;
 }
 
+export interface ISynchronizer {
+    synchronize(data: ISynchronizeParams): Observable<boolean>;
+}
+
 export interface ISynchronizeParams {
     entity: string;
     data: any;

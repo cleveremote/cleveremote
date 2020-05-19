@@ -5,7 +5,7 @@ import { v1 } from 'uuid';
 import { DeviceExt } from "../../manager/repositories/device.ext";
 import { DeviceEntity } from '../../manager/entities/device.entity';
 import { Tools } from '../../common/tools-service';
-import { ITopic } from '../../manager/interfaces/entities.interface';
+import { ITopic } from '../../synchronizer/interfaces/entities.interface';
 import { CustomPartitionnerService } from './customPartitionner.service';
 import { ConsumerCustom } from '../classes/consumer.custom.class';
 import { IPartitionConfig } from '../interfaces/partition.config.interface';

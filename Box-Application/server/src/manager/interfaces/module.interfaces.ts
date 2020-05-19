@@ -7,6 +7,8 @@ export enum TYPE_IOCFG {
 }
 
 export enum TYPE_IO {
+    DISABLED,
+    NA,
     ANALOG_INPUT = 2,
     DIGITAL_INPUT,
     DIGITAL_OUTPUT_LOW,

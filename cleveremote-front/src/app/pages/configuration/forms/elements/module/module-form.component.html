@@ -1,0 +1,88 @@
+<form *ngIf="deviceForm" [formGroup]="deviceForm">
+  <div style="height: 63vh;">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Name</label>
+          <input formControlName="name" type="text" nbInput fullWidth placeholder="Name">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Status</label>
+          <input formControlName="status" type="text" nbInput fullWidth placeholder="Status" disabled>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Port N°</label>
+          <input formControlName="port" type="text" nbInput fullWidth placeholder="Port N°" disabled>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Type</label>
+          <input formControlName="type" type="text" nbInput fullWidth placeholder="Type" disabled>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label class="label">Description</label>
+          <textarea formControlName="description" nbInput fullWidth placeholder="Description"></textarea>
+        </div>
+      </div>
+    </div>
+    <hr class="hr-text" data-content="Display configuration">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Prefix</label>
+          <input type="text" formControlName="prefix" nbInput fullWidth placeholder="Prefix">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Suffix</label>
+          <input type="text" formControlName="suffix" nbInput fullWidth placeholder="Suffix">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Apply function</label>
+          <input type="text" formControlName="applyFunction" nbInput fullWidth placeholder="Apply function">
+        </div>
+      </div>
+    </div>
+    <hr class="hr-text" data-content="Sleep configuration">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Sleep Cycle Number</label>
+          <input type="number" formControlName="SN" nbInput fullWidth placeholder="Sleep Cycle Number" disabled>
+        </div>
+      </div>
+      <div class="col-md-1" style="justify-content: center;display: flex; ">
+        <nb-icon icon="times" [style.margin-top]="!isMobile?'2.5rem':'0rem'" style="color: #8f9bb3;" pack="fa">
+        </nb-icon>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label for="inputWebsite" class="label">Sleep Periode (SP) x 10 ms </label>
+          <input id="SP" type="number" formControlName="SP" nbInput fullWidth disabled>
+        </div>
+      </div>
+      <div class="col-md-1" style="justify-content: center;display: flex; ">
+        <nb-icon icon="equals" [style.margin-top]="!isMobile?'2.5rem':'0rem'" style="color: #8f9bb3;" pack="fa">
+        </nb-icon>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Extended Sleep Time (ms)</label>
+          <input type="text" formControlName="extended" nbInput fullWidth placeholder="Extended Sleep Time" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

@@ -24,6 +24,7 @@ import { AccountCollection } from './collections/account.collection';
 import { ValueCollection } from './collections/value.collection';
 import { NetworkCollection } from './collections/network.collection';
 import { TimerService } from './timer.service';
+import { NbComponentStatus, NbGlobalPosition, NbGlobalPhysicalPosition, NbToastrService } from '@nebular/theme';
 
 export class Message {
     constructor(
@@ -63,7 +64,8 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         public accountCollection: AccountCollection,
         public valueCollection: ValueCollection,
         public networkCollection: NetworkCollection,
-        public timerService: TimerService
+        public timerService: TimerService,
+        private toastrService: NbToastrService
     ) {
         this.collectionStore.push(this.moduleCollection);
         this.collectionStore.push(this.groupViewCollection);
@@ -157,12 +159,25 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         const entityType = wsMessage.target;
         const sourceData = wsMessage.data;
         const actionType = wsMessage.typeAction;
+        if (Array.isArray(sourceData[0])) {
+            sourceData[0].forEach(element => {
+                const parentsToSync = this.getParents(element);
+                parentsToSync.forEach(parentToSync => {
+                    const collectionInstance = this.getCollectionInstanceByType(parentToSync.name);
+                    collectionInstance.reload(sourceData, entityType, actionType);
+                });
+            });
+        } else {
+            const parentsToSync = this.getParents(sourceData[0]);
+            parentsToSync.forEach(parentToSync => {
+                const collectionInstance = this.getCollectionInstanceByType(parentToSync.name);
+                collectionInstance.reload(sourceData, entityType, actionType);
 
-        const parentsToSync = this.getParents(sourceData[0]);
-        parentsToSync.forEach(parentToSync => {
-            const collectionInstance = this.getCollectionInstanceByType(parentToSync.name);
-            collectionInstance.reload(sourceData, entityType, actionType);
-        });
+            });
+        }
+        if (wsMessage.target === 'Transceiver' && wsMessage.typeAction === 'SAVE') {
+            this.makeToast();
+        }
     }
 
     getParents(element) {
@@ -188,10 +203,10 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
         try {
             const wsMessage = JSON.parse(message.content);
             switch (wsMessage.typeAction) {
-                case 'CONNECTIVITY':
+                case 'Connectivity':
                     this.setConnectivities(wsMessage.data);
                     break;
-                case 'CONNECTION':
+                case 'InitWSClient':
                     if (document.hidden) {
                         this.setClientVisibilityInfo(false);
                     } else {
@@ -226,8 +241,7 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
             } else {
                 this.setClientVisibilityInfo(true);
             }
-        }
-        );
+        });
     }
 
     public setClientVisibilityInfo(visible: boolean) {
@@ -235,6 +249,36 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
             const message = { type: 'VISIBILITY', visible: visible };
             this.dataService.socket.next(message);
         }
+    }
+
+
+    makeToast() {
+        this.showToast('success', 'Transceiver', `updated successufully!`);
+    }
+
+    index = 1;
+    destroyByClick = true;
+    duration = 2000;
+    hasIcon = true;
+    position: NbGlobalPosition = NbGlobalPhysicalPosition.TOP_RIGHT;
+    preventDuplicates = false;
+
+    private showToast(type: NbComponentStatus, title: string, body: string) {
+        const config = {
+            status: type,
+            destroyByClick: this.destroyByClick,
+            duration: this.duration,
+            hasIcon: this.hasIcon,
+            position: this.position,
+            preventDuplicates: this.preventDuplicates,
+        };
+        const titleContent = title ? `${title}` : '';
+
+        this.index += 1;
+        this.toastrService.show(
+            body,
+            `${titleContent}`,
+            config);
     }
 
 

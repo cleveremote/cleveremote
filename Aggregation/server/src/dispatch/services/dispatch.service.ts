@@ -1,5 +1,5 @@
 import { Message, ConsumerGroup, ConsumerGroupStream } from "kafka-node";
-import { Observable, from, of, fromEvent, forkJoin } from "rxjs";
+import { Observable, from, of, fromEvent, forkJoin, iif } from "rxjs";
 import { getCustomRepository, getRepository } from "typeorm";
 import { AccountExt } from "../../authentication/repositories/account.ext";
 import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronizeParams } from "../../manager/interfaces/entities.interface";
@@ -15,26 +15,40 @@ import { MailService } from "../../common/mail-service";
 import { MapperService } from "../../common/mapper.service";
 import { LoggerService } from "../../common/logger.service";
 import { Tools } from "../../common/tools-service";
-import { WebSocketService } from "../../websocket/services/websocket.service";
+import { WebSocketService, ExtWebSocket, MessageWs, IWebSocketError, IWebSocketEvent } from "../../websocket/services/websocket.service";
 import { genericRetryStrategy } from "../../common/generic-retry-strategy";
 import { KafkaBase } from "../../kafka/services/kafka.base";
 import { v1 } from 'uuid';
 
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
-import { ACTION_TYPE, ELEMENT_TYPE } from "../../websocket/services/interfaces/ws.message.interfaces";
+import { SYNC_ACTION as WS_SYNC_ACTION, ELEMENT_TYPE } from "../../websocket/services/interfaces/ws.message.interfaces";
+import { IsArray } from "class-validator";
+import { SynchronizerService } from "../../synchronizer/services/synchronizer.service";
+
+import * as jwt from 'jsonwebtoken';
+import WebSocket = require("ws");
+import { SYNC_TYPE, SEND_TYPE, SYNC_ACTION } from "../../synchronizer/interfaces/entities.interface";
 
 @Injectable()
 export class DispatchService {
     private mapperService: MapperService;
     private loggerService: LoggerService;
+    private devices = [];
 
 
-    constructor(@Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService) {
+    constructor(
+        @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
+        @Inject(forwardRef(() => SynchronizerService)) private readonly synchronizerService: SynchronizerService
+    ) {
         this.mapperService = new MapperService();
         this.loggerService = new LoggerService();
     }
 
-    public init(): Observable<any> {
+    public init(devices: Array<any> | boolean): Observable<any> {
+        if (devices && Array.isArray(devices)) {
+            this.devices = devices;
+        }
+
         const consumerObs = [];
         this.kafkaService.consumers.forEach(consumer => {
             const obs = consumer.eventData
@@ -45,6 +59,41 @@ export class DispatchService {
         });
         Tools.logSuccess('  => OK.');
         forkJoin(consumerObs).subscribe();
+        this.initWebSocket(devices as Array<any>)
+        return of(true);
+    }
+
+    public initWebSocket(devices: Array<any>): Observable<boolean> {
+        this.synchronizerService.devices = devices;
+        Tools.loginfo('* start init websocket...');
+
+        of(true).pipe(
+            map(() => {
+                Tools.logSuccess('  => OK.');
+                const wss = WebSocketService.wss;
+                this.synchronizerService.startCheckConnectivity();
+                WebSocketService.wss.on('connection', (ws: WebSocket) => {
+                    const extWs = ws as ExtWebSocket;
+                    extWs.isAlive = true;
+                    jwt.verify(extWs.protocol, '123456789', (err, decoded) => {
+                        if (err) {
+                            console.log('error connection websocket');
+                        } else {
+                            (extWs as any).userInfo = decoded;
+                            const connection = { data: { message: 'Connected to the WebSocket server' }, typeAction: 'InitWSClient' };
+                            const message = JSON.stringify(new MessageWs(JSON.stringify(connection), false, undefined));
+                            ws.send(message);
+                        }
+                    });
+                    ws.on('pong', () => { extWs.isAlive = true; });
+                    ws.onmessage = (event: IWebSocketEvent) => {
+                        this.synchronizerService.localWS(event);
+                    };
+                    ws.onclose = (event: any) => { Tools.loginfo('Client quite') };
+                    ws.onerror = (e: IWebSocketError) => { Tools.logWarn(`Client disconnected - reason: ${e.error}`); };
+                });
+            })).subscribe();
+
         return of(true);
     }
 
@@ -59,6 +108,8 @@ export class DispatchService {
         });
     }
 
+
+
     public routeMessage(message: Message): void {
         const messageData = JSON.parse(String(message.value));
         switch (message.topic) {
@@ -66,26 +117,22 @@ export class DispatchService {
                 this.proccessSyncConnexion(message.value).subscribe();
                 break;
             case "aggregator_dbsync":
-                this.mapperService.dataBaseSynchronize(String(message.value))
-                    .pipe(mergeMap((boxId: string) => this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true }, messageData.sourceId)
-                        .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))))
-                    .subscribe();
+                this.synchronizerService.local(messageData);
                 break;
             case "aggregator_logsync":
                 const kafkaMessage: ISynchronizeParams = JSON.parse(String(message.value));
                 switch (kafkaMessage.entity) {
-                    case 'NETWORK':
-                        console.log('test graph data received', kafkaMessage.data);
-                        // , ELEMENT_TYPE.GROUPVIEW, groupView, request
+                    case 'Network':
                         switch (kafkaMessage.action) {
-                            case ACTION_TYPE.ADD:
-
-                                break;
-                            case ACTION_TYPE.UPDATE:
+                            case SYNC_ACTION.NOTIFY:
+                                const toto = false;
+                                if (toto) {
+                                    console.log('jes');
+                                }
                                 kafkaMessage.data.NetworkId = 'xxxxx';
                                 WebSocketService.syncClients(kafkaMessage.action, ELEMENT_TYPE.NETWORK, kafkaMessage.data, undefined);
                                 break;
-                            case ACTION_TYPE.DELETE:
+                            case SYNC_ACTION.DELETE:
 
                                 break;
 
@@ -98,8 +145,6 @@ export class DispatchService {
                     default:
                         break;
                 }
-
-                //this.loggerService.logSynchronize(String(message.value));
                 break;
             default:
                 break;

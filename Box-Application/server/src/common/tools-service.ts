@@ -7,7 +7,7 @@ import * as _colors from 'colors';
 
 
 
-export const liveRefresh = { active: false };
+export const boxInfo = { id: undefined, liveReload: false, isConnected: false };
 export class Tools {
     public static serialNumber: string;
     public static debug = true;
@@ -170,6 +170,30 @@ export class Tools {
         } else {
             progressBar.stop();
         }
+    }
+
+    public static groupBy(array, f) {
+        var groups = {};
+        array.forEach(function (o) {
+            var group = JSON.stringify(f(o));
+            groups[group] = groups[group] || [];
+            groups[group].push(o);
+        });
+        return Object.keys(groups).map(function (group) {
+            return groups[group];
+        });
+    }
+
+    public static onlyDistinctValue(list: Array<any>, attribute: string): Array<any> {
+        var resArr = [];
+        list.filter(function (item) {
+            var i = resArr.findIndex(x => x[attribute] === item[attribute]);
+            if (i <= -1) {
+                resArr.push(item);
+            }
+            return null;
+        });
+        return resArr;
     }
 
 }

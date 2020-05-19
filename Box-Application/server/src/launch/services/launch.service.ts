@@ -7,11 +7,13 @@ import { DispatchService } from "../../dispatch/services/dispatch.service";
 import { ManagerService } from "../../manager/services/manager.service";
 import { Tools } from "../../common/tools-service";
 import { IPartitionConfig } from "../../kafka/interfaces/partition.config.interface";
+import { SynchronizerService } from "../../synchronizer/services/synchronizer.service";
 
 @Injectable()
 export class LaunchService {
 
     constructor(
+        @Inject(forwardRef(() => SynchronizerService)) private readonly synchronizerService: SynchronizerService,
         @Inject(forwardRef(() => XbeeService)) private readonly xbeeService: XbeeService,
         @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
         @Inject(forwardRef(() => DispatchService)) private readonly dispatchService: DispatchService,
@@ -26,9 +28,10 @@ export class LaunchService {
             .pipe(mergeMap(() => Tools.getSerialNumber()))
             .pipe(mergeMap(() => this.kafkaService.initCommonKafka()))
             .pipe(mergeMap(() => this.initFirstConnexion()))
+            .pipe(mergeMap(() => this.synchronizerService.init()))
             .pipe(mergeMap((resKafka: boolean) => resKafka ? this.xbeeService.init() : of(false)))
             .pipe(mergeMap((resXbee: boolean) => resXbee ? this.dispatchService.init() : of(false)))
-            .pipe(tap(() => { Tools.debug = true; Tools.logSuccess('* Box ready for work!'); }))
+            .pipe(tap(() => { Tools.debug = false; Tools.logSuccess('* Box ready for work!'); }))
             .toPromise();
     }
 

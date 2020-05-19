@@ -1,13 +1,13 @@
 <nb-reveal-card [showToggleButton]="false" [revealed]="revealed">
     <nb-card-front>
         <nb-card>
-            <graph-network [revealed]="_revealed"> </graph-network>
+            <graph-network [revealed]="_revealed" [data]='_data' [formContainer]='formContainer'> </graph-network>
         </nb-card>
 
     </nb-card-front>
     <nb-card-back>
-        <nb-card>
-            <device-form [revealed]="_revealed"> </device-form>
+        <nb-card #containerFormCmp>
+            <!-- <device-form [revealed]="_revealed"> </device-form> -->
         </nb-card>
     </nb-card-back>
 </nb-reveal-card>

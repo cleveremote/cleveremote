@@ -1,4 +1,4 @@
-import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
+import { EntityRepository, Repository, DeleteResult, FindManyOptions, In } from "typeorm";
 import { TransceiverEntity } from "../entities/transceiver.entity";
 import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
 import { from, Observable, of } from "rxjs";
@@ -18,10 +18,8 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
 
     public synchronize(params: ISynchronizeParams): Observable<TransceiverEntity | boolean> {
         switch (params.action) {
-            case 'ADD':
-                return this.addTransceiver(classToClass<TransceiverDto>(params.data));
-            case 'UPDATE':
-                return this.updateTransceiver(classToClass<TransceiverDto>(params.data));
+            case 'SAVE':
+                return this.saveTransceiver(params.data).pipe(map((result) => true)); //classToClass<TransceiverDto>(params.data)
             case 'DELETE':
                 return this.deleteTransceiver(params.data);
             default:
@@ -33,9 +31,9 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
         return of('server_1');
     }
 
-    public updateTransceiver(data: any, sync = true): Observable<TransceiverEntity> {
+    public saveTransceiver(data: any, sync = true): Observable<TransceiverEntity | Array<TransceiverEntity>> {
         return from(this.save(data)).pipe(
-            map((transceiver: TransceiverEntity) => {
+            map((transceiver: any) => {
 
                 if (!transceiver) {
                     console.log('no account found');
@@ -62,7 +60,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
     }
 
     public deleteTransceiver(transceiverId: string): Observable<boolean> {
-        return from(this.delete({ id: transceiverId })).pipe(
+        return from(this.delete({ id: In([...transceiverId]) })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {

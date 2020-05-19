@@ -20,5 +20,6 @@ export enum TRANSCIEVER_TYPE {
 export enum TRANSCIEVER_STATUS {
     ACTIF = 'ACTIF',
     INACTIF = 'INACTIF',
-    SLEEPY = 'SLEEPY'
+    SLEEPY = 'SLEEPY',
+    PENDING = 'PENDING'
 }

@@ -29,8 +29,7 @@ import { ConfigurationModule } from './configuration/configuration.module';
   ],
   providers: [
     RessourcesService,
-    ConfigurationService,
-    CoreDataService
+    ConfigurationService
   ]
 })
 export class PagesModule {

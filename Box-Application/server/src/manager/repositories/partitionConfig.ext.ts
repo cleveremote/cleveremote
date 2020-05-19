@@ -1,6 +1,6 @@
 import { EntityRepository, Repository } from "typeorm";
 import { PartitionConfigEntity } from "../entities/partitionconfig.entity";
-import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 import { of, Observable } from "rxjs";
 
 @EntityRepository(PartitionConfigEntity)

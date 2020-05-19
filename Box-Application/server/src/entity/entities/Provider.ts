@@ -22,6 +22,9 @@ export class Provider {
   })
   providerUid: string;
 
+  @Column("date", { name: "updatedat", nullable: true })
+  updatedat: string | null;
+
   @ManyToOne(
     () => User,
     user => user.providers,

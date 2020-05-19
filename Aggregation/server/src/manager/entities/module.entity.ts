@@ -18,6 +18,18 @@ export class ModuleEntity {
   @Column("character varying", { name: "status", length: 255 })
   public status: string;
 
+  @Column("character varying", { name: "applyfunction", length: 255 })
+  public applyFunction: string;
+
+  @Column("character varying", { name: "suffix", length: 255 })
+  public suffix: string;
+
+  @Column("character varying", { name: "prefix", length: 255 })
+  public prefix: string;
+
+  @Column("character varying", { name: "description", length: 255 })
+  public description: string;
+
   @Column("character varying", { name: "name", length: 255 })
   public name: string;
 

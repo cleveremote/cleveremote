@@ -29,8 +29,8 @@ export class TransceiverEntity {
   @Column("character varying", { name: "address", length: 255 })
   public address: string;
 
-  @Column("character varying", { name: "type", length: 255 })
-  public type: string;
+  @Column("integer", { name: "type", nullable: false })
+  public type: number;
 
   @Column("character varying", { name: "deviceId", length: 255 })
   public deviceId: string;
@@ -40,6 +40,19 @@ export class TransceiverEntity {
 
   @Column("json", { name: "configuration" })
   public configuration: object;
+
+  @ManyToOne(
+    () => TransceiverEntity,
+    transceiver => transceiver.transceivers, { onDelete: 'CASCADE', cascade: true }
+  )
+  @JoinColumn([{ name: "pending", referencedColumnName: "id" }])
+  public pending: TransceiverEntity;
+
+  @OneToMany(
+    () => TransceiverEntity,
+    transceiver => transceiver.pending
+  )
+  public transceivers: Array<TransceiverEntity>;
 
   @OneToMany(
     () => ModuleEntity,

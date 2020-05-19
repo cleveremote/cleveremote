@@ -3,7 +3,7 @@ import { UserEntity } from "../entities/user.entity";
 import { Observable, from, of } from "rxjs";
 import { AccountEntity } from "../entities/account.entity";
 import { map, mergeMap } from "rxjs/operators";
-import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeParams } from "../../manager/interfaces/entities.interface";
+import { IAccount, IDevice, IPartitionConfig, IUser, ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 import { DeviceEntity } from "../../manager/entities/device.entity";
 import { UserExt } from "./user.ext";
 import { PartitionConfigEntity } from "../../manager/entities/partitionconfig.entity";

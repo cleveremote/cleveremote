@@ -2,11 +2,11 @@
   {
     "name": "default",
     "type": "postgres",
-    "host": "82.125.211.136",
+    "host": "192.168.1.30",
     "port": 5432,
     "username": "test",
     "password": "1234",
-    "database": "testMig",
+    "database": "boxTest",
     "schema": "public",
     "synchronize": false,
     "entities": ["entities/*.js"]

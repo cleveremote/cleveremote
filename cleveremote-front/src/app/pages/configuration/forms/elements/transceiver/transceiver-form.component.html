@@ -1,0 +1,170 @@
+<form *ngIf="deviceForm && loaded" [formGroup]="deviceForm">
+  <div style="height: 63vh;">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Name</label>
+          <input formControlName="name" maxlength="25" type="text" nbInput fullWidth placeholder="Name">
+        </div>
+        <div
+          *ngIf="deviceForm.controls['name'].invalid && (deviceForm.controls['name'].dirty || deviceForm.controls['name'].touched)"
+          style="margin-top: -5px; justify-content: center;display: flex; ">
+          <label class="label" *ngIf="deviceForm.controls['name'].errors.required" style="color:red;">* field is
+            required</label>
+          <label *ngIf="deviceForm.controls['name'].errors.minlength" style="color:red;">* field must be at least 3
+            characters</label>
+          <label *ngIf="deviceForm.controls['name'].errors.maxlength" style="color:red;">* field must be at least 25
+            characters</label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-group">
+          <label for="inputWebsite" class="label">Type</label>
+          <nb-select formControlName="type" fullWidth (selectedChange)='transceiverTypeChange($event)'
+            [disabled]="isCoordinator">
+            <nb-option *ngFor="let lst of typeLst" [value]="lst.value">{{ lst.label }}</nb-option>
+          </nb-select>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Address</label>
+          <input formControlName="address" type="text" nbInput fullWidth placeholder="Address" disabled>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label class="label">Description</label>
+          <textarea maxlength="255" formControlName="description" nbInput fullWidth placeholder="Description"
+            style='height: 50px;'></textarea>
+        </div>
+        <div
+          *ngIf="deviceForm.controls['description'].invalid && (deviceForm.controls['description'].dirty || deviceForm.controls['description'].touched)"
+          style="margin-top: -5px; justify-content: center;display: flex; ">
+          <label *ngIf="deviceForm.controls['description'].errors.maxlength" style="color:red;">* field must be at least
+            255 characters</label>
+        </div>
+      </div>
+    </div>
+    <hr class="hr-text" [style.margin-top]="!isMobile?'-5px':'0'" data-content="IO configuration">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Configuration Type</label>
+          <nb-select formControlName='typeIOCfg' fullWidth (selectedChange)='iOCfgChange($event)'>
+            <nb-option *ngFor="let lst of iocfgLst" [value]="lst.value">{{ lst.label }}</nb-option>
+          </nb-select>
+        </div>
+      </div>
+
+      <div class="col-md-4" *ngIf='sleepCfgDisabled'>
+        <nb-toggle [style.margin-top]="!isMobile?'1.9rem':'0rem'" labelPosition="start" status="info">Change detection
+          (IC)</nb-toggle>
+      </div>
+
+    </div>
+    <div *ngFor='let portName of portConfiguration; let i = index'>
+      <div class="row" *ngIf="i % 3 === 0">
+        <div class="col-md-4" *ngFor='let index of [0,1,2]; let j = index'>
+          <div class="form-group" *ngIf="i + j < portConfiguration.length">
+            <label class="label">{{portConfiguration[i+j]}}</label>
+            <nb-select formControlName="{{portConfiguration[i+j]}}" fullWidth [disabled]="cfgportDisable">
+              <nb-option *ngFor="let lst of portCfg" [value]="lst.value"
+                [disabled]="lst.value===2 && ['D1','D2','D3'].indexOf(portConfiguration[i+j])===-1">{{ lst.label }}
+              </nb-option>
+            </nb-select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="hr-text" [style.margin-top]="!isMobile?'-5px':'0'" data-content="Sleep configuration"
+      *ngIf='!sleepCfgDisabled'>
+    <div class="row" *ngIf='!sleepCfgDisabled'>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Sleep Cycle Number</label>
+          <input type="number" formControlName="SN" nbInput fullWidth placeholder="Sleep Cycle Number"
+            (keyup)='SNchange($event)' (keypress)="numberOnly($event)" [attr.disabled]="sleepCfgDisabled ? '' : null">
+        </div>
+        <div
+          *ngIf="deviceForm.controls['SN'].invalid && (deviceForm.controls['SN'].dirty || deviceForm.controls['SN'].touched)"
+          style="margin-top: -5px; justify-content: center;display: flex; ">
+          <label class="label" *ngIf="deviceForm.controls['SN'].errors.required" style="color:red;">* field is
+            required</label>
+          <label *ngIf="deviceForm.controls['SN'].errors.minlength" style="color:red;">* field must be at least 6
+            characters</label>
+          <label *ngIf="deviceForm.controls['SN'].errors.min" style="color:red;">* field must be at least 1</label>
+          <label *ngIf="deviceForm.controls['SN'].errors.max" style="color:red;">* field must be at most 65535</label>
+        </div>
+      </div>
+
+
+      <div class="col-md-1" style="justify-content: center;display: flex; ">
+        <nb-icon icon="times" [style.margin-top]="!isMobile?'2.5rem':'0rem'" style="color: #8f9bb3;" pack="fa">
+        </nb-icon>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label for="inputWebsite" class="label">Sleep Periode (SP) x 10 ms </label>
+          <input id="SP" type="number" [status]="manageFormError('SP')" formControlName="SP" nbInput fullWidth
+            placeholder="Sleep Periode (SP) x 10 ms" (keyup)='SPchange($event)' (keypress)="numberOnly($event)"
+            [attr.disabled]="sleepCfgDisabled ? '' : null">
+        </div>
+
+        <div
+          *ngIf="deviceForm.controls['SP'].invalid && (deviceForm.controls['SP'].dirty || deviceForm.controls['SP'].touched)"
+          style="margin-top: -5px; justify-content: center;display: flex; ">
+          <label class="label" *ngIf="deviceForm.controls['SP'].errors.required" style="color:red;">* field is
+            required</label>
+          <label *ngIf="deviceForm.controls['SP'].errors.minlength" style="color:red;">* field must be at least 6
+            characters</label>
+          <label *ngIf="deviceForm.controls['SP'].errors.min" style="color:red;">* field must be at least 320</label>
+          <label *ngIf="deviceForm.controls['SP'].errors.max" style="color:red;">* field must be at most 2800</label>
+        </div>
+
+      </div>
+      <div class="col-md-1" style="justify-content: center;display: flex; ">
+        <nb-icon icon="equals" [style.margin-top]="!isMobile?'2.5rem':'0rem'" style="color: #8f9bb3;" pack="fa">
+        </nb-icon>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="label">Extended Sleep Time (ms)</label>
+          <input type="text" formControlName="extended" nbInput fullWidth placeholder="Extended Sleep Time" disabled>
+        </div>
+      </div>
+    </div>
+
+    <hr class="hr-text" data-content="Pending settings" *ngIf='data.element.pending'>
+    <div style='display: inline-flex;' class="col-md-4" *ngIf='data.element.pending'>
+      <!-- offset-md-8  -->
+      <nb-alert outline="warning" style='width: 100%;  height: 50px; padding: 0.5rem 0rem;'>
+        <div style='display: inline-flex; width: 100%;' class="col-md-12">
+          <nb-icon status='info' nbButton class="toggle-icon" icon="alert-triangle-outline" pack="eva"
+            [options]="{ animation: { type: 'zoom' }} "
+            style="display: flex;justify-content: flex-start;color: #fcaa00;font-size: 2.5rem; margin-top: -0.3rem;">
+          </nb-icon>
+          <div
+            style="display: flex;justify-content: flex-start;width: 100%;color: #8f9bb3;font-size: 1.2rem; margin-left: 1rem; margin-top: 0.2rem;">
+            Pending settings
+          </div>
+          <nb-icon status='info' nbButton class="toggle-icon" icon="minus-square-outline" pack="eva"
+            [options]="{ animation: { type: 'zoom' }} "
+            style="display: flex;justify-content: flex-end;color: #8f9bb3;font-size: 2.5rem; margin-top: -0.3rem;">
+          </nb-icon>
+          <nb-icon status='info' nbButton class="toggle-icon" icon="menu-outline" pack="eva"
+            [options]="{ animation: { type: 'zoom' } }"
+            style="display: flex;justify-content: flex-end;color: #8f9bb3;font-size: 2.5rem; margin-top: -0.3rem;">
+          </nb-icon>
+
+        </div>
+      </nb-alert>
+    </div>
+  </div>
+</form>

@@ -2,9 +2,9 @@ import { Message, ConsumerGroupStream } from "kafka-node";
 import { Observable, of, forkJoin } from "rxjs";
 import { mergeMap, filter, tap, map, catchError } from "rxjs/operators";
 import { KafkaService } from "../../kafka/services/kafka.service";
-import { MapperService } from "../../manager/services/mapper.service";
+import { MapperService } from "../../common/mapper.service";
 import { LoggerService } from "../../manager/services/logger.service";
-import { Tools, liveRefresh } from "../../common/tools-service";
+import { Tools, boxInfo } from "../../common/tools-service";
 import { Injectable, Inject, forwardRef } from "@nestjs/common";
 import { IPartitionConfig } from "../../kafka/interfaces/partition.config.interface";
 import { v1 } from 'uuid';
@@ -12,6 +12,7 @@ import { v1 } from 'uuid';
 import * as _colors from 'colors';
 import { XbeeService } from "../../xbee/services/xbee.service";
 import { ACTION_TYPE } from "../../websocket/services/interfaces/ws.message.interfaces";
+import { SynchronizerService } from "../../synchronizer/services/synchronizer.service";
 
 @Injectable()
 export class DispatchService {
@@ -19,7 +20,8 @@ export class DispatchService {
 
     constructor(
         @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
-        @Inject(forwardRef(() => XbeeService)) private readonly xbeeService: XbeeService) {
+        @Inject(forwardRef(() => XbeeService)) private readonly xbeeService: XbeeService,
+        @Inject(forwardRef(() => SynchronizerService)) private readonly synchronizerService: SynchronizerService) {
         this.mapperService = new MapperService();
     }
 
@@ -53,7 +55,6 @@ export class DispatchService {
         });
     }
 
-
     public routeMessage(message: Message): void {
         const messageData = JSON.parse(String(message.value));
         switch (message.topic) {
@@ -62,34 +63,31 @@ export class DispatchService {
                 break;
             case "box_action":
                 const data = JSON.parse(String(message.value));
-                switch (data.action) {
-                    case 'SCAN':
+                switch (data.entity) {
+                    case 'Scan':
                         this.xbeeService.getNetworkGraph().pipe(mergeMap((result) =>
                             this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true, graphData: result })
                                 .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))
                         )).subscribe();
                         break;
-                    case 'SWITCH':
-
-                        break;
-                    case 'CONNECTIVITY':
-                        liveRefresh.active = data.liveRefresh;
+                    case 'Connectivity':
+                        if (messageData.data.liveReload !== undefined) {
+                            boxInfo.liveReload = messageData.data.liveReload;
+                        }
+                        boxInfo.isConnected = true; 
+                        this.synchronizerService.replay().subscribe();
                         this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
                             .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
+                        break;
+                    case 'Switch':
+
                         break;
                     default:
                         break;
                 }
-
-                // this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
-                //     .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
                 break;
             case "box_dbsync":
-                // this.loggerService.logSynchronize(messageData);
-                this.mapperService.dataBaseSynchronize(String(message.value))
-                    .pipe(mergeMap(() => this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
-                        .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))))
-                    .subscribe();
+                this.synchronizerService.local(messageData);
                 break;
             default:
                 break;
@@ -168,5 +166,27 @@ export class DispatchService {
                 })
             );
     }
+
+    // switch (data.action) {
+    //     case 'SCAN':
+    //         this.xbeeService.getNetworkGraph().pipe(mergeMap((result) =>
+    //             this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true, graphData: result })
+    //                 .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`)))
+    //         )).subscribe();
+    //         break;
+    //     case 'SWITCH':
+
+    //         break;
+    //     case 'CONNECTIVITY':
+    //         boxInfo.liveReload = data.liveRefresh;
+    //         this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
+    //             .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
+    //         break;
+    //     default:
+    //         break;
+    // }
+
+    // // this.kafkaService.sendAck({ messageId: messageData.messageId, ack: true })
+    // //     .pipe(tap(() => Tools.logSuccess(`     => message proccessing OK`))).subscribe();
 
 }

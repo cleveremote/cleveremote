@@ -8,5 +8,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     database: process.env.TYPEORM_DATABASE,
     migrations: [process.env.TYPEORM_MIGRATIONS],
     entities: process.env.TYPEORM_ENTITIES.split(','),
-    autoLoadEntities: true
+    autoLoadEntities: true,
+    // debug: true,
+    // logging: true
 };

@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="details">
-        <div class="title h5" style="color: #666f80; width: 30vw;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">{{ module.name }}</div>
+        <div class="title h5" style="color: #666f80;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">{{ module.name }}</div>
         <div *ngIf="module.type === moduleType.RELAY" class="status paragraph-2">
             {{ (module.value === 'ON') ? 'ON' : 'OFF' }}</div>
     </div>

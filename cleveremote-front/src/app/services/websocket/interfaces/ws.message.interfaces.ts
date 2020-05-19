@@ -19,7 +19,8 @@ export enum ACTION_TYPE {
     LOAD = 'LOAD',
     ADD = 'ADD',
     UPDATE = 'UPDATE',
-    DELETE = 'DELETE'
+    DELETE = 'DELETE',
+    SAVE = 'SAVE',
 }
 
 export interface IWSMessage {

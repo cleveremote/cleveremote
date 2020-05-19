@@ -6,52 +6,32 @@ export const MENU_ITEMS: NbMenuItem[] = [
     title: 'Devices',
     icon: { icon: 'server', pack: 'font-awesome' },
     children: [
-      // {
-      //   icon: { icon: 'square', pack: 'font-awesome' },
-      //   title: 'Device 1',
-      // },
-      // {
-      //   icon: { icon: 'square', pack: 'font-awesome' },
-      //   title: 'Device 2'
-      // },
-      // {
-      //   icon: { icon: 'square', pack: 'font-awesome' },
-      //   title: 'Device 3'
-      // },
-      // {
-      //   icon: { icon: 'square', pack: 'font-awesome' },
-      //   title: 'Device 4'
-      // },
-      // {
-      //   icon: { icon: 'square', pack: 'font-awesome' },
-      //   title: 'Device 5'
-      // },
     ],
   },
   {
-    title: 'Scheme',
+    title: 'Schema',
     data: '123456',
-    icon: { icon: 'cog', pack: 'font-awesome' },
+    icon: { icon: 'map', pack: 'font-awesome' },
     link: '/pages/Scheme',
   },
+  { 
+    title: 'Dashboard',
+    icon: { icon: 'chart-pie', pack: 'font-awesome' },
+    link: '/pages/iot-dashboard',
+  },
   {
-    title: 'Configuration',
+    title: 'Network',
     data: '123456',
     icon: { icon: 'project-diagram', pack: 'font-awesome' },
     link: '/pages/Configuration',
   },
   {
-    title: 'E-commerce',
-    icon: 'shopping-cart-outline',
+    title: 'Programing',
+    data: '123456',
+    icon: { icon: 'stream', pack: 'font-awesome' },
     link: '/pages/dashboard',
-    home: true,
   },
-  {
-    title: 'IoT Dashboard',
-    icon: 'home-outline',
-    link: '/pages/iot-dashboard',
-  },
-  {
+ /* {
     title: 'FEATURES',
     group: true,
   },
@@ -282,5 +262,5 @@ export const MENU_ITEMS: NbMenuItem[] = [
         link: '/auth/reset-password',
       },
     ],
-  },
+  },*/
 ];

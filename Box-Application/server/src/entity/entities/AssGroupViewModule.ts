@@ -2,39 +2,29 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
 import { GroupView } from "./GroupView";
 import { Module } from "./Module";
 
-@Index("AssGroupViewModule_pkey", ["assId"], { unique: true })
+@Index("assgroupviewmodule_pk", ["groupId", "moduleId"], { unique: true })
 @Entity("AssGroupViewModule", { schema: "public" })
 export class AssGroupViewModule {
-  @Column("character varying", { primary: true, name: "assId", length: 255 })
-  assId: string;
+  @Column("character varying", { primary: true, name: "groupId", length: 255 })
+  groupId: string;
+
+  @Column("character varying", { primary: true, name: "moduleId", length: 255 })
+  moduleId: string;
+
+  @Column("date", { name: "updatedat", nullable: true })
+  updatedat: string | null;
 
   @ManyToOne(
     () => GroupView,
-    groupView => groupView.assGroupViewModules,
-    { onDelete: "CASCADE" }
+    groupView => groupView.assGroupViewModules
   )
   @JoinColumn([{ name: "groupId", referencedColumnName: "groupId" }])
   group: GroupView;
 
   @ManyToOne(
-    () => GroupView,
-    groupView => groupView.assGroupViewModules2
-  )
-  @JoinColumn([{ name: "groupId", referencedColumnName: "groupId" }])
-  group2: GroupView;
-
-  @ManyToOne(
     () => Module,
-    module => module.assGroupViewModules,
-    { onDelete: "CASCADE" }
+    module => module.assGroupViewModules
   )
-  @JoinColumn([{ name: "moduleId", referencedColumnName: "moduleId" }])
+  @JoinColumn([{ name: "moduleId", referencedColumnName: "id" }])
   module: Module;
-
-  @ManyToOne(
-    () => Module,
-    module => module.assGroupViewModules2
-  )
-  @JoinColumn([{ name: "moduleId", referencedColumnName: "moduleId" }])
-  module2: Module;
 }

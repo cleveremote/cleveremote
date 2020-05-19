@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ModuleController } from './controllers/module.controller';
 import { ModuleService } from './services/module.service';
 import { TransceiverService } from './services/transceiver.service';
@@ -16,9 +16,10 @@ import { SchemeExt } from './repositories/scheme.ext';
 import { SectorExt } from './repositories/sector.ext';
 import { XbeeModule } from '../xbee/xbee.module';
 import { KafkaModule } from '../kafka/kafka.module';
+import { SynchronizerModule } from '../synchronizer/synchronizer.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), KafkaModule],
+  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt]), KafkaModule, forwardRef(() => SynchronizerModule), forwardRef(() => XbeeModule)],
   controllers: [ModuleController, TransceiverController, SchemeController, SectorController],
   providers: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService],
   exports: [ModuleService, TransceiverService, ManagerService, SchemeService, SectorService]

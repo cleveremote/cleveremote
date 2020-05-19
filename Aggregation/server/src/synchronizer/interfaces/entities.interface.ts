@@ -6,9 +6,33 @@ export interface ISynchronize<T> {
 }
 
 export interface ISynchronizeParams {
+    messageId: string;
     entity: string;
-    data: any;
+    data: Array<any> | any;
     action: string;
+    sourceId: string;
+    ack: boolean;
+}
+
+export enum SYNC_TYPE {
+    DB = 'dbsync',
+    LOG = 'logsync',
+    ACK = 'ack',
+    ACTION = 'action'
+}
+
+export enum SEND_TYPE {
+    SEND = 'SEND', // send only no ack no delivery ack
+    DELIVERY = 'DELIVERY', //just to know if received by the target
+    ACK = 'ACK' // wait for functional ack
+}
+
+export enum SYNC_ACTION {
+    NONE = 'NONE',
+    DELETE = 'DELETE',
+    SAVE = 'SAVE',
+    GET = 'GET',
+    NOTIFY = 'NOTIFY'
 }
 
 export interface IPartitionTopic {

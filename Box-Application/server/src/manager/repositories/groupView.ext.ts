@@ -1,5 +1,5 @@
 import { EntityRepository, Repository, DeleteResult, FindManyOptions, getRepository } from "typeorm";
-import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { plainToClass } from "class-transformer";

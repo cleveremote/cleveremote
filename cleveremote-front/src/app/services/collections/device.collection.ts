@@ -60,18 +60,37 @@ export class DeviceCollection extends BaseCollection<DeviceElement> {
     private loadBylevel(entities: any, levelType: LEVEL_TYPE, action: ACTION_TYPE) {
         let classNameId = this.constructor.name.replace('Collection', '') + 'Id';
         classNameId = classNameId.charAt(0).toLowerCase() + classNameId.slice(1);
-        const device = this.elements.find((element) => element.id === entities[0][classNameId]);
-        if (!device) return [];
-        switch (levelType) {
-            case LEVEL_TYPE.GROUPVIEW:
-                this.execSync(device.groupViews, this.groupViewCollection, entities, action);
-                break;
-            case LEVEL_TYPE.SCHEME:
-                this.execSync(device.schemes, this.schemeCollection, entities, action);
-                break;
-            case LEVEL_TYPE.TRANSCEIVER:
-                this.execSync(device.transceivers, this.transceiverCollection, entities, action);
-                break;
+        let device;
+        if (Array.isArray(entities[0])) {
+            entities[0].forEach(element => {
+                device = this.elements.find((_) => _.id === element[classNameId]);
+                if (!device) return [];
+                switch (levelType) {
+                    case LEVEL_TYPE.GROUPVIEW:
+                        this.execSync(device.groupViews, this.groupViewCollection, entities, action);
+                        break;
+                    case LEVEL_TYPE.SCHEME:
+                        this.execSync(device.schemes, this.schemeCollection, entities, action);
+                        break;
+                    case LEVEL_TYPE.TRANSCEIVER:
+                        this.execSync(device.transceivers, this.transceiverCollection, entities, action);
+                        break;
+                }
+            });
+        } else {
+            device = this.elements.find((element) => element.id === entities[0][classNameId]);
+            if (!device) return [];
+            switch (levelType) {
+                case LEVEL_TYPE.GROUPVIEW:
+                    this.execSync(device.groupViews, this.groupViewCollection, entities, action);
+                    break;
+                case LEVEL_TYPE.SCHEME:
+                    this.execSync(device.schemes, this.schemeCollection, entities, action);
+                    break;
+                case LEVEL_TYPE.TRANSCEIVER:
+                    this.execSync(device.transceivers, this.transceiverCollection, entities, action);
+                    break;
+            }
         }
         return device;
     }

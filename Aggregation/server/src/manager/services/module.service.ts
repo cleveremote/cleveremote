@@ -9,7 +9,7 @@ import { forwardRef, Inject } from '@nestjs/common';
 import { ModuleEntity } from '../entities/module.entity';
 import { TYPE_IO, TYPE_MODULE } from '../interfaces/module.interfaces';
 import { WebSocketService } from '../../websocket/services/websocket.service';
-import { ACTION_TYPE, ELEMENT_TYPE } from '../../websocket/services/interfaces/ws.message.interfaces';
+import { SYNC_ACTION, ELEMENT_TYPE } from '../../websocket/services/interfaces/ws.message.interfaces';
 import { ModuleLogMongo, LogMongoEntity } from '../repositories/module-log.mongo';
 
 export class ModuleService {
@@ -98,7 +98,7 @@ export class ModuleService {
     }
 
     public execute(moduleDto: ModuleDto, request: any): Observable<LogMongoEntity> {
-        WebSocketService.syncClients(ACTION_TYPE.UPDATE, ELEMENT_TYPE.VALUE, { valueId: moduleDto.id, value: moduleDto.value }, request);
+        WebSocketService.syncClients(SYNC_ACTION.SAVE, ELEMENT_TYPE.VALUE, { valueId: moduleDto.id, value: moduleDto.value }, request);
         const logMongoEntity: LogMongoEntity = {} as LogMongoEntity;
         logMongoEntity.moduleId = moduleDto.id;
         logMongoEntity.value = moduleDto.value;

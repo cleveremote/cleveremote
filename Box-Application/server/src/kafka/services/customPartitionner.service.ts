@@ -1,7 +1,7 @@
 const VERSION = 0;
 import { _ } from 'lodash';
 import * as assert from 'assert';
-import { ITopic } from '../../manager/interfaces/entities.interface';
+import { ITopic } from '../../synchronizer/interfaces/entities.interface';
 
 export class CustomPartitionnerService {
 
@@ -20,7 +20,15 @@ export class CustomPartitionnerService {
         const startRange = this.topicData.partitionTopic.rangePartitions[0];
         const endRange = this.topicData.partitionTopic.rangePartitions[1];
         const rangeArray = _.range(startRange, endRange + 1, 1).map(String);
-        topicPartition[this.topicData.name] = _.intersection(topicPartition[this.topicData.name], rangeArray);
+        for (const key in topicPartition) {
+            if (topicPartition.hasOwnProperty(key)) {
+                const regex = RegExp('_init_');
+                if (!regex.test(key)) {
+                    topicPartition[key] = _.intersection(topicPartition[this.topicData.name], rangeArray);
+                }
+            }
+        }
+
         const _members = _(groupMembers).map('id');
         const members = _members.value().sort();
         const assignment = _members.reduce((obj, id) => {

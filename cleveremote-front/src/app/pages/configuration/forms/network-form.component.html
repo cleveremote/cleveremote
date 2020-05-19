@@ -1,0 +1,24 @@
+<nb-card>
+  <nb-card-header style='display: inline-flex;'>
+    <div style="display: flex;justify-content: flex-start;color: #8f9bb3;font-size: 1.5rem;">
+      Edit Transceiver
+    </div>
+    <div style="display: flex;justify-content: flex-start;color: #fcaa00; margin-left: 0.3rem; font-size: 0.75rem;" *ngIf='data.element.pending'>
+      *Pending settings
+    </div>
+  </nb-card-header>
+  <nb-card-body>
+    <transceiver-form [data]='data' *ngIf="data.type === 'TRANSCEIVER'" #form></transceiver-form>
+    <module-form [data]='data' *ngIf="data.type === 'MODULE'" #form></module-form>
+    <device-form [data]='data' *ngIf="data.type === 'DEVICE'" #form></device-form>
+
+  </nb-card-body>
+  <nb-card-footer style="display: flex;justify-content: center;align-items: center;">
+    <nb-icon #testFocus status='info' nbButton class="toggle-icon" icon="close-square-outline" pack="eva"
+      [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+      (click)="cancel()"></nb-icon>
+    <nb-icon status='info' nbButton class="toggle-icon" icon="save-outline" pack="eva"
+      [options]="{ animation: { type: 'zoom' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+      (click)="save()"></nb-icon>
+  </nb-card-footer>
+</nb-card>

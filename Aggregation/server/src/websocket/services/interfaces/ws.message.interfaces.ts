@@ -4,20 +4,23 @@ export enum ELEMENT_TYPE {
     GROUPVIEW = 'GroupView',
     VALUE = 'Value',
     SECTOR = 'Sector',
-    NETWORK = 'Network'
+    NETWORK = 'Network',
+    CONNECTIVITY = 'Connectivity'
 }
 
-export enum ACTION_TYPE {
-    ADD = 'ADD',
-    UPDATE = 'UPDATE',
+export enum SYNC_ACTION {
+    NONE = 'NONE',
     DELETE = 'DELETE',
+    SAVE = 'SAVE',
+    GET = 'GET',
+    NOTIFY = 'NOTIFY',
     CONNECTIVITY = 'CONNECTIVITY',
     LIVEREFRESH = 'LIVEREFRESH'
 }
 
 export interface IWSMessage {
     target: ELEMENT_TYPE;
-    typeAction: ACTION_TYPE,
+    typeAction: SYNC_ACTION,
     data: any;
     date: Date;
 }

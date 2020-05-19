@@ -8,6 +8,9 @@ import * as difference from 'lodash.difference';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { CoreDataService } from '../../../../services/core.data.service';
 import { RessourcesService } from '../../../../services/ressources.service';
+import { TransceiverElement } from '../../../../services/collections/elements/transceiver.element';
+import { ConfigurationComponent } from '../../configuration.component';
+import { TRANSCIEVER_TYPE } from '../../../../services/collections/elements/interfaces/transceiver.interfaces';
 
 export class Message {
   constructor(
@@ -20,7 +23,9 @@ export class Message {
 export enum STATUS {
   NONE = 'NONE',
   LOAD = 'LOAD',
-  LOAD_SAVED = 'LOAD_SAVED'
+  LOAD_SAVED = 'LOAD_SAVED',
+  LIVE_RELOAD = 'LIVE_RELOAD',
+  REORGANIZE = 'REORGANIZE'
 }
 
 @Component({
@@ -46,10 +51,13 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
   public filter: Array<any>;
   public isMobile;
   private subscriptions: Array<Subscription> = [];
+  selectedTransceiver: TransceiverElement;
   @Input() revealed: any;
+  @Input() data: any;
+  @Input() formContainer: ConfigurationComponent;
+
 
   @ViewChild('pContainer', { static: true }) pcontainer: ElementRef;
-  // is the declaration. To get the value, it's this.pcontainer.nativeElement.offsetWidth. For your ide, you can use (this.container.nativeElement as HTMLElement).offsetWidth. 
 
   public status: STATUS;
   constructor(iconsLibrary: NbIconLibraries,
@@ -97,9 +105,16 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
   public listenStatuschange() {
     const subscription = this.coreDataService.networkCollection.onNetworkChanges.subscribe((network: any) => {
-      console.log('updated graph data', network);
       delete network.id;
-      this.updateGraph(network);
+      //if (this.status === STATUS.NONE) {
+      this.status = STATUS.LIVE_RELOAD;
+      //}
+      if (!this.dataset) {
+        this.dataset = network;
+        this.buildGraphElemements(this.dataset);
+      } else {
+        this.updateGraph(network);
+      }
     });
     this.subscriptions.push(subscription);
   }
@@ -110,7 +125,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
     setTimeout(() => {
       this.loadLayout();
-      this.listenStatuschange();
+
     }, 1000);
 
   }
@@ -141,12 +156,6 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     data.nodes.forEach(node => {
       const transceiver = this.coreDataService.transceiverCollection.elements.find((transceiver) => transceiver.id === node.id);
       graphData.nodes.push({ id: transceiver.id, name: transceiver.name, label: transceiver.name, type: transceiver.type, runtime: 100, power: node.data.power, status: node.data.status });
-      // { source: transceiver.address64, target: neighborlqi.extAddr, lqi: neighborlqi.lqi, type: 'AIR' };
-      // transceiver.modules.forEach(module => {
-      //   graphData.nodes.push({ id: module.id, name: module.name, label: module.name, group: 'MODULE', runtime: 40, data: module, status: node.data.status });
-      //   graphData.links.push({ source: module.id, target: transceiver.id, status: node.data.status, type: 'WIRE' });
-      //   graphData.links.push({ source: transceiver.id, target: module.id, status: node.data.status, type: 'WIRE' });
-      // });
     });
     data.links.forEach(link => {
       const concernedNodes = graphData.nodes.filter((node) => node.id === link.source || node.id === link.traget);
@@ -164,36 +173,25 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
   }
 
   public organizeGraph() {
-
+    this.status = STATUS.REORGANIZE;
     this.resourceService.fullScan('server_1').subscribe((response) => { // this.coreDataService.currentDevice.id
-      this.clearLayoutData(false);
-
-      const newdata = JSON.parse(response[0].value).graphData;
-      //this.updateLayoutData(newdata);
-
-      if (this.status = STATUS.LOAD_SAVED) {
-        this.status = STATUS.NONE;
-        for (let index = 0; index < newdata.nodes.length; index++) {
-          newdata.nodes[index].fx = newdata.nodes[index].x;
-          newdata.nodes[index].fy = newdata.nodes[index].y;
-          newdata.nodes[index].fixed = 1;
-        }
-      }
-
-      this.dataset = newdata;
-      this.updateGraphData(newdata);
+      this.clearLayoutData(true);
+      const graphData = this.coreDataService.networkCollection.reload([JSON.parse(response[0].value).graphData]);
+      const newdata = graphData[0];
+      this.updateGraph(newdata, false, false);
     });
     //this.updateGraphData(this.dataset);
   }
 
-  public updateGraph(data) {
-    //this.status = STATUS.NONE;
-    this.clearLayoutData(false);
-    this.updateLayoutData(data);
+  public updateGraph(data, fix = true, keepLayout = true) {
+    if (!keepLayout) {
+      this.clearLayoutData(false);
+    }
+
+    this.updateLayoutData(data, fix);
     this.dataset = data;
     this.updateGraphData(data);
-    this.updateLayoutData(data, false);
-    //this.status = STATUS.LOAD;
+    this.updateLayoutData(data, keepLayout);
   }
 
   public saveLayout() {
@@ -203,43 +201,28 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
   public loadLayout() {
     const data = undefined;//localStorage.getItem('graphData');
     if (data) {
-      this.status = STATUS.LOAD_SAVED;
+      this.status = STATUS.NONE;
       this.dataset = JSON.parse(data);
       this.buildGraphElemements(this.dataset);
+      this.listenStatuschange();
     } else {
-      this.status = STATUS.LOAD;
+      this.status = STATUS.REORGANIZE;
       this.resourceService.fullScan('server_1').subscribe((response) => { // this.coreDataService.currentDevice.id
-        this.dataset = JSON.parse(response[0].value).graphData;
+        const graphData = this.coreDataService.networkCollection.reload([JSON.parse(response[0].value).graphData]);
+        this.dataset = graphData[0];
         this.buildGraphElemements(this.dataset);
+        this.listenStatuschange();
       });
     }
   }
 
-  public removeElements() {
-    // this.clearLayoutData(false);
-    // const newData = this.initData(1);
-    // this.updateLayoutData(newData);
-    // this.dataset = newData;
-    // this.filter = [];
-    // this.updateGraphData(this.dataset);
-  }
-
-  public addElements() {
-    // this.clearLayoutData(false);
-    // const newdata = this.initData(3);
-    // this.filter = difference(newdata.nodes.map(x => x.id), this.dataset.nodes.map(x => x.id));
-    // this.filter = this.filter && this.filter.length > 0 ? this.filter : undefined;
-    // this.dataset = newdata;
-    // this.updateGraphData(this.dataset);
-  }
-
   public clearLayoutData(includeNodes: boolean) {
-    if (this.dataset.links[0].source instanceof Object) {
+    if (this.dataset && this.dataset.links[0].source instanceof Object) {
       this.dataset.links.forEach((link, index) => {
         this.dataset.links[index] = { source: link.source.id, target: link.target.id, type: link.type, status: link.status, lqi: link.lqi, lqibis: link.lqibis };
       });
     }
-    if (includeNodes) {
+    if (includeNodes && this.dataset) {
       this.dataset.nodes.forEach((node, index) => {
         this.dataset.nodes[index] = { id: node.id, name: node.name, type: node.type, status: node.status, powerSupply: node.powerSupply };
       });
@@ -301,9 +284,12 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     this.createEdgeLabels(currentDataSet.links, true);
     this.createNodes(currentDataSet.nodes, true);
 
-    this.simulation$.nodes(currentDataSet.nodes);
+    this.simulation$.nodes(currentDataSet.nodes)
+      .on('end', () => {
+        this.status = STATUS.NONE;
+      });
     this.simulation$.force('link').links(currentDataSet.links);
-    this.simulation$.alphaTarget(0.1).restart();
+    this.simulation$.alphaTarget(0.5).restart();
 
   }
 
@@ -376,9 +362,9 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
       nodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
 
-      // if (this.status === STATUS.LOAD) {
-      this.findScale();
-      // }
+      if (this.status === STATUS.REORGANIZE) {
+        this.findScale();
+      }
 
       this.calculatePointText(nodes._groups[0]);
 
@@ -388,9 +374,9 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
       edgeLabels.selectAll('textPath').text(function (d: any) {
         if (d.target.x <= d.source.x) {
-          return d.lqi && d.lqibis ? d.lqi + '\uf060' + '\uf061' + d.lqibis + 'bis' : (d.lqi ? d.lqi + '\uf060' : '');
+          return d.lqi && d.lqibis ? d.lqi + '\uf060' + '\uf061' + d.lqibis : (d.lqi ? d.lqi + '\uf060' : '');
         }
-        return d.lqi && d.lqibis ? d.lqibis + '\uf060' + '\uf061' + d.lqi + 'bis' : (d.lqi ? d.lqi + '\uf061' : '');
+        return d.lqi && d.lqibis ? d.lqibis + '\uf060' + '\uf061' + d.lqi : (d.lqi ? d.lqi + '\uf061' : '');
       });
 
       const offsetG = this.pcontainer.nativeElement.offsetWidth;
@@ -402,16 +388,20 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     const simulation$: any = this.d3.forceSimulation()
       .force('link', this.d3.forceLink()
         .id((d: any) => d.id)
-        .distance(50)
+        .distance(150)
       )
       .force('charge', this.d3.forceManyBody().strength(-800))
       .force('center', this.d3.forceCenter(this.getWidth() / 2, this.getHeight() / 2))
-      .alphaTarget(0.1)
+      .alphaTarget(0.5)
       .on('tick', ticked$);
+
 
     const simulationResult = simulation$;
     simulationResult.nodes(dataset.nodes)
-      .on('tick', ticked$);
+      .on('tick', ticked$)
+      .on('end', () => {
+        this.status = STATUS.NONE;
+      });
 
     simulationResult.force('link')
       .links(dataset.links);
@@ -498,7 +488,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     for (const key in graph.selectAll('.nodes')._groups[0]) {
       if (graph.selectAll('.nodes')._groups[0].hasOwnProperty(key)) {
         const node = graph.selectAll('.nodes')._groups[0][key];
-        if (node.__data__.type === 'COORDINATOR') {
+        if (node.__data__.type === 'BOX') { //TRANSCIEVER_TYPE.COORDINATOR
           coordinatorG = node;
           break;
         }
@@ -522,9 +512,9 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
         }
 
         if (nodePoint.y < coordinatorPoint.y) {
-          node.select('text').attr('dy', -17);
+          node.select('text').attr('dy', -22);
         } else {
-          node.select('text').attr('dy', 27);
+          node.select('text').attr('dy', 30);
         }
       }
     });
@@ -534,7 +524,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     const _this = this;
 
     let nodes = this.svg.selectAll('.nodes')
-      .data(dataset, function (d) { return d.id + '-' + d.status; });
+      .data(dataset, function (d) { return d.id + '-' + d.status + '-' + d.type; });
     nodes.exit().remove();
 
     const enter = nodes.enter().append('g')
@@ -560,7 +550,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     }
 
     enter.append('circle')
-      .attr('r', d => 15)
+      .attr('r', d => d.type === 'BOX' ? 25 : (d.type === 'ROUTER' || d.type === 'COORDINATOR' ? 20 : 15))
       .style('stroke', function (d) { return d.type === 'ROUTER' || d.type === 'ENDDEVICE' ? '#86d698' : 'grey'; }) //#86d698 green #ff0018 red #fd9b4a orange
       .style('stroke-opacity', function (d) { return d.type === 'ROUTER' || d.type === 'ENDDEVICE' ? 1 : 0.3; })
       .style('stroke-width', (d: any) => d.type === 'ROUTER' || d.type === 'ENDDEVICE' ? 4 : 10) //d.runtime / 10
@@ -578,14 +568,35 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
     enter.append('text')
       .attr('dy', function () { return 5; })
-      .attr('dx', function () { return -7; })
+      .attr('dx', function () { return -14; })
       .style('fill', 'rgb(95, 94, 94)')
       .style('font-weight', 600)
       .text(x => trimText(x.name, 10));
 
     enter.on('click', (d: any) => {
       console.log('test click node');
+      //this.data.element = undefined;
+      switch (d.type) {
+        case 'ROUTER':
+        case 'COORDINATOR':
+        case 'ENDDEVICE':
+          this.data.type = 'TRANSCEIVER';
+          this.data.element = this.coreDataService.transceiverCollection.elements.find(_ => _.id === d.id);
+          this.formContainer.loadComponent();
+          break;
+        case 'BOX':
+          this.data.type = 'DEVICE';
+          this.data.element = this.coreDataService.deviceCollection.elements.find(_ => _.id === d.id);
+          this.formContainer.loadComponent();
+          break;
+        case 'MODULE':
+          this.data.type = 'MODULE';
+          this.data.element = this.coreDataService.moduleCollection.elements.find(_ => _.id === d.id);
+          this.formContainer.loadComponent();
+          break;
+      }
       this.revealed.visible = !this.revealed.visible;
+
     });
     nodes = nodes.merge(enter);
     return nodes;
@@ -612,7 +623,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       this.svg.append('defs').append('marker')
         .attr('id', 'arrowhead')
         .attr('viewBox', '-0 -5 10 10') //the bound of the SVG viewport for the current SVG fragment. defines a coordinate system 10 wide and 10 high starting on (0,-5)
-        .attr('refX', 23) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
+        .attr('refX', 28) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
         .attr('refY', 0)
         .attr('orient', 'auto')
         .attr('markerWidth', 7)
@@ -626,7 +637,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       this.svg.append('defs').append('marker')
         .attr('id', 'arrowhead-start')
         .attr('viewBox', '-0 -5 10 10') //the bound of the SVG viewport for the current SVG fragment. defines a coordinate system 10 wide and 10 high starting on (0,-5)
-        .attr('refX', -13) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
+        .attr('refX', -18) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
         .attr('refY', 0)
         .attr('orient', 'auto')
         .attr('markerWidth', 7)
@@ -640,26 +651,6 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     }
 
     this.initLegend();
-    // function drag_this() {
-    //   return d3Lib.drag().subject(this)
-    //     .on('start', function (d: any) {
-    //       if (d.x1) {
-    //         d.x1 = d3Lib.event.x - d.xt;
-    //         d.y1 = d3Lib.event.y - d.yt;
-    //       } else {
-    //         d.x1 = d3Lib.event.x;
-    //         d.y1 = d3Lib.event.y;
-    //       }
-    //     })
-    //     .on('drag', function (d: any) {
-    //       d3Lib.select(this)
-    //         .attr("transform", "translate(" + (d3Lib.event.x - d.x1) + "," + (d3Lib.event.y - d.y1) + ")");
-
-    //       d.xt = d3Lib.event.x - d.x1;
-    //       d.yt = d3Lib.event.y - d.y1;
-    //     });
-    // }
-    // this.svg.call(drag_this);
   }
 
 
@@ -667,7 +658,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     this.legend = this.d3.select('div#legendcontainer')
       .append('svg')
       .attr('width', `${this.isMobile ? 86 : 140}px`)
-      .attr('height', `${600}px`)
+      .attr('height', `${63}vh`)
       .classed('svg-content', true)
       .append('g')
       .attr('id', 'dragCt')
@@ -701,7 +692,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       .text((d: any) => d);
 
     const groupeTitleBattery = this.legend.append('g')
-      .attr('transform', `translate(${7}, 140)`);
+      .attr('transform', `translate(${7}, 160)`);
     groupeTitleBattery.append('text')
       .attr('x', 15)
       .attr('y', 0)
@@ -712,7 +703,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     const legend_g1 = this.legend.selectAll('.legend')
       .data(this.batteryLevel().domain())
       .enter().append('g')
-      .attr('transform', (d, i) => `translate(${7},${160 + (i * 20)})`);
+      .attr('transform', (d, i) => `translate(${7},${180 + (i * 20)})`);
 
     legend_g1.append('circle')
       .attr('r', 7)
@@ -729,7 +720,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
 
     const groupeTitleLinks = this.legend.append('g')
-      .attr('transform', `translate(${7}, 240)`);
+      .attr('transform', `translate(${7}, 260)`);
     groupeTitleLinks.append('text')
       .attr('x', 15)
       .attr('y', 0)
@@ -740,7 +731,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
     const legend_g3 = this.legend.selectAll('.legend')
       .data(this.linkType().domain())
       .enter().append('g')
-      .attr('transform', (d, i) => `translate(${7},${260 + (i * 20)})`);
+      .attr('transform', (d, i) => `translate(${7},${280 + (i * 20)})`);
 
     legend_g3.append('line')
       .style("stroke-dasharray", d => d === 'WIRELESS' ? '5,2.5' : d === 'ACTIVE' || d === 'INACTIVE' ? '5,2.5,5,2.5,12' : '5,0')
@@ -756,7 +747,7 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       .text((d: any) => d);
 
     const direction = this.legend.append('g')
-      .attr('transform', `translate(${7}, 345)`);
+      .attr('transform', `translate(${7}, 365)`);
     direction.append('text')
       .attr('x', -8)
       .attr('y', 0)
@@ -768,48 +759,6 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
       .attr('x', 26)
       .attr('y', 0)
       .text('Lqi direction');
-
-
-    // legend_g1.append('circle')
-    //   .attr('cx', 0)
-    //   .attr('cy', 0)
-    //   .attr('r', 5)
-    //   .attr('fill', this.batteryLevel());
-
-    // legend_g1.append('text')
-    //   .attr('x', 10)
-    //   .attr('y', 5)
-    //   .text((d: any) => d);
-
-
-    // const legend_g2 = this.legend.append('g')
-    //   .attr('transform', `translate(${7}, 120)`);
-
-    // legend_g2.append('circle')
-    //   .attr('r', 5)
-    //   .attr('cx', 0)
-    //   .attr('cy', 0)
-    //   .style('stroke', 'grey')
-    //   .style('stroke-opacity', 0.3)
-    //   .style('stroke-width', 15)
-    //   .style('fill', 'black');
-    // legend_g2.append('text')
-    //   .attr('x', 15)
-    //   .attr('y', 0)
-    //   .text('long runtime');
-
-    // legend_g2.append('circle')
-    //   .attr('r', 5)
-    //   .attr('cx', 0)
-    //   .attr('cy', 20)
-    //   .style('stroke', 'grey')
-    //   .style('stroke-opacity', 0.3)
-    //   .style('stroke-width', 2)
-    //   .style('fill', 'black');
-    // legend_g2.append('text')
-    //   .attr('x', 15)
-    //   .attr('y', 20)
-    //   .text('short runtime');
   }
 
   public getMargin() {
@@ -889,8 +838,8 @@ export class GraphComponent implements AfterContentInit, OnDestroy {
 
   public colorScale() {
     return this.d3.scaleOrdinal() //=d3.scaleOrdinal(d3.schemeSet2)
-      .domain(['COORDINATOR', 'ROUTER', 'ENDDEVICE', 'MODULE', 'INACTIVE'])
-      .range(['#9e79db', '#fff178', '#52a0f7', '#abe5ff', 'grey']) as any;
+      .domain(['BOX', 'COORDINATOR', 'ROUTER', 'ENDDEVICE', 'MODULE', 'INACTIVE'])
+      .range(['red', '#9e79db', '#fff178', '#52a0f7', '#abe5ff', 'grey']) as any;
   }
 
   public batteryLevel() {

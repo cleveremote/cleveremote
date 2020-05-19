@@ -1,4 +1,4 @@
-import { mergeMap, map } from 'rxjs/operators';
+import { mergeMap, map, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ModuleExt } from '../repositories/module.ext';
@@ -11,13 +11,16 @@ import { TYPE_IO, TYPE_MODULE } from '../interfaces/module.interfaces';
 import { WebSocketService } from '../../websocket/services/websocket.service';
 import { ACTION_TYPE, ELEMENT_TYPE } from '../../websocket/services/interfaces/ws.message.interfaces';
 import { ModuleLogMongo, LogMongoEntity } from '../repositories/module-log.mongo';
+import { SynchronizerService } from '../../synchronizer/services/synchronizer.service';
+import { SYNC_TYPE, SYNC_ACTION, SEND_TYPE } from '../../synchronizer/interfaces/entities.interface';
 
 export class ModuleService {
     public entityName = 'Module';
 
     constructor(
         @Inject(forwardRef(() => KafkaService)) private readonly kafkaService: KafkaService,
-        @InjectRepository(ModuleExt) private readonly moduleRepository: ModuleExt,
+        @Inject(forwardRef(() => SynchronizerService)) private readonly synchronizerService: SynchronizerService,
+        @InjectRepository(ModuleExt) private readonly moduleRepository: ModuleExt
     ) { }
 
     public get(id: string): Observable<any> {
@@ -47,7 +50,8 @@ export class ModuleService {
 
     public delete(id: string): Observable<any> {
         return this.moduleRepository.deleteModule(id)
-            .pipe(mergeMap(() => this.kafkaService.executeDbSync(id, 'DELETE', this.entityName, id)));
+            .pipe(tap(() => this.synchronizerService.remote('aggregator_server', [id], SYNC_TYPE.DB, SYNC_ACTION.DELETE, 'Module', SEND_TYPE.ACK)));
+
     }
 
     public getAll(moduleQueryDto: ModuleQueryDto): Observable<any> {

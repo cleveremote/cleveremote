@@ -94,7 +94,7 @@ export class KafkaService extends KafkaBase {
     }
 
 
-    public initKafka(devicesConfig: Array<IPartitionConfig>): Observable<boolean> {
+    public initKafka(devicesConfig: Array<IPartitionConfig>): Observable<Array<IPartitionConfig> | boolean> {
         const progressBar = Tools.startProgress('Kafka initialize configuration     ', 0, 3, '* Start micro-service KAFKA');
         return this.initializeCLients()
             .pipe(tap(() => progressBar.increment()))
@@ -105,6 +105,7 @@ export class KafkaService extends KafkaBase {
             .pipe(mergeMap(() => this.setSubscriptionTopics()), catchError(val => of(false)))
             .pipe(tap(() => progressBar.increment()))
             .pipe(mergeMap(() => this.initializeConsumer()), catchError(val => of(false)))
+            .pipe(map(() => devicesConfig))
             .pipe(tap(() => progressBar.increment()))
             .pipe(tap(() => Tools.stopProgress('Kafka initialize configuration     ', progressBar)))
             .pipe(
@@ -137,8 +138,59 @@ export class KafkaService extends KafkaBase {
         const mapper = new MapperService();
         const payloads = [{
             topic: 'box_action',
-            messages: JSON.stringify({ messageId: v1(), action: action, data: dataToSync }), key: `box_action.${deviceId}`
+            messages: JSON.stringify({ messageId: v1(), action: 'Get', entity: 'Scan', data: dataToSync }), key: `box_action.${deviceId}`
         }];
         return this.sendMessage(payloads, true).pipe(map((response: any) => response));
+    }
+
+    public sendDeliveryMessage(payloads: Array<ProduceRequest>, checkResponse = true, ackFrom = 'box_ack', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
+        const messageId = JSON.parse(payloads[0].messages).messageId;
+        const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
+        let obs: Observable<ISendResponse | [Message, boolean]> = of(true)
+            .pipe(delay(200))
+            .pipe(mergeMap(() => sendObs()))
+            .pipe(mergeMap((data: [any, ISendResponse]) => {
+                Tools.loginfo('   - message sent => ');
+                Tools.logWarn(`   ${JSON.stringify(payloads)}`);
+                return of(data[1]);
+            }));
+        if (checkResponse) {
+            obs = obs.pipe(mergeMap((data: ISendResponse) => this.checkReponseMessage1(data)));
+        }
+        return obs;
+    }
+
+    public checkReponseMessage1(data: any): Observable<any> {
+
+        return of(data).pipe(
+            mergeMap((x: any) => {
+                const topicInfo = Object.keys(data)[0];
+                const offset = new Offset(this.clientProducer);
+                const offsetObs = bindCallback(offset.fetchCommits.bind(offset, process.env.BOX_GROUPID, [
+                    { topic: topicInfo, partition: Object.keys(data[topicInfo])[0] }
+                ]));
+
+                return offsetObs().pipe(
+                    map((results: any) => {
+                        if (!!(results.message || results[0] !== null)) {
+                            Tools.logSuccess('     => KO');
+                            throw false;
+                        }
+                        const offsetRes: number = results[1][topicInfo][Object.keys(data[topicInfo])[0]];
+                        const offsetIn: number = data[topicInfo][Object.keys(data[topicInfo])[0]];
+                        const partitionRes = Object.keys(results[1][topicInfo])[0];
+                        const partitionIn = Object.keys(data[topicInfo])[0];
+                        if ((offsetRes >= offsetIn + 1) && partitionRes === partitionIn) {
+                            Tools.logSuccess(`     => OK [PartitionIn,OffsetIn]=[${partitionIn},${offsetIn}] [PartitionRes,OffsetRes]=[${partitionRes},${offsetRes}]`);
+
+                            return { pin: partitionIn, oin: offsetIn };
+                        }
+                        Tools.logSuccess(`     => KO [PartitionIn,OffsetIn]=[${partitionIn},${offsetIn}] [PartitionRes,OffsetRes]=[${partitionRes},${offsetRes}]`);
+                        throw { status: 'KO', message: "process timeOut!" };
+                    })
+                );
+            }),
+            retryWhen(genericRetryStrategy({ durationBeforeRetry: 200, maxRetryAttempts: 40 }))
+        );
     }
 }

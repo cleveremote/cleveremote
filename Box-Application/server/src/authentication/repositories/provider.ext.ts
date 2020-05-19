@@ -1,7 +1,7 @@
 import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
 import { DeviceEntity } from "../../manager/entities/device.entity";
 import { ProviderEntity } from "../entities/provider.entity";
-import { ISynchronize, ISynchronizeParams } from "../../manager/interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 import { Observable, of, from } from "rxjs";
 import { ProvideryDto } from "../dto/provider.dto";
 import { ProviderQueryDto } from "../dto/provider.query.dto";

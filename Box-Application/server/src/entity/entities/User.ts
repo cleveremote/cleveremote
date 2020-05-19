@@ -35,6 +35,9 @@ export class User {
   @Column("character varying", { name: "password", unique: true, length: 512 })
   password: string;
 
+  @Column("date", { name: "updatedat", nullable: true })
+  updatedat: string | null;
+
   @OneToMany(
     () => Provider,
     provider => provider.user

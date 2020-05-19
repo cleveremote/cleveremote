@@ -91,8 +91,8 @@ export class KafkaService extends KafkaBase {
         }));
     }
 
-    public sendAck(message: any): Observable<ISendResponse | [Message, boolean]> {
-        const payloads = [new Payload('aggregator_ack', JSON.stringify(message), 'server_1')];
+    public sendAck(message: any, sourceId: string = 'server_1'): Observable<ISendResponse | [Message, boolean]> {
+        const payloads = [new Payload('aggregator_ack', JSON.stringify(message), sourceId)];
         return this.sendMessage(payloads);
     }
 
@@ -162,7 +162,8 @@ export class KafkaService extends KafkaBase {
     public executeDbSync(dataToSync: any, action: string, entityName: string, boxId: string): Observable<boolean> {
         const payloads = [{
             topic: 'aggregator_dbsync',
-            messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync }), key: 'server_1'
+            messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync }),
+            key: 'server_1'
         }];
         return this.sendMessage(payloads, true).pipe(map(() => true));
     }
@@ -170,27 +171,24 @@ export class KafkaService extends KafkaBase {
     public executeSync(type: string, dataToSync: any, action: string, entityName: string, boxId: string): Observable<boolean> {
         const payloads = [{
             topic: type,
-            messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync }), key: 'server_1'
+            messages: JSON.stringify({ sourceId: boxId, messageId: v1(), entity: entityName, action: action, data: dataToSync })
         }];
-        return this.sendMessageWithDeleiveryAck(payloads).pipe(map(() => true));
+        return this.sendDeliveryMessage(payloads).pipe(map(() => true));
     }
 
 
-    public sendMessageWithDeleiveryAck(payloads: Array<ProduceRequest>, checkResponse = true, ackFrom = 'box_ack', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
+    public sendDeliveryMessage(payloads: Array<ProduceRequest>, ackFrom = 'box_ack', timeOut = 15000): Observable<ISendResponse | [Message, boolean]> {
         const messageId = JSON.parse(payloads[0].messages).messageId;
         const sendObs = bindCallback(this.producer.sendPayload.bind(this.producer, payloads));
-        let obs: Observable<ISendResponse | [Message, boolean]> = of(true)
+        return of(true)
             .pipe(delay(200))
             .pipe(mergeMap(() => sendObs()))
             .pipe(mergeMap((data: [any, ISendResponse]) => {
                 Tools.loginfo('   - message sent => ');
                 Tools.logWarn(`   ${JSON.stringify(payloads)}`);
                 return of(data[1]);
-            }));
-        if (checkResponse) {
-            obs = obs.pipe(mergeMap((data: ISendResponse) => this.checkReponseMessage1(data)));
-        }
-        return obs;
+            }))
+            .pipe(mergeMap((data: ISendResponse) => this.checkReponseMessage1(data)));
     }
 
     public checkReponseMessage1(data: any): Observable<any> {

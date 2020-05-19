@@ -22,6 +22,12 @@ export class Account {
   @Column("boolean", { name: "activated", nullable: true })
   activated: boolean | null;
 
+  @Column("date", { name: "updatedAt", nullable: true })
+  updatedAt: string | null;
+
+  @Column("date", { name: "updatedat", nullable: true })
+  updatedat: string | null;
+
   @OneToMany(
     () => Device,
     device => device.account

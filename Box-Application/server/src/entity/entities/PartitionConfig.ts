@@ -13,6 +13,9 @@ export class PartitionConfig {
   @Column("integer", { name: "endRange" })
   endRange: number;
 
+  @Column("date", { name: "updatedat", nullable: true })
+  updatedat: string | null;
+
   @ManyToOne(
     () => Device,
     device => device.partitionConfigs,

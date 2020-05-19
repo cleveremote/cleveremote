@@ -20,9 +20,11 @@ export class IOCfg {
     public D4: Array<number>;
     public P1: Array<number>;
     public P2: Array<number>;
+    public 'V+': Array<number>;
 
 
     constructor(type: TYPE_IOCFG) {
+        this['V+'] = [255, 255];
         switch (type) {
             case TYPE_IOCFG.FULL_ANALOG_INPUT:
                 this.getFullAnalog();
@@ -37,12 +39,12 @@ export class IOCfg {
                 this.getFullDigital(false, false);
                 break;
             case TYPE_IOCFG.INIT:
-                this.D1 =  [] ;
-                this.D2 =  [] ;
-                this.D3 =  [] ;
-                this.D4 =  [] ;
-                this.P1 =  [] ;
-                this.P2 =  [] ;
+                this.D1 = [];
+                this.D2 = [];
+                this.D3 = [];
+                this.D4 = [];
+                this.P1 = [];
+                this.P2 = [];
                 break;
             default:
                 break;

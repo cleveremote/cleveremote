@@ -21,9 +21,10 @@ import { SectorController } from './controllers/sector.controller';
 import { SectorService } from './services/sector.service';
 import { TransceiverController } from './controllers/transceiver.controller';
 import { TransceiverService } from './services/transceiver.service';
+import { SynchronizerModule } from '../synchronizer/synchronizer.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt, GroupViewExt, SchemeExt]), forwardRef(() => AuthModule), KafkaModule],
+  imports: [TypeOrmModule.forFeature([ModuleExt, TransceiverExt, DeviceExt, SchemeExt, SectorExt, GroupViewExt, SchemeExt]), forwardRef(() => AuthModule), KafkaModule, forwardRef(() => SynchronizerModule)],
   controllers: [ModuleController, DeviceController, GroupViewController, SchemeController, SectorController, TransceiverController],
   providers: [ModuleService, ManagerService, DeviceService, GroupViewService, SchemeService, SectorService, TransceiverService],
   exports: [ModuleService, ManagerService, DeviceService, GroupViewService, SchemeService, SectorService, TransceiverService]

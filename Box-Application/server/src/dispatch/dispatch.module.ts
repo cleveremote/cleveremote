@@ -5,9 +5,10 @@ import { KafkaService } from '../kafka/services/kafka.service';
 import { KafkaModule } from '../kafka/kafka.module';
 import { ManagerModule } from '../manager/manager.module';
 import { XbeeModule } from '../xbee/xbee.module';
+import { SynchronizerModule } from '../synchronizer/synchronizer.module';
 
 @Module({
-  imports: [KafkaModule,ManagerModule,XbeeModule],
+  imports: [KafkaModule, ManagerModule, XbeeModule, SynchronizerModule],
   controllers: [DispatchController],
   providers: [DispatchService],
   exports: [DispatchService]

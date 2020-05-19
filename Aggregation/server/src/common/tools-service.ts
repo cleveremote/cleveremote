@@ -168,4 +168,30 @@ export class Tools {
         }
     }
 
+    public static groupBy1(list, keyGetter): any {
+        const map = new Map();
+        list.forEach((item: any) => {
+            const key = keyGetter(item);
+            const collection = map.get(key);
+            if (!collection) {
+                map.set(key, [item]);
+            } else {
+                collection.push(item);
+            }
+        });
+        return map;
+    }
+
+    public static groupBy(array, f) {
+        var groups = {};
+        array.forEach(function (o) {
+            var group = JSON.stringify(f(o));
+            groups[group] = groups[group] || [];
+            groups[group].push(o);
+        });
+        return Object.keys(groups).map(function (group) {
+            return groups[group];
+        });
+    }
+
 }

@@ -33,6 +33,12 @@ export class Device {
   })
   accountId: string | null;
 
+  @Column("date", { name: "updatedat", nullable: true })
+  updatedat: string | null;
+
+  @Column("boolean", { name: "default", nullable: true })
+  default: boolean | null;
+
   @ManyToOne(
     () => Account,
     account => account.devices

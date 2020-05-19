@@ -18,7 +18,7 @@ import { TYPE_MODULE, TYPE_IO } from '../interfaces/module.interfaces';
 import { v1 } from 'uuid';
 import { WebSocketService } from '../../websocket/services/websocket.service';
 import { ModuleService } from './module.service';
-import { ELEMENT_TYPE, ACTION_TYPE } from '../../websocket/services/interfaces/ws.message.interfaces';
+import { ELEMENT_TYPE, SYNC_ACTION } from '../../websocket/services/interfaces/ws.message.interfaces';
 import { GroupViewEntity } from '../entities/groupView.entity';
 import { getRepository, In } from 'typeorm';
 
@@ -38,8 +38,7 @@ export class GroupViewService {
                 groupe.modules = groupe.modules.concat([...modules].map(x => ({ id: x }) as any));
                 return this.groupViewRepository.SaveGroupe(groupe)
                     .pipe(map((groupView: GroupViewEntity) => {
-                        WebSocketService.syncClients(ACTION_TYPE.ADD, ELEMENT_TYPE.GROUPVIEW, groupView, request);
-                        
+                        WebSocketService.syncClients(SYNC_ACTION.SAVE, ELEMENT_TYPE.GROUPVIEW, groupView, request);
                         return groupView;
                     }));
             }));
@@ -52,7 +51,7 @@ export class GroupViewService {
                 groupe.modules = groupe.modules.filter((module: ModuleEntity) => [...modules].indexOf(module.id) === -1);
                 return this.groupViewRepository.SaveGroupe(groupe)
                     .pipe(map((groupView: GroupViewEntity) => {
-                        WebSocketService.syncClients(ACTION_TYPE.ADD, ELEMENT_TYPE.GROUPVIEW, groupView, request);
+                        WebSocketService.syncClients(SYNC_ACTION.SAVE, ELEMENT_TYPE.GROUPVIEW, groupView, request);
                         return groupView;
                     }));
             }));

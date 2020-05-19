@@ -1,6 +1,6 @@
-import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typeorm";
+import { EntityRepository, Repository, DeleteResult, FindManyOptions, In } from "typeorm";
 import { TransceiverEntity } from "../entities/transceiver.entity";
-import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 import { from, Observable, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { TransceiverDto } from "../dto/transceiver.dto";
@@ -21,7 +21,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             case 'ADD':
                 return this.addTransceiver(classToClass<TransceiverDto>(params.data));
             case 'UPDATE':
-                return this.updateTransceiver(classToClass<TransceiverDto>(params.data));
+            //return this.updateTransceiver(classToClass<TransceiverDto | TransceiverDto[]>(params.data));
             case 'DELETE':
                 return this.deleteTransceiver(params.data);
             default:
@@ -33,9 +33,9 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
         return of('server_1');
     }
 
-    public updateTransceiver(data: any, sync = true): Observable<TransceiverEntity> {
+    public saveTransceiver(data: any, sync = true): Observable<TransceiverEntity | Array<TransceiverEntity>> {
         return from(this.save(data)).pipe(
-            map((transceiver: TransceiverEntity) => {
+            map((transceiver: any) => {
 
                 if (!transceiver) {
                     console.log('no account found');
@@ -61,8 +61,8 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             }));
     }
 
-    public deleteTransceiver(transceiverId: string): Observable<boolean> {
-        return from(this.delete({ id: transceiverId })).pipe(
+    public deleteTransceiver(transceiverIds: Array<string>): Observable<boolean> {
+        return from(this.delete({ id: In(transceiverIds) })).pipe(
             map((deleteResult: DeleteResult) => {
 
                 if (!deleteResult) {
@@ -82,7 +82,7 @@ export class TransceiverExt extends Repository<TransceiverEntity> implements ISy
             filter[key] = value;
         }
 
-        return from(this.find({ where: filter, relations: ['modules'] })).pipe(
+        return from(this.find({ where: filter, relations: ['modules', 'pending'] })).pipe(
             map((transceivers: Array<TransceiverEntity>) => {
 
                 if (transceivers.length === 0) {

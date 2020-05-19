@@ -1,0 +1,32 @@
+<form *ngIf="deviceForm" [formGroup]="deviceForm">
+  <div style="height: 63vh;">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Name</label>
+          <input formControlName="name" type="text" nbInput fullWidth placeholder="Name">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Status</label>
+          <input formControlName="status" type="text" nbInput fullWidth placeholder="Status" disabled>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label class="label">Default</label>
+          <input formControlName="default" type="text" nbInput fullWidth placeholder="Type" disabled>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label class="label">Description</label>
+          <textarea formControlName="description" nbInput fullWidth placeholder="Description"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

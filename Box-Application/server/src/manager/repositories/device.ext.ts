@@ -2,7 +2,7 @@ import { EntityRepository, Repository, DeleteResult, FindManyOptions } from "typ
 import { Observable, from, of } from "rxjs";
 import { DeviceEntity } from "../entities/device.entity";
 import { map } from "rxjs/operators";
-import { ISynchronize, ISynchronizeParams } from "../interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 import { TransceiverDto } from "../dto/transceiver.dto";
 import { TransceiverQueryDto } from "../dto/transceiver.query.dto";
 import { classToClass, plainToClass } from "class-transformer";

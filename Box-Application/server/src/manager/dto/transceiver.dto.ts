@@ -9,13 +9,15 @@ export class TransceiverDto {
     @IsNotEmpty()
     public address: string;
     @IsNotEmpty()
-    public type: string;
-    public status: string;
+    public type: number;
+    public status: string; //???
     @IsNotEmpty()
     public deviceId: string;
     @IsNotEmpty()
     public configuration: object;
     @IsOptional()
     public modules: Array<ModuleDto>;
+    @IsOptional()
+    public pending: TransceiverDto;
     
 }

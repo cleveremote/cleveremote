@@ -53,6 +53,9 @@ logsync_aggregator publish
 
 kafka tools
 ---------------
+
+npm run typeorm:cli -- migration:generate -n toto
+
 cd C:\Users\dell\Downloads\kafka_2.11-0.10.2.0\kafka_2.11-0.10.2.0\bin\windows
 .\kafka-topics.bat --zookeeper 192.168.1.30:2181 --delete --topic topic1_test
 .\kafka-console-consumer.bat --bootstrap-server 192.168.1.30:32771,192.168.1.30:32770 --topic topic-mitosis

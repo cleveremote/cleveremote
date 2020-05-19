@@ -3,14 +3,6 @@
         <div style="display: flex;justify-content: flex-start;width: 100%;color: #8f9bb3;font-size: 1.5rem;">
             Graph Network
         </div>
-        <div style="display: flex;justify-content: flex-end;width: 50%;">
-            <nb-icon status='info' nbButton class="toggle-icon" icon="save-outline" pack="eva"
-                [options]="{ animation: { type: 'flip' } }"
-                style="width: 32px;height: 32px;color: #598bff;margin-left: 1.5rem;" (click)="saveLayout()">
-            </nb-icon>
-        </div>
-
-
     </nb-card-header>
     <nb-card-body >
         <div #pContainer style="display: flex;justify-content: flex-start;width: 100%;">
@@ -31,6 +23,10 @@
         <nb-icon status='info' nbButton class="toggle-icon" icon="sync-outline" pack="eva"
             [options]="{ animation: { type: 'flip' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
             (click)="organizeGraph()">
+        </nb-icon>
+        <nb-icon status='info' nbButton class="toggle-icon" icon="save-outline" pack="eva"
+            [options]="{ animation: { type: 'flip' } }" style="color: #8f9bb3;font-size: 2rem;margin-left: 1.5rem;"
+            (click)="saveLayout()">
         </nb-icon>
         <!-- <nb-icon status='info' nbButton class="toggle-icon" icon="minus-circle-outline" pack="eva"
                     [options]="{ animation: { type: 'flip' } }"

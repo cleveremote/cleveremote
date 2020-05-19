@@ -11,6 +11,8 @@ import {
   NbDialogModule,
   NbInputModule,
   NbCheckboxModule,
+  NbToggleModule,
+  NbAlertModule,
 } from '@nebular/theme';
 import { NgxEchartsModule } from 'ngx-echarts';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
@@ -25,14 +27,18 @@ import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import { NetworkComponent } from './transceivers/network/network.component';
 import { ConfigurationComponent } from './configuration.component';
 import { GraphComponent } from './transceivers/graph/graph.component';
-import { DeviceFormComponent } from './forms/device-form.component';
+import { NetworkFormComponent } from './forms/network-form.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IconsComponent } from '../ui-features/icons/icons.component';
+import { TransceiverFormComponent } from './forms/elements/transceiver/transceiver-form.component';
+import { ModuleFormComponent } from './forms/elements/module/module-form.component';
+import { DeviceFormComponent } from './forms/elements/device/device-form.component';
 
 @NgModule({
 
   imports: [
     NbDialogModule.forChild(),
+    NbAlertModule,
     NbCheckboxModule,
     NbInputModule,
     ThemeModule,
@@ -50,19 +56,26 @@ import { IconsComponent } from '../ui-features/icons/icons.component';
     LeafletModule,
     FormsModule,
     ReactiveFormsModule,
+    NbToggleModule,
   ],
   declarations: [
     GraphComponent,
     NetworkComponent,
     ConfigurationComponent,
+    NetworkFormComponent,
+    TransceiverFormComponent,
+    ModuleFormComponent,
     DeviceFormComponent,
     IconsComponent,
   ],
   entryComponents: [
     NetworkComponent,
     ConfigurationComponent,
+    NetworkFormComponent,
+    IconsComponent,
+    TransceiverFormComponent,
     DeviceFormComponent,
-    IconsComponent
+    ModuleFormComponent
   ],
   // providers: [
   //   RessourcesService,

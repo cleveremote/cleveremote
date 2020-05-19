@@ -19,7 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "watch-ts": "tsc -w",
-    "migration:run": "ts-node node_modules/typeorm/cli.js migration:run"
+    "typeorm:cli": "ts-node node_modules/typeorm/cli -f src/common/typeorm.config.ts"
   },
   "author": "",
   "license": "ISC",
@@ -84,6 +84,7 @@
     "express-fileupload": "^1.1.4",
     "express-session": "^1.15.6",
     "fastify-multipart": "^1.0.5",
+    "json-size": "^1.0.0",
     "jsonwebtoken": "^8.2.2",
     "kafka-node": "^5.0.0",
     "moment": "^2.24.0",

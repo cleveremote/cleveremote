@@ -11,7 +11,7 @@ import { mergeMap } from 'rxjs/operators';
   selector: 'ngx-pages',
   styleUrls: ['pages.component.scss'],
   template: `
-    <ngx-one-column-layout>
+    <ngx-one-column-layout >
       <nb-menu (click)='testClick()' [items]="menu" tag="test"></nb-menu>
       <router-outlet></router-outlet>
     </ngx-one-column-layout>

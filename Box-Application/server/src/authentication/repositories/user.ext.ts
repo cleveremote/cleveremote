@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt-nodejs';
 import { Observable, from, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { AccountEntity } from "../entities/account.entity";
-import { ISynchronize, ISynchronizeParams } from "../../manager/interfaces/entities.interface";
+import { ISynchronize, ISynchronizeParams } from "../../synchronizer/interfaces/entities.interface";
 
 import { UserDto } from "../dto/user.dto";
 import { UserQueryDto } from "../dto/user.query.dto";

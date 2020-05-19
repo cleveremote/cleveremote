@@ -21,12 +21,13 @@ export class Transceiver {
    public sleepCfg: SleepCfg;
    public iOCfg: IOCfg;
    public links: Array<any>;
+   public pending: any;
 
    /////////////////
    constructor(data?: any) {
       if (data) {
          this.decodeInput(data);
-      } 
+      }
    }
 
    public decodeInput(data: any): void {

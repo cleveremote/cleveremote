@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
+import { ModuleDto } from "./module.dto";
 export class TransceiverDto {
     public id: string;
     @IsNotEmpty()
@@ -8,9 +9,13 @@ export class TransceiverDto {
     @IsNotEmpty()
     public address: string;
     @IsNotEmpty()
-    public type: string;
+    public type: number;
     @IsNotEmpty()
     public deviceId: string;
     @IsNotEmpty()
     public configuration: object;
+    @IsOptional()
+    public modules: Array<ModuleDto>;
+    @IsOptional()
+    public pending: TransceiverDto;
 }
