@@ -49,6 +49,7 @@ action_idbox subscribe
 dbsync_idbox subscribe
 dbsync_aggregator publish
 logsync_aggregator publish
+tt
 
 
 kafka tools
