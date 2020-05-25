@@ -17,22 +17,22 @@ import { Account } from "./Account";
 @Index("User_pkey", ["userId"], { unique: true })
 @Entity("User", { schema: "public" })
 export class User {
-  @Column("character varying", { primary: true, name: "userId", length: 255 })
+  @Column("varchar", { primary: true, name: "userId", length: 255 })
   userId: string;
 
-  @Column("character varying", { name: "firstName", unique: true, length: 50 })
+  @Column("varchar", { name: "firstName", unique: true, length: 50 })
   firstName: string;
 
-  @Column("character varying", { name: "lastName", unique: true, length: 50 })
+  @Column("varchar", { name: "lastName", unique: true, length: 50 })
   lastName: string;
 
-  @Column("character varying", { name: "email", unique: true, length: 255 })
+  @Column("varchar", { name: "email", unique: true, length: 255 })
   email: string;
 
-  @Column("character varying", { name: "phone", unique: true, length: 50 })
+  @Column("varchar", { name: "phone", unique: true, length: 50 })
   phone: string;
 
-  @Column("character varying", { name: "password", unique: true, length: 512 })
+  @Column("varchar", { name: "password", unique: true, length: 512 })
   password: string;
 
   @OneToMany(

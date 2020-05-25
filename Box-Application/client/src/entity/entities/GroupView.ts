@@ -15,10 +15,10 @@ import { Sector } from "./Sector";
 @Index("GroupView_pkey", ["groupId"], { unique: true })
 @Entity("GroupView", { schema: "public" })
 export class GroupView {
-  @Column("character varying", { primary: true, name: "groupId", length: 255 })
+  @Column("varchar", { primary: true, name: "groupId", length: 255 })
   groupId: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("varchar", { name: "name", length: 255 })
   name: string;
 
   @Column("text", { name: "description", nullable: true })

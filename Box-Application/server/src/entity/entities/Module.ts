@@ -1,62 +1,39 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany
-} from "typeorm";
-import { AssGroupViewModule } from "./AssGroupViewModule";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Transceiver } from "./Transceiver";
+import { AssGroupViewModule } from "./AssGroupViewModule";
 
-@Index("Module_pkey", ["id"], { unique: true })
-@Entity("Module", { schema: "public" })
+@Entity("Module")
 export class Module {
-  @Column("character varying", { primary: true, name: "id", length: 255 })
+  @Column("text", { primary: true, name: "id", unique: true })
   id: string;
 
-  @Column("character varying", { name: "port", length: 2 })
+  @Column("text", { name: "port" })
   port: string;
 
-  @Column("character varying", { name: "status", length: 255 })
+  @Column("text", { name: "status" })
   status: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("text", { name: "name" })
   name: string;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
 
-  @Column("character varying", { name: "prefix", nullable: true, length: 255 })
+  @Column("text", { name: "prefix", nullable: true })
   prefix: string | null;
 
-  @Column("character varying", { name: "suffix", nullable: true, length: 255 })
+  @Column("text", { name: "suffix", nullable: true })
   suffix: string | null;
 
-  @Column("character varying", {
-    name: "applyfunction",
-    nullable: true,
-    length: 512
-  })
+  @Column("text", { name: "applyfunction", nullable: true })
   applyfunction: string | null;
 
-  @Column("character varying", {
-    name: "description",
-    nullable: true,
-    length: 255
-  })
+  @Column("text", { name: "description", nullable: true })
   description: string | null;
-
-  @OneToMany(
-    () => AssGroupViewModule,
-    assGroupViewModule => assGroupViewModule.module
-  )
-  assGroupViewModules: AssGroupViewModule[];
 
   @ManyToOne(
     () => Transceiver,
-    transceiver => transceiver.modules,
-    { onDelete: "CASCADE" }
+    transceiver => transceiver.modules
   )
   @JoinColumn([
     { name: "transceiverId", referencedColumnName: "transceiverId" }
@@ -71,4 +48,10 @@ export class Module {
     { name: "transceiverId", referencedColumnName: "transceiverId" }
   ])
   transceiver2: Transceiver;
+
+  @OneToMany(
+    () => AssGroupViewModule,
+    assGroupViewModule => assGroupViewModule.module
+  )
+  assGroupViewModules: AssGroupViewModule[];
 }

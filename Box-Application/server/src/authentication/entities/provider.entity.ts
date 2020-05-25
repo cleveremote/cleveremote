@@ -7,7 +7,7 @@ import { UserEntity } from "./user.entity";
 @Index("provider_provider_uid_key", ["providerUid"], { unique: true })
 export class ProviderEntity {
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         primary: true,
         length: 255,
@@ -15,7 +15,7 @@ export class ProviderEntity {
     })
     providerId: string;
 
-    @Column("character varying", { name: "userId", unique: true, length: 255 })
+    @Column("varchar", { name: "userId", unique: true, length: 255 })
     public userId: string;
 
 
@@ -24,7 +24,7 @@ export class ProviderEntity {
     user: UserEntity | null;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         length: 50,
         name: "provider"
@@ -32,7 +32,7 @@ export class ProviderEntity {
     provider: string;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 255,

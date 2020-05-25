@@ -11,7 +11,7 @@ import { ProviderEntity } from "./provider.entity";
 @Index("users_password_key", ["password",], { unique: true })
 export class UserEntity {
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         primary: true,
         length: 255,
@@ -20,7 +20,7 @@ export class UserEntity {
     id: string;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 50,
@@ -29,7 +29,7 @@ export class UserEntity {
     firstName: string;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 50,
@@ -37,10 +37,10 @@ export class UserEntity {
     })
     lastName: string;
 
-    @Column("character varying", { name: "accountId", unique: true, length: 255 })
+    @Column("varchar", { name: "accountId", unique: true, length: 255 })
     public accountId: string;
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 255,
@@ -49,7 +49,7 @@ export class UserEntity {
     email: string;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 50,
@@ -58,7 +58,7 @@ export class UserEntity {
     phone: string;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 512,

@@ -4,7 +4,7 @@ import { DeviceEntity } from "./device.entity";
 @Entity("PartitionConfig", { schema: "public" })
 export class PartitionConfigEntity {
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         primary: true,
         length: 255,
@@ -24,7 +24,7 @@ export class PartitionConfigEntity {
     })
     public endRange: number;
 
-    @Column("character varying", { name: "deviceId", unique: true, length: 255 })
+    @Column("varchar", { name: "deviceId", unique: true, length: 255 })
     public deviceId: string;
 
 

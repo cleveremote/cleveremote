@@ -6,23 +6,23 @@ import { GroupViewEntity } from "./groupView.entity";
 @Index("sector_pkey", ["id"], { unique: true })
 @Entity("Sector", { schema: "public" })
 export class SectorEntity {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "id",
     length: 255
   })
   public id: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("varchar", { name: "name", length: 255 })
   public name: string;
 
-  @Column("character varying", { name: "schemeId", length: 255 })
+  @Column("varchar", { name: "schemeId", length: 255 })
   public schemeId: string;
 
-  @Column("character varying", { name: "schemeDetailId", length: 255 })
+  @Column("varchar", { name: "schemeDetailId", length: 255 })
   public schemeDetailId: string;
 
-  @Column("character varying", { name: "groupId", length: 255 })
+  @Column("varchar", { name: "groupId", length: 255 })
   public groupViewId: string;
 
   @ManyToOne(

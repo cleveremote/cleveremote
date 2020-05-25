@@ -1,34 +1,24 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
 import { User } from "./User";
 
-@Index("Provider_pkey", ["providerId"], { unique: true })
 @Index("Provider_providerUid_key", ["providerUid"], { unique: true })
-@Entity("Provider", { schema: "public" })
+@Entity("Provider")
 export class Provider {
-  @Column("character varying", {
-    primary: true,
-    name: "providerId",
-    length: 255
-  })
+  @Column("text", { primary: true, name: "providerId", unique: true })
   providerId: string;
 
-  @Column("character varying", { name: "provider", length: 50 })
+  @Column("text", { name: "provider" })
   provider: string;
 
-  @Column("character varying", {
-    name: "providerUid",
-    unique: true,
-    length: 255
-  })
+  @Column("text", { name: "providerUid", unique: true })
   providerUid: string;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
 
   @ManyToOne(
     () => User,
-    user => user.providers,
-    { onDelete: "CASCADE" }
+    user => user.providers
   )
   @JoinColumn([{ name: "userId", referencedColumnName: "userId" }])
   user: User;

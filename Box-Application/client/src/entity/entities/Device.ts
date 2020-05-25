@@ -17,16 +17,16 @@ import { Transceiver } from "./Transceiver";
 @Index("Device_name_key", ["name"], { unique: true })
 @Entity("Device", { schema: "public" })
 export class Device {
-  @Column("character varying", { primary: true, name: "deviceId", length: 255 })
+  @Column("varchar", { primary: true, name: "deviceId", length: 255 })
   deviceId: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("varchar", { name: "name", unique: true, length: 50 })
   name: string;
 
   @Column("text", { name: "description", nullable: true })
   description: string | null;
 
-  @Column("character varying", {
+  @Column("varchar", {
     name: "accountId",
     nullable: true,
     length: 255

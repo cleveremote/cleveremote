@@ -7,7 +7,7 @@ import { UserEntity } from "./user.entity";
 @Index("account_name_key", ["name"], { unique: true })
 export class AccountEntity {
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         primary: true,
         length: 255,
@@ -16,7 +16,7 @@ export class AccountEntity {
     id: string;
 
 
-    @Column("character varying", {
+    @Column("varchar", {
         nullable: false,
         unique: true,
         length: 50,

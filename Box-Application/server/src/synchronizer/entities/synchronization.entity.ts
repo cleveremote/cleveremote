@@ -5,22 +5,22 @@ import { Column, Entity, Index } from "typeorm";
 })
 @Entity("Synchronization", { schema: "public" })
 export class SynchronizationEntity {
-  @Column("character varying", { primary: true, name: "target", length: 255 })
+  @Column("varchar", { primary: true, name: "target", length: 255 })
   target: string;
 
-  @Column("character varying", { primary: true, name: "topic", length: 255 })
+  @Column("varchar", { primary: true, name: "topic", length: 255 })
   topic: string;
 
-  @Column("character varying", { primary: true, name: "entity", length: 255 })
+  @Column("varchar", { primary: true, name: "entity", length: 255 })
   entity: string;
 
-  @Column("character varying", { primary: true, name: "entityId", length: 255 })
+  @Column("varchar", { primary: true, name: "entityId", length: 255 })
   entityId: string;
 
-  @Column("character varying", { primary: true, name: "action", length: 255 })
+  @Column("varchar", { primary: true, name: "action", length: 255 })
   action: string;
 
-  @Column("json", { name: "data" })
+  @Column('varchar', { name: "data" })
   data: object;
 
   @Column("numeric", { name: "size" })

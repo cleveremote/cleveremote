@@ -12,16 +12,16 @@ import { Transceiver } from "./Transceiver";
 @Index("Module_pkey", ["moduleId"], { unique: true })
 @Entity("Module", { schema: "public" })
 export class Module {
-  @Column("character varying", { primary: true, name: "moduleId", length: 255 })
+  @Column("varchar", { primary: true, name: "moduleId", length: 255 })
   moduleId: string;
 
-  @Column("character varying", { name: "port", length: 2 })
+  @Column("varchar", { name: "port", length: 2 })
   port: string;
 
-  @Column("character varying", { name: "status", length: 255 })
+  @Column("varchar", { name: "status", length: 255 })
   status: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("varchar", { name: "name", length: 255 })
   name: string;
 
   @ManyToMany(

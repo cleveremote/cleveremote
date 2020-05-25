@@ -94,7 +94,10 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
             this.setClientVisibilityInfo(false);
             setTimeout(() => {
                 dataService.stopWebSocket();
-                this.obsMessage.unsubscribe();
+                if (this.obsMessage) {
+                    this.obsMessage.unsubscribe();
+                }
+
                 this.obsMessage = undefined;
             }, 2000);
 
@@ -109,7 +112,9 @@ export class CoreDataService implements OnDestroy, Resolve<any> {
                 this.setClientVisibilityInfo(false);
                 setTimeout(() => {
                     dataService.stopWebSocket();
-                    this.obsMessage.unsubscribe();
+                    if (this.obsMessage) {
+                        this.obsMessage.unsubscribe();
+                    }
                     this.obsMessage = undefined;
                 }, 2000);
 

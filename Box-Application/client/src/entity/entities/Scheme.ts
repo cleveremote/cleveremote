@@ -13,13 +13,13 @@ import { Sector } from "./Sector";
 @Index("Scheme_pkey", ["schemeId"], { unique: true })
 @Entity("Scheme", { schema: "public" })
 export class Scheme {
-  @Column("character varying", { primary: true, name: "schemeId", length: 255 })
+  @Column("varchar", { primary: true, name: "schemeId", length: 255 })
   schemeId: string;
 
-  @Column("character varying", { name: "file", unique: true, length: 255 })
+  @Column("varchar", { name: "file", unique: true, length: 255 })
   file: string;
 
-  @Column("character varying", { name: "name", length: 50 })
+  @Column("varchar", { name: "name", length: 50 })
   name: string;
 
   @Column("text", { name: "description", nullable: true })

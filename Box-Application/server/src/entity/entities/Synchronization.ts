@@ -1,30 +1,25 @@
-import { Column, Entity, Index } from "typeorm";
+import { Column, Entity } from "typeorm";
 
-@Index(
-  "synchronization_pk",
-  ["action", "entity", "entityId", "target", "topic"],
-  { unique: true }
-)
-@Entity("Synchronization", { schema: "public" })
+@Entity("Synchronization")
 export class Synchronization {
-  @Column("character varying", { primary: true, name: "target", length: 255 })
+  @Column("text", { primary: true, name: "target" })
   target: string;
 
-  @Column("character varying", { primary: true, name: "entity", length: 255 })
+  @Column("text", { primary: true, name: "entity" })
   entity: string;
 
-  @Column("character varying", { primary: true, name: "entityId", length: 255 })
+  @Column("text", { primary: true, name: "entityId" })
   entityId: string;
 
-  @Column("character varying", { primary: true, name: "action", length: 255 })
+  @Column("text", { primary: true, name: "action" })
   action: string;
 
-  @Column("json", { name: "data" })
-  data: object;
+  @Column("text", { name: "data" })
+  data: string;
 
-  @Column("numeric", { name: "size" })
-  size: string;
+  @Column("double", { name: "size" })
+  size: number;
 
-  @Column("character varying", { primary: true, name: "topic", length: 255 })
+  @Column("text", { primary: true, name: "topic" })
   topic: string;
 }

@@ -1,13 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity } from "typeorm";
 
-@Entity("migrations", { schema: "public" })
+@Entity("migrations")
 export class Migrations {
-  @PrimaryGeneratedColumn({ type: "integer", name: "id" })
+  @Column("integer", { primary: true, name: "id" })
   id: number;
 
-  @Column("bigint", { name: "timestamp" })
-  timestamp: string;
+  @Column("integer", { name: "timestamp" })
+  timestamp: number;
 
-  @Column("character varying", { name: "name" })
+  @Column("text", { name: "name" })
   name: string;
 }

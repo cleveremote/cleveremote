@@ -15,26 +15,26 @@ import { SectorEntity } from "./sector.entity";
 @Index("scheme_pkey", ["id"], { unique: true })
 @Entity("Scheme", { schema: "public" })
 export class SchemeEntity {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "id",
     length: 255
   })
   public id: string;
 
-  @Column("character varying", { name: "file", unique: true, length: 255 })
+  @Column("varchar", { name: "file", unique: true, length: 255 })
   public file: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("varchar", { name: "name", unique: true, length: 50 })
   public name: string;
 
   @Column("text", { name: "description", nullable: true })
   public description: string | null;
 
-  @Column("character varying", { name: "sectorId", unique: true, length: 255 })
+  @Column("varchar", { name: "sectorId", unique: true, length: 255 })
   public sectorId: string;
 
-  @Column("character varying", { name: "deviceId", unique: true, length: 255 })
+  @Column("varchar", { name: "deviceId", unique: true, length: 255 })
   public deviceId: string;
 
   @ManyToOne(

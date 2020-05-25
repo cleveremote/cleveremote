@@ -8,6 +8,6 @@ export class Migrations {
   @Column("bigint", { name: "timestamp" })
   timestamp: string;
 
-  @Column("character varying", { name: "name" })
+  @Column("varchar", { name: "name" })
   name: string;
 }

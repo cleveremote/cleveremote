@@ -45,6 +45,8 @@ import { UserCollection } from './services/collections/user.collection';
 import { ValueCollection } from './services/collections/value.collection';
 import { NetworkCollection } from './services/collections/network.collection';
 
+import { APP_BASE_HREF, LocationStrategy, HashLocationStrategy } from '@angular/common';
+
 @NgModule({
   declarations: [AppComponent],
   providers: [
@@ -70,6 +72,8 @@ import { NetworkCollection } from './services/collections/network.collection';
     CoreDataService,
 
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: APP_BASE_HREF, useValue: '/' },
+    { provide: LocationStrategy, useClass: HashLocationStrategy },
 
   ],
   imports: [

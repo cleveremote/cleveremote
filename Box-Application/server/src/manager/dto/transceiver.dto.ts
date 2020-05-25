@@ -14,7 +14,7 @@ export class TransceiverDto {
     @IsNotEmpty()
     public deviceId: string;
     @IsNotEmpty()
-    public configuration: object;
+    public configuration: string;
     @IsOptional()
     public modules: Array<ModuleDto>;
     @IsOptional()

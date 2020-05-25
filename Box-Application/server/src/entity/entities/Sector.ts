@@ -1,44 +1,23 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany
-} from "typeorm";
-import { GroupView } from "./GroupView";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Scheme } from "./Scheme";
+import { GroupView } from "./GroupView";
 
-@Index("Sector_pkey", ["id"], { unique: true })
-@Entity("Sector", { schema: "public" })
+@Entity("Sector")
 export class Sector {
-  @Column("character varying", { primary: true, name: "id", length: 255 })
+  @Column("text", { primary: true, name: "id", unique: true })
   id: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("text", { name: "name" })
   name: string;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
-
-  @OneToMany(
-    () => GroupView,
-    groupView => groupView.sector2
-  )
-  groupViews: GroupView[];
 
   @OneToMany(
     () => Scheme,
     scheme => scheme.sector3
   )
   schemes: Scheme[];
-
-  @ManyToOne(
-    () => GroupView,
-    groupView => groupView.sectors
-  )
-  @JoinColumn([{ name: "groupId", referencedColumnName: "groupId" }])
-  group: GroupView;
 
   @ManyToOne(
     () => Scheme,
@@ -49,9 +28,21 @@ export class Sector {
 
   @ManyToOne(
     () => Scheme,
-    scheme => scheme.sectors2,
-    { onDelete: "CASCADE" }
+    scheme => scheme.sectors2
   )
   @JoinColumn([{ name: "schemeId", referencedColumnName: "id" }])
   scheme: Scheme;
+
+  @ManyToOne(
+    () => GroupView,
+    groupView => groupView.sectors
+  )
+  @JoinColumn([{ name: "groupId", referencedColumnName: "groupId" }])
+  group: GroupView;
+
+  @OneToMany(
+    () => GroupView,
+    groupView => groupView.sector
+  )
+  groupViews: GroupView[];
 }

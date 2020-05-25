@@ -6,37 +6,50 @@ import {
   ManyToOne,
   OneToMany
 } from "typeorm";
-import { Provider } from "./Provider";
 import { Account } from "./Account";
+import { Provider } from "./Provider";
 
-@Index("User_email_key", ["email"], { unique: true })
-@Index("User_firstName_key", ["firstName"], { unique: true })
-@Index("User_lastName_key", ["lastName"], { unique: true })
-@Index("User_password_key", ["password"], { unique: true })
 @Index("User_phone_key", ["phone"], { unique: true })
-@Index("User_pkey", ["userId"], { unique: true })
-@Entity("User", { schema: "public" })
+@Index("User_password_key", ["password"], { unique: true })
+@Index("User_lastName_key", ["lastName"], { unique: true })
+@Index("User_firstName_key", ["firstName"], { unique: true })
+@Index("User_email_key", ["email"], { unique: true })
+@Entity("User")
 export class User {
-  @Column("character varying", { primary: true, name: "userId", length: 255 })
+  @Column("text", { primary: true, name: "userId", unique: true })
   userId: string;
 
-  @Column("character varying", { name: "firstName", unique: true, length: 50 })
+  @Column("text", { name: "firstName", unique: true })
   firstName: string;
 
-  @Column("character varying", { name: "lastName", unique: true, length: 50 })
+  @Column("text", { name: "lastName", unique: true })
   lastName: string;
 
-  @Column("character varying", { name: "email", unique: true, length: 255 })
+  @Column("text", { name: "email", unique: true })
   email: string;
 
-  @Column("character varying", { name: "phone", unique: true, length: 50 })
+  @Column("text", { name: "phone", unique: true })
   phone: string;
 
-  @Column("character varying", { name: "password", unique: true, length: 512 })
+  @Column("text", { name: "password", unique: true })
   password: string;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
+
+  @ManyToOne(
+    () => Account,
+    account => account.users
+  )
+  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
+  account: Account;
+
+  @ManyToOne(
+    () => Account,
+    account => account.users2
+  )
+  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
+  account2: Account;
 
   @OneToMany(
     () => Provider,
@@ -49,19 +62,4 @@ export class User {
     provider => provider.user2
   )
   providers2: Provider[];
-
-  @ManyToOne(
-    () => Account,
-    account => account.users,
-    { onDelete: "CASCADE" }
-  )
-  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
-  account: Account;
-
-  @ManyToOne(
-    () => Account,
-    account => account.users2
-  )
-  @JoinColumn([{ name: "accountId", referencedColumnName: "accountId" }])
-  account2: Account;
 }

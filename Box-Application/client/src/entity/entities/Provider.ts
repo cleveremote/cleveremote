@@ -5,17 +5,17 @@ import { User } from "./User";
 @Index("Provider_providerUid_key", ["providerUid"], { unique: true })
 @Entity("Provider", { schema: "public" })
 export class Provider {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "providerId",
     length: 255
   })
   providerId: string;
 
-  @Column("character varying", { name: "provider", length: 50 })
+  @Column("varchar", { name: "provider", length: 50 })
   provider: string;
 
-  @Column("character varying", {
+  @Column("varchar", {
     name: "providerUid",
     unique: true,
     length: 255

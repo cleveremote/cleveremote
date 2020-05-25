@@ -5,34 +5,34 @@ import { GroupViewEntity } from "./groupView.entity";
 @Index("module_pkey", ["id"], { unique: true })
 @Entity("Module", { schema: "public" })
 export class ModuleEntity {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "id",
     length: 255
   })
   public id: string;
 
-  @Column("character varying", { name: "port", length: 2 })
+  @Column("varchar", { name: "port", length: 2 })
   public port: string;
 
-  @Column("character varying", { name: "status", length: 255 })
+  @Column("varchar", { name: "status", length: 255 })
   public status: string;
 
-  @Column("character varying", { name: "applyfunction", length: 255 })
+  @Column("varchar", { name: "applyfunction", length: 255 })
   public applyFunction: string;
 
-  @Column("character varying", { name: "suffix", length: 255 })
+  @Column("varchar", { name: "suffix", length: 255 })
   public suffix: string;
 
-  @Column("character varying", { name: "prefix", length: 255 })
+  @Column("varchar", { name: "prefix", length: 255 })
   public prefix: string;
 
-  @Column("character varying", { name: "description", length: 255 })
+  @Column("varchar", { name: "description", length: 255 })
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("varchar", { name: "name", length: 255 })
   public name: string;
 
-  @Column("character varying", { name: "transceiverId", length: 255 })
+  @Column("varchar", { name: "transceiverId", length: 255 })
   public transceiverId: string;
 
   @ManyToMany(

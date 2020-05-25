@@ -2,31 +2,23 @@ import { Column, Entity, Index, OneToMany } from "typeorm";
 import { Device } from "./Device";
 import { User } from "./User";
 
-@Index("Account_pkey", ["accountId"], { unique: true })
 @Index("Account_name_key", ["name"], { unique: true })
-@Entity("Account", { schema: "public" })
+@Entity("Account")
 export class Account {
-  @Column("character varying", {
-    primary: true,
-    name: "accountId",
-    length: 255
-  })
+  @Column("text", { primary: true, name: "accountId", unique: true })
   accountId: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("text", { name: "name", unique: true })
   name: string;
 
   @Column("text", { name: "description", nullable: true })
   description: string | null;
 
-  @Column("boolean", { name: "activated", nullable: true })
-  activated: boolean | null;
+  @Column("integer", { name: "activated", nullable: true })
+  activated: number | null;
 
-  @Column("date", { name: "updatedAt", nullable: true })
+  @Column("text", { name: "updatedAt", nullable: true })
   updatedAt: string | null;
-
-  @Column("date", { name: "updatedat", nullable: true })
-  updatedat: string | null;
 
   @OneToMany(
     () => Device,

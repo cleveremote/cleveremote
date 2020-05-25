@@ -4,7 +4,7 @@ import { Device } from "./Device";
 @Index("PartitionConfig_pkey", ["configId"], { unique: true })
 @Entity("PartitionConfig", { schema: "public" })
 export class PartitionConfig {
-  @Column("character varying", { primary: true, name: "configId", length: 255 })
+  @Column("varchar", { primary: true, name: "configId", length: 255 })
   configId: string;
 
   @Column("integer", { name: "startRange" })

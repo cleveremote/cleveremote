@@ -1,64 +1,32 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany
-} from "typeorm";
-import { Module } from "./Module";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Device } from "./Device";
+import { Module } from "./Module";
 
-@Index("Transceiver_pkey", ["transceiverId"], { unique: true })
-@Entity("Transceiver", { schema: "public" })
+@Entity("Transceiver")
 export class Transceiver {
-  @Column("character varying", {
-    primary: true,
-    name: "transceiverId",
-    length: 255
-  })
+  @Column("text", { primary: true, name: "transceiverId", unique: true })
   transceiverId: string;
 
-  @Column("character varying", { name: "name", length: 50 })
+  @Column("text", { name: "name" })
   name: string;
 
   @Column("text", { name: "description", nullable: true })
   description: string | null;
 
-  @Column("character varying", { name: "address", length: 255 })
+  @Column("text", { name: "address" })
   address: string;
 
   @Column("integer", { name: "type" })
   type: number;
 
-  @Column("json", { name: "configuration" })
-  configuration: object;
+  @Column("text", { name: "configuration" })
+  configuration: string;
 
-  @Column("character varying", { name: "status", nullable: true })
+  @Column("text", { name: "status", nullable: true })
   status: string | null;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
-
-  @OneToMany(
-    () => Module,
-    module => module.transceiver
-  )
-  modules: Module[];
-
-  @OneToMany(
-    () => Module,
-    module => module.transceiver2
-  )
-  modules2: Module[];
-
-  @ManyToOne(
-    () => Device,
-    device => device.transceivers,
-    { onDelete: "CASCADE" }
-  )
-  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
-  device: Device;
 
   @ManyToOne(
     () => Transceiver,
@@ -72,4 +40,23 @@ export class Transceiver {
     transceiver => transceiver.pending
   )
   transceivers: Transceiver[];
+
+  @ManyToOne(
+    () => Device,
+    device => device.transceivers
+  )
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
+  device: Device;
+
+  @OneToMany(
+    () => Module,
+    module => module.transceiver
+  )
+  modules: Module[];
+
+  @OneToMany(
+    () => Module,
+    module => module.transceiver2
+  )
+  modules2: Module[];
 }

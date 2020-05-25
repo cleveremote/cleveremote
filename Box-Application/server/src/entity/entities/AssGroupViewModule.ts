@@ -1,17 +1,16 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { GroupView } from "./GroupView";
 import { Module } from "./Module";
 
-@Index("assgroupviewmodule_pk", ["groupId", "moduleId"], { unique: true })
-@Entity("AssGroupViewModule", { schema: "public" })
+@Entity("AssGroupViewModule")
 export class AssGroupViewModule {
-  @Column("character varying", { primary: true, name: "groupId", length: 255 })
+  @Column("text", { primary: true, name: "groupId" })
   groupId: string;
 
-  @Column("character varying", { primary: true, name: "moduleId", length: 255 })
+  @Column("text", { primary: true, name: "moduleId" })
   moduleId: string;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
 
   @ManyToOne(

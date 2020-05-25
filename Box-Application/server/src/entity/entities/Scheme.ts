@@ -6,35 +6,26 @@ import {
   ManyToOne,
   OneToMany
 } from "typeorm";
-import { Device } from "./Device";
 import { Sector } from "./Sector";
+import { Device } from "./Device";
 
 @Index("Scheme_file_key", ["file"], { unique: true })
-@Index("Scheme_pkey", ["id"], { unique: true })
-@Entity("Scheme", { schema: "public" })
+@Entity("Scheme")
 export class Scheme {
-  @Column("character varying", { primary: true, name: "id", length: 255 })
+  @Column("text", { primary: true, name: "id", unique: true })
   id: string;
 
-  @Column("character varying", { name: "file", unique: true, length: 255 })
+  @Column("text", { name: "file", unique: true })
   file: string;
 
-  @Column("character varying", { name: "name", length: 50 })
+  @Column("text", { name: "name" })
   name: string;
 
   @Column("text", { name: "description", nullable: true })
   description: string | null;
 
-  @Column("date", { name: "updatedat", nullable: true })
+  @Column("text", { name: "updatedat", nullable: true })
   updatedat: string | null;
-
-  @ManyToOne(
-    () => Device,
-    device => device.schemes,
-    { onDelete: "CASCADE" }
-  )
-  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
-  device: Device;
 
   @ManyToOne(
     () => Sector,
@@ -42,6 +33,13 @@ export class Scheme {
   )
   @JoinColumn([{ name: "sectorId", referencedColumnName: "id" }])
   sector3: Sector;
+
+  @ManyToOne(
+    () => Device,
+    device => device.schemes
+  )
+  @JoinColumn([{ name: "deviceId", referencedColumnName: "deviceId" }])
+  device: Device;
 
   @OneToMany(
     () => Sector,

@@ -4,6 +4,8 @@
   "description": "",
   "author": "",
   "license": "MIT",
+  "main": "./dist/main.js",
+  "bin": "./dist/main.js",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -70,6 +72,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "pg": "^7.9.0",
+    "pm2": "^4.4.0",
     "progress": "^2.0.3",
     "pump": "^3.0.0",
     "redis": "^2.8.0",
@@ -79,7 +82,8 @@
     "rxjs": "^6.5.4",
     "serialport": "^7.1.5",
     "setimmediate": "^1.0.5",
-    "typeorm": "^0.2.24",
+    "sqlite3": "^4.2.0",
+    "typeorm": "^0.2.25",
     "typeorm-model-generator": "^0.4.0",
     "uuid": "^3.3.2",
     "ws": "^6.2.1",
@@ -120,5 +124,12 @@
   },
   "engines": {
     "node": "9.5.0"
+  },
+  "pkg": {
+    "assets": [
+      "boxTest.db"
+    ],
+    "scripts": "require.js",
+    "dotenv": ".env"
   }
 }

@@ -30,6 +30,24 @@ export class TransceiverService implements ISynchronizer {
     public synchronize(params: ISynchronizeParams): Observable<boolean> {
         switch (params.action) {
             case 'SAVE':
+                if (Array.isArray(params.data)) {
+                    params.data.forEach(element => {
+                        if (element.configuration instanceof Object) {
+                            element.configuration = JSON.stringify(element.configuration);
+                        }
+                        if (element.pending && element.pending.configuration instanceof Object) {
+                            element.pending.configuration = JSON.stringify(element.pending.configuration);
+                        }
+                    });
+                } else {
+                    if (params.data.configuration instanceof Object) {
+                        params.data.configuration = JSON.stringify(params.data.configuration);
+                    }
+                    if (params.data.pending && params.data.pending.configuration instanceof Object) {
+                        params.data.pending.configuration = JSON.stringify(params.data.pending.configuration);
+                    }
+                }
+
                 return this.save(params.data, true, false)
                     .pipe(map(_ => true));
             default:
@@ -53,6 +71,25 @@ export class TransceiverService implements ISynchronizer {
     public save(moduleDto: Array<TransceiverDto | TransceiverEntity>, remote = false, auto = true): Observable<any> {
         return this.transceiverRepository.saveTransceiver(moduleDto)
             .pipe(tap(entities => this.updateTransceiverList(entities)))
+            .pipe(map(entities => {
+                if (remote) {
+                    return entities;
+                }
+                if (Array.isArray(entities)) {
+                    entities.forEach(entity => {
+                        if (typeof entity.configuration === 'string' || (entity.configuration as any) instanceof String) {
+                            entity.configuration = JSON.parse(entity.configuration);
+                        }
+                    });
+                } else {
+                    const entity = entities;
+                    if (typeof entities.configuration === 'string' || (entities.configuration as any) instanceof String) {
+                        entities.configuration = JSON.parse(entities.configuration);
+                    }
+                }
+
+                return entities;
+            }))
             .pipe(tap(transceiverEntity => !remote ? this.synchronizerService.remote('aggregator_server', transceiverEntity, SYNC_TYPE.DB, SYNC_ACTION.SAVE, 'Transceiver', SEND_TYPE.ACK) : false));
     }
 
@@ -114,12 +151,12 @@ export class TransceiverService implements ISynchronizer {
             if (transceiver.type === TRANSCIEVER_TYPE.ENDDEVICE) {
                 transceiver.links = [];
             }
-            dto.configuration = { sleepCfg: SleepCfg.convertToDBFormat(transceiver.sleepCfg), IOCfg: transceiver.iOCfg };
+            dto.configuration = JSON.stringify({ sleepCfg: SleepCfg.convertToDBFormat(transceiver.sleepCfg), IOCfg: transceiver.iOCfg });
             dto.status = !transceiver.status ? 'ACTIF' : transceiver.status;
             dto.modules = [];
             if (transceiver.iOCfg) {
                 for (const port of Object.keys(transceiver.iOCfg)) {
-                    if(port!=='V+'){
+                    if (port !== 'V+') {
                         const module = new ModuleEntity();
                         module.id = v1();
                         module.port = port;
@@ -132,7 +169,7 @@ export class TransceiverService implements ISynchronizer {
             }
         } else {
             transceiverEntity.type = transceiver.type;
-            transceiverEntity.configuration = { sleepCfg: SleepCfg.convertToDBFormat(transceiver.sleepCfg), IOCfg: transceiver.iOCfg };
+            transceiverEntity.configuration = JSON.stringify({ sleepCfg: SleepCfg.convertToDBFormat(transceiver.sleepCfg), IOCfg: transceiver.iOCfg });
             transceiverEntity.status = !transceiver.status ? 'ACTIF' : transceiver.status;
             transceiverEntity.modules.forEach(module => {
                 module.status = !transceiver.status ? 'ACTIF' : transceiver.status;

@@ -13,33 +13,33 @@ import { DeviceEntity } from "./device.entity";
 @Index("transceiver_pkey", ["id"], { unique: true })
 @Entity("Transceiver", { schema: "public" })
 export class TransceiverEntity {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "transceiverId",
     length: 255
   })
   public id: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("varchar", { name: "name", unique: true, length: 50 })
   public name: string;
 
   @Column("text", { name: "description", nullable: true })
   public description: string | null;
 
-  @Column("character varying", { name: "address", length: 255 })
+  @Column("varchar", { name: "address", length: 255 })
   public address: string;
 
   @Column("integer", { name: "type", nullable: false })
   public type: number;
 
-  @Column("character varying", { name: "deviceId", length: 255 })
+  @Column("varchar", { name: "deviceId", length: 255 })
   public deviceId: string;
 
-  @Column("character varying", { name: "status", length: 255 })
+  @Column("varchar", { name: "status", length: 255 })
   public status: string;
 
-  @Column("json", { name: "configuration" })
-  public configuration: object;
+  @Column('varchar', { name: "configuration" })
+  public configuration: string;
 
   @ManyToOne(
     () => TransceiverEntity,

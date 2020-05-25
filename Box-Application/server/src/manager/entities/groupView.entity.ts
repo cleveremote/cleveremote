@@ -16,10 +16,10 @@ import { ModuleEntity } from "./module.entity";
 @Index("GroupView_pkey", ["id"], { unique: true })
 @Entity("GroupView", { schema: "public" })
 export class GroupViewEntity {
-  @Column("character varying", { primary: true, name: "groupId", length: 255 })
+  @Column("varchar", { primary: true, name: "groupId", length: 255 })
   id: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("varchar", { name: "name", length: 255 })
   name: string;
 
   @Column("text", { name: "description", nullable: true })
@@ -31,10 +31,10 @@ export class GroupViewEntity {
   )
   modules: ModuleEntity[];
 
-  @Column("character varying", { name: "deviceId", unique: true, length: 255 })
+  @Column("varchar", { name: "deviceId", unique: true, length: 255 })
   public deviceId: string;
 
-  @Column("character varying", { name: "sectorId", unique: true, length: 255 })
+  @Column("varchar", { name: "sectorId", unique: true, length: 255 })
   public sectorId: string;
 
   @ManyToOne(

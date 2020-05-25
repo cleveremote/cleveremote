@@ -13,26 +13,26 @@ import { Device } from "./Device";
 @Index("Transceiver_pkey", ["transceiverId"], { unique: true })
 @Entity("Transceiver", { schema: "public" })
 export class Transceiver {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "transceiverId",
     length: 255
   })
   transceiverId: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("varchar", { name: "name", unique: true, length: 50 })
   name: string;
 
   @Column("text", { name: "description", nullable: true })
   description: string | null;
 
-  @Column("character varying", { name: "address", length: 255 })
+  @Column("varchar", { name: "address", length: 255 })
   address: string;
 
-  @Column("character varying", { name: "type", length: 255 })
+  @Column("varchar", { name: "type", length: 255 })
   type: string;
 
-  @Column("json", { name: "configuration" })
+  @Column(TEXT, { name: "configuration" })
   configuration: object;
 
   @OneToMany(

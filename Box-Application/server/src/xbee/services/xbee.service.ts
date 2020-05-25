@@ -227,7 +227,10 @@ export class XbeeService {
 
         if (transceiver.type === TRANSCIEVER_TYPE.COORDINATOR) {
             for (const cmd of Object.keys(configuration)) {
-                if (cmd !== 'SM' && cmd !== 'ST') {
+                if (cmd === 'IC') {
+                    const params = [255, 255];
+                    cmdObs = cmdObs.pipe(mergeMap(() => this.executeLocalCommand(cmd, params).pipe(map(() => true))));
+                } else if (cmd !== 'SM' && cmd !== 'ST') {
                     const params = configuration[cmd];
                     cmdObs = cmdObs.pipe(mergeMap(() => this.executeLocalCommand(cmd, params).pipe(map(() => true))));
                 }
@@ -239,8 +242,13 @@ export class XbeeService {
         }
 
         for (const cmd of Object.keys(configuration)) {
-            const params = configuration[cmd];
-            cmdObs = cmdObs.pipe(mergeMap(() => this.executeRemoteCommand(60000, cmd, transceiver.address64, params).pipe(map(() => true))));
+            if (cmd === 'IC') {
+                const params = transceiver.type === TRANSCIEVER_TYPE.ENDDEVICE ? [0] : [255, 255];
+                cmdObs = cmdObs.pipe(mergeMap(() => this.executeLocalCommand(cmd, params).pipe(map(() => true))));
+            } else {
+                const params = configuration[cmd];
+                cmdObs = cmdObs.pipe(mergeMap(() => this.executeRemoteCommand(60000, cmd, transceiver.address64, params).pipe(map(() => true))));
+            }
         }
         return cmdObs.pipe(map(response => {
             const result = (response && configuration instanceof IOCfg) ? transceiver.iOCfg = configuration : ((response) ? transceiver.sleepCfg = configuration as SleepCfg : undefined);
@@ -264,6 +272,11 @@ export class XbeeService {
 
     public init(): Observable<boolean> {
         this.progressBar = Tools.startProgress('RF module Xbee configuration   ', 0, 5, '* Start micro-service : RF network ...');
+        SerialPort.list(function (err, ports) {
+            ports.forEach(function (port) {
+                console.log("Port: ", port);
+            })
+        });
         const exists = portName => SerialPort.list().then(ports => ports.some(port => port.comName === portName));
         const xbeeObs = new Observable<any>(observer => {
             let xbee: any;
@@ -323,16 +336,16 @@ export class XbeeService {
                 transceiver.address64 = transceiverdB.id;
                 transceiver.type = transceiverdB.type;
                 transceiver.status = TRANSCIEVER_STATUS.INACTIF;
-                transceiver.sleepCfg = SleepCfg.convertToTrFormat((transceiverdB.configuration as any).sleepCfg);
-                transceiver.iOCfg = (transceiverdB.configuration as any).IOCfg;
+                transceiver.sleepCfg = SleepCfg.convertToTrFormat((JSON.parse(transceiverdB.configuration)).sleepCfg);
+                transceiver.iOCfg = (JSON.parse(transceiverdB.configuration)).IOCfg;
                 transceiver.links = undefined;
                 if (transceiverdB.pending) {
                     const data = transceiverdB.pending;
                     const pendingTransceiver = new Transceiver();
                     pendingTransceiver.address64 = data.address;
                     pendingTransceiver.type = data.type;
-                    pendingTransceiver.sleepCfg = SleepCfg.convertToTrFormat((data.configuration as any).sleepCfg);
-                    pendingTransceiver.iOCfg = (data.configuration as any).IOCfg;
+                    pendingTransceiver.sleepCfg = SleepCfg.convertToTrFormat((JSON.parse(data.configuration)).sleepCfg);
+                    pendingTransceiver.iOCfg = (JSON.parse(data.configuration)).IOCfg;
                     pendingTransceiver.links = undefined;
                     if (!transceiver.pending) {
                         transceiver.pending = {};
@@ -666,8 +679,8 @@ export class XbeeService {
                 const pendingTransceiver = new Transceiver();
                 pendingTransceiver.address64 = data.pending.address;
                 pendingTransceiver.type = data.pending.type;
-                pendingTransceiver.sleepCfg = SleepCfg.convertToTrFormat((data.pending.configuration as any).sleepCfg);
-                pendingTransceiver.iOCfg = (data.pending.configuration as any).IOCfg;
+                pendingTransceiver.sleepCfg = SleepCfg.convertToTrFormat(JSON.parse(data.pending.configuration).sleepCfg);
+                pendingTransceiver.iOCfg = JSON.parse(data.pending.configuration).IOCfg;
 
                 const currentTransceiver = this.transceivers[foundIndex];
                 currentTransceiver.type = pendingTransceiver.type;
@@ -699,11 +712,13 @@ export class XbeeService {
                 if (cmd !== 'SM') {
                     if (cmd === 'ST') {
                         cfg.IR = currentTransceiver.sleepCfg[cmd];
+                    } else if (cmd === 'IC') {
+                        cfg.IC = currentTransceiver.type === TRANSCIEVER_TYPE.ENDDEVICE ? [0] : [255, 255];
+                    } else {
+                        cfg[cmd] = currentTransceiver.sleepCfg[cmd];
                     }
-                    cfg[cmd] = currentTransceiver.sleepCfg[cmd];
                 }
             }
-            cfg['V+'] = [255, 255];
         }
         if (previousTransceiver.type === TRANSCIEVER_TYPE.ROUTER && cfg) {
             this.applyConfiguration(currentTransceiver, cfg, pendingId, true).subscribe();
@@ -744,8 +759,8 @@ export class XbeeService {
 
     public updateSleepMemoryRouters(dataUpdated: TransceiverEntity): void {
         const filtered = this.transceiverService.transceivers.filter(_ => _.type !== TRANSCIEVER_TYPE.ENDDEVICE);
-        const sns = filtered.map(_ => (_.configuration as any).sleepCfg.SN);
-        const sps = filtered.map(_ => (_.configuration as any).sleepCfg.SP);
+        const sns = filtered.map((_: any) => typeof _.configuration === 'string' ? JSON.parse(_.configuration).sleepCfg.SN : _.configuration.sleepCfg.SN);
+        const sps = filtered.map((_: any) => typeof _.configuration === 'string' ? JSON.parse(_.configuration).sleepCfg.SP : _.configuration.sleepCfg.SP);
         const maxSN = Math.max(...sns);
         const maxSP = Math.max(...sps);
         const newSP = (dataUpdated.configuration as any).sleepCfg.SP;

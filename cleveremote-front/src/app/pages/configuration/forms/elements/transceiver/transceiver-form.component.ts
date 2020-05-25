@@ -70,6 +70,8 @@ export class TransceiverFormComponent implements OnInit { //, AfterViewChecked
         SN: [element.configuration.sleepCfg && element.configuration.sleepCfg.SN, [Validators.required, Validators.min(1), Validators.max(65535)]],
         SP: [element.configuration.sleepCfg && element.configuration.sleepCfg.SP, [Validators.required, Validators.min(320), Validators.max(2800)]],
         ST: [element.configuration.sleepCfg && element.configuration.sleepCfg.ST],
+        IR: [element.configuration.sleepCfg && element.configuration.sleepCfg.IR],
+        IC: [element.configuration.sleepCfg && element.configuration.sleepCfg.IC],
         extended: (element.configuration.sleepCfg && element.configuration.sleepCfg.SN) * (element.configuration.sleepCfg && element.configuration.sleepCfg.SP) * 10
       });
       this.setIOCfg(element.configuration.IOCfg);
@@ -160,10 +162,13 @@ export class TransceiverFormComponent implements OnInit { //, AfterViewChecked
     this.portConfiguration.forEach(io => {
       IOCfg[io] = [formValues[io]];
     });
+    IOCfg['V+'] = formValues['V+'];
     sleepCfg['SM'] = formValues.type === TRANSCIEVER_TYPE.ENDDEVICE ? 5 : 0;
     sleepCfg['SN'] = formValues.SN;
     sleepCfg['SP'] = formValues.SP;
     sleepCfg['ST'] = formValues.ST;
+    sleepCfg['IC'] = formValues.IC;
+    sleepCfg['IR'] = formValues.IR;
 
     dto.id = formValues.id;
     dto.name = formValues.name;
@@ -182,7 +187,12 @@ export class TransceiverFormComponent implements OnInit { //, AfterViewChecked
     for (const prop in ioCfg) {
       if (ioCfg.hasOwnProperty(prop)) {
         const controlName = `${prop}`;
-        this.deviceForm.addControl(prop, this.formBuilder.control(ioCfg[prop][0]));
+        if(prop==='V+'){
+          this.deviceForm.addControl(prop, this.formBuilder.control(ioCfg[prop]));
+        } else {
+          this.deviceForm.addControl(prop, this.formBuilder.control(ioCfg[prop][0]));
+        }
+        
       }
     }
   }

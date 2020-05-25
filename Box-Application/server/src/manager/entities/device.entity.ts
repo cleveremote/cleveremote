@@ -16,20 +16,20 @@ import { AccountEntity } from "../../authentication/entities/account.entity";
 @Index("device_name_key", ["name"], { unique: true })
 @Entity("Device", { schema: "public" })
 export class DeviceEntity {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "deviceId",
     length: 255
   })
   public id: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("varchar", { name: "name", unique: true, length: 50 })
   public name: string;
 
   @Column("text", { name: "description", nullable: true })
   public description: string | null;
 
-  @Column("character varying", { name: "accountId", unique: true, length: 255 })
+  @Column("varchar", { name: "accountId", unique: true, length: 255 })
   public accountId: string;
 
   @ManyToOne(

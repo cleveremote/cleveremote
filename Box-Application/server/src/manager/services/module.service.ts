@@ -31,7 +31,7 @@ export class ModuleService {
                 module.transceiverId = [element.transceiverId];
                 module.id = element.id;
                 module.name = element.name;
-                module.type = this.getModuleType(element.port, (element.transceiver.configuration as any).IOCfg);
+                module.type = this.getModuleType(element.port, (JSON.parse(element.transceiver.configuration)).IOCfg);
                 module.configuration = { data: "comming soon" };
                 module.value = module.type === TYPE_MODULE.RELAY ? 'ON' : '26°';
                 return of(module);
@@ -67,7 +67,7 @@ export class ModuleService {
                     module.groupViewId = ['server_1'];
                     module.transceiverId = ['server_1'];
                     module.name = element.name;
-                    module.type = this.getModuleType(module.port, (element.transceiver.configuration as any).IOCfg);
+                    module.type = this.getModuleType(module.port, (JSON.parse(element.transceiver.configuration)).IOCfg);
                     module.configuration = { data: "comming soon" };
                     module.value = module.type === TYPE_IO.DIGITAL_OUTPUT_HIGH ? 'ON' : 'OFF';
                     response.push(module);
@@ -92,7 +92,7 @@ export class ModuleService {
                     module.transceiverId = [element.transceiverId];
                     module.id = element.id;
                     module.name = element.name;
-                    module.type = this.getModuleType(element.port, (element.transceiver.configuration as any).IOCfg);
+                    module.type = this.getModuleType(element.port, (JSON.parse(element.transceiver.configuration)).IOCfg);
                     module.configuration = { data: "comming soon" };
                     module.value = module.type === TYPE_MODULE.RELAY ? 'ON' : '26°';
                     response.push(module);

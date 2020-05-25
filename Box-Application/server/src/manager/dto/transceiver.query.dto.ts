@@ -13,5 +13,5 @@ export class TransceiverQueryDto {
     @IsOptional()
     public deviceId: string;
     @IsOptional()
-    public configuration: object;
+    public configuration: string;
 }

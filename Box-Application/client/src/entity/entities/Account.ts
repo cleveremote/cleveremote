@@ -6,14 +6,14 @@ import { User } from "./User";
 @Index("Account_name_key", ["name"], { unique: true })
 @Entity("Account", { schema: "public" })
 export class Account {
-  @Column("character varying", {
+  @Column("varchar", {
     primary: true,
     name: "accountId",
     length: 255
   })
   accountId: string;
 
-  @Column("character varying", { name: "name", unique: true, length: 50 })
+  @Column("varchar", { name: "name", unique: true, length: 50 })
   name: string;
 
   @Column("text", { name: "description", nullable: true })

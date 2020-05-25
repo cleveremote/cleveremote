@@ -5,10 +5,10 @@ import { Scheme } from "./Scheme";
 @Index("Sector_pkey", ["sectorId"], { unique: true })
 @Entity("Sector", { schema: "public" })
 export class Sector {
-  @Column("character varying", { primary: true, name: "sectorId", length: 255 })
+  @Column("varchar", { primary: true, name: "sectorId", length: 255 })
   sectorId: string;
 
-  @Column("character varying", { name: "name", length: 255 })
+  @Column("varchar", { name: "name", length: 255 })
   name: string;
 
   @ManyToOne(
