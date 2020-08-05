@@ -63,7 +63,7 @@
     "cors": "^2.8.4",
     "dotenv": "^7.0.0",
     "express": "^4.16.1",
-    "express-fileupload": "^1.1.4",
+    "express-fileupload": "^1.1.9",
     "express-session": "^1.15.6",
     "jsonwebtoken": "^8.2.2",
     "kafka-node": "^5.0.0",
