@@ -55,7 +55,7 @@
   "dependencies": {
     "@types/async": "^3.0.0",
     "angular-user-idle": "^2.1.2",
-    "async": "^3.0.1",
+    "async": "^3.2.2",
     "baseconvert": "^1.0.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.19.0",
