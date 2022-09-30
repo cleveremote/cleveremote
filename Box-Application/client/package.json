@@ -29,7 +29,7 @@
     "angular-user-idle": "^2.1.2",
     "bootstrap": "^4.3.1",
     "core-js": "^2.5.7",
-    "d3": "^5.15.0",
+    "d3": "^7.6.1",
     "font-awesome": "^4.7.0",
     "httpclient": "^0.1.0",
     "jasmine": "^3.1.0",
