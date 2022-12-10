@@ -67,7 +67,7 @@
     "debug": "^4.1.1",
     "dotenv": "^7.0.0",
     "endianness": "^8.0.2",
-    "express": "^4.16.1",
+    "express": "^4.17.3",
     "express-fileupload": "^1.1.4",
     "express-session": "^1.15.6",
     "hex-to-binary": "^1.0.1",
