@@ -71,7 +71,7 @@
     "express-fileupload": "^1.1.4",
     "express-session": "^1.15.6",
     "hex-to-binary": "^1.0.1",
-    "jsonwebtoken": "^8.2.2",
+    "jsonwebtoken": "^9.0.0",
     "kafka-node": "^5.0.0",
     "moment": "^2.24.0",
     "mongoose": "^4.12.0",
